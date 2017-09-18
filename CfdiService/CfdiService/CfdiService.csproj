@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\CompaniesController.cs" />
+    <Compile Include="Controllers\SignaturePurchaseController.cs" />
     <Compile Include="Controllers\EmployeeController.cs" />
     <Compile Include="Controllers\CompanyUserController.cs" />
     <Compile Include="Controllers\PayStubContentController.cs" />
@@ -130,6 +131,8 @@
     <Compile Include="Shapes\CompanyListShape.cs" />
     <Compile Include="Shapes\CompanyShape.cs" />
     <Compile Include="Shapes\EmployeeListShape.cs" />
+    <Compile Include="Shapes\SignaturePurchaseShape.cs" />
+    <Compile Include="Shapes\SignaturePurchaseListShape.cs" />
     <Compile Include="Shapes\UserListShape.cs" />
     <Compile Include="Shapes\FileUpload.cs" />
     <Compile Include="Shapes\OpenBatch.cs" />
