@@ -65,16 +65,16 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("companyusers")]
-        public IHttpActionResult AddCompany(CompanyShape companyShape)
+        public IHttpActionResult AddCompanyUser(UserShape userShape)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            Company company = CompanyShape.ToDataModel(companyShape);
-            db.Companies.Add(company);
+            User user = UserShape.ToDataModel(userShape);
+            db.Users.Add(user);
             db.SaveChanges();
-            return Ok(CompanyShape.FromDataModel(company, Request));
+            return Ok(UserShape.FromDataModel(user, Request));
         }
 
         // DELETE: api/companyusers/5
