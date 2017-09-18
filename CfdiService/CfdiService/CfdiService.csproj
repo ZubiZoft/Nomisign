@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\CompaniesController.cs" />
+    <Compile Include="Controllers\CompanyUserController.cs" />
     <Compile Include="Controllers\PayStubContentController.cs" />
     <Compile Include="ModelDbContext.cs" />
     <Compile Include="Model\Batch.cs" />
@@ -127,9 +128,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shapes\CompanyListShape.cs" />
     <Compile Include="Shapes\CompanyShape.cs" />
+    <Compile Include="Shapes\UserListShape.cs" />
     <Compile Include="Shapes\FileUpload.cs" />
     <Compile Include="Shapes\OpenBatch.cs" />
     <Compile Include="Shapes\RequestExtensions.cs" />
+    <Compile Include="Shapes\UserShape.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup />
