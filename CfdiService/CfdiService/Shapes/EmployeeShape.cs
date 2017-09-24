@@ -35,7 +35,7 @@ namespace CfdiService.Shapes
                 Links = new LinksClass()
             };
 
-            employeeShape.Links.SelfUri = request.GetLinkUri($"employees/{employeeShape.UserId}");
+            employeeShape.Links.SelfUri = request.GetLinkUri($"employees/{employeeShape.EmployeeId}");
             return employeeShape;
         }
 

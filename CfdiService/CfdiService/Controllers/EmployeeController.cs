@@ -71,6 +71,7 @@ namespace CfdiService.Controllers
             {
                 return BadRequest(ModelState);
             }
+
             Employee employee = EmployeeShape.ToDataModel(employeeShape);
             db.Employees.Add(employee);
             db.SaveChanges();
