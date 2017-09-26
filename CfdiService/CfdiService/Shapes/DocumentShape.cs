@@ -15,6 +15,7 @@ namespace CfdiService.Shapes
         public DateTime UploadTime { get; set; }
         public DateTime PayperiodDate { get; set; }
         public int SignStatus { get; set; }
+        public string DocumentBytes { get; set; }
         public Nullable<int> BatchId { get; set; }
         //public virtual Batch Batch { get; set; }
 
@@ -26,6 +27,9 @@ namespace CfdiService.Shapes
 
         public static DocumentShape FromDataModel(Document document, HttpRequestMessage request)
         {
+            // untill i get file IO working, do this
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("sample sign doc info");
+
             var documentShape = new DocumentShape
             {
                 DocumentId = document.DocumentId,
@@ -33,6 +37,7 @@ namespace CfdiService.Shapes
                 BatchId  = document.BatchId,
                 //Batch = document.Batch,
                 //Employee = document.Employee,
+                DocumentBytes = System.Convert.ToBase64String(plainTextBytes),
                 UploadTime = document.UploadTime,
                 PayperiodDate = document.PayperiodDate,
                 SignStatus = (int)document.SignStatus,

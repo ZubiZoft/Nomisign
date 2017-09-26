@@ -15,7 +15,7 @@ namespace CfdiService.Controllers
 
         // GET: api/companyusers
         [HttpGet]
-        [Route("companyusers")]
+        [Route("companyusers/{cid}")]
         public IHttpActionResult GetCompanyUsers()
         {
             var result = new List<UserListShape>();
@@ -28,7 +28,7 @@ namespace CfdiService.Controllers
 
         // GET: api/companyusers/5
         [HttpGet]
-        [Route("companyusers/{id}")]
+        [Route("companyusers/{cid}/{id}")]
         public IHttpActionResult GetCompanyUser(int id)
         {
             User user = db.Users.Find(id);
