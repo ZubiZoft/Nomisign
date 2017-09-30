@@ -117,6 +117,7 @@
   <ItemGroup>
     <Compile Include="Controllers\CompaniesController.cs" />
     <Compile Include="Controllers\DocumentController.cs" />
+    <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\SignaturePurchaseController.cs" />
     <Compile Include="Controllers\EmployeeController.cs" />
     <Compile Include="Controllers\CompanyUserController.cs" />

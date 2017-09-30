@@ -16,12 +16,16 @@ namespace CfdiService.Controllers
         // GET: api/companyusers
         [HttpGet]
         [Route("companyusers/{cid}")]
-        public IHttpActionResult GetCompanyUsers()
+        public IHttpActionResult GetCompanyUsers(int cid)
         {
             var result = new List<UserListShape>();
             foreach (var c in db.Users)
             {
-                result.Add(UserListShape.FromDataModel(c, Request));
+                Employee e = db.Employees.Find(c.EmployeeId);
+                if (null != e && e.CompanyId == cid)
+                {
+                    result.Add(UserListShape.FromDataModel(c, Request));
+                }
             }
             return Ok(result);
         }
@@ -29,8 +33,9 @@ namespace CfdiService.Controllers
         // GET: api/companyusers/5
         [HttpGet]
         [Route("companyusers/{cid}/{id}")]
-        public IHttpActionResult GetCompanyUser(int id)
+        public IHttpActionResult GetCompanyUser(int cid, int id)
         {
+            // not validating cid here
             User user = db.Users.Find(id);
             if (user == null)
             {

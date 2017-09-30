@@ -16,12 +16,15 @@ namespace CfdiService.Controllers
         // GET: api/employees
         [HttpGet]
         [Route("employees/{cid}")]
-        public IHttpActionResult GetCompanyEmployees()
+        public IHttpActionResult GetCompanyEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
             foreach (var c in db.Employees)
             {
-                result.Add(EmployeeListShape.FromDataModel(c, Request));
+                if (c.CompanyId == cid)
+                {
+                    result.Add(EmployeeListShape.FromDataModel(c, Request));
+                }
             }
             return Ok(result);
         }
@@ -29,8 +32,9 @@ namespace CfdiService.Controllers
         // GET: api/companyusers/5
         [HttpGet]
         [Route("employees/{cid}/{id}")]
-        public IHttpActionResult GetCompanyEmployee(int id)
+        public IHttpActionResult GetCompanyEmployee(int cid, int id)
         {
+            // not validating company ID here
             Employee employee = db.Employees.Find(id);
             if (employee == null)
             {

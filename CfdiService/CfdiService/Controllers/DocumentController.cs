@@ -15,20 +15,23 @@ namespace CfdiService.Controllers
 
         // GET: api/employees
         [HttpGet]
-        [Route("documents")]
-        public IHttpActionResult GetDocuments()
+        [Route("documents/{eid}")]
+        public IHttpActionResult GetDocuments(int eid)
         {
             var result = new List<DocumentListShape>();
             foreach (var c in db.Documents)
             {
-                result.Add(DocumentListShape.FromDataModel(c, Request));
+                if (c.EmployeeId == eid)
+                {
+                    result.Add(DocumentListShape.FromDataModel(c, Request));
+                }
             }
             return Ok(result);
         }
 
         // GET: api/companyusers/5
         [HttpGet]
-        [Route("documents/{id}")]
+        [Route("documents/{eid}/{id}")]
         public IHttpActionResult GetDocument(int id)
         {
             Document document = db.Documents.Find(id);
