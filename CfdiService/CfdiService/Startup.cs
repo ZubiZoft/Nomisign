@@ -19,6 +19,7 @@ namespace CfdiService
             // WebApiConfig.Register(config);
 
             config.MapHttpAttributeRoutes();
+            config.EnableCors();
 
             // Use JSON as our data format instead of XML
             var formatter = new JsonMediaTypeFormatter();
@@ -33,6 +34,7 @@ namespace CfdiService
             config.Formatters.Add(formatter);
 
             appBuilder.UseWebApi(config);
+                       
             using (var db = new ModelDbContext())
             {
                 db.Documents.Count();

@@ -13,6 +13,7 @@ namespace CfdiService.Shapes
         public string FirstName { get; set; }
         public string LastName1 { get; set; }
         public string LastName2 { get; set; }
+        public string EmailAddress { get; set; }
 
         public class LinksClass
         {
@@ -25,6 +26,7 @@ namespace CfdiService.Shapes
         {
             var employeeUserShape = new EmployeeListShape
             {
+                EmailAddress = employee.EmailAddress,
                 EmployeeId = employee.EmployeeId,
                 FirstName = employee.FirstName,
                 LastName1 = employee.LastName1,

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace CfdiService.Controllers
 {
@@ -25,6 +26,7 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("login")]
+        [EnableCors(origins: "http://www.ogrean.com", headers: "*", methods: "*")]
         public IHttpActionResult DoEmployeeLogin(EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
@@ -32,16 +34,15 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
-            Employee employee = db.Employees.Find(employeeShape.EmployeeId);
+            foreach (var employee in db.Employees)
+            {
+                if (employee.EmailAddress == employeeShape.EmailAddress && employee.PasswordHash == employeeShape.PasswordHash)
+                {
+                    return Ok(EmployeeShape.FromDataModel(employee, Request));
+                }
+            }
 
-            if (employee.PasswordHash == employeeShape.PasswordHash)
-            {
-                return Ok();
-            }
-            else
-            {
-                return BadRequest("Invalid Login");
-            }
+            return BadRequest("Invalid Login");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace CfdiService
         public ModelDbContext() : base("name=CfdiConnection")
         {
             Database.SetInitializer<ModelDbContext>(new CreateDatabaseIfNotExists<ModelDbContext>());
-            //Database.SetInitializer<SchoolDBContext>(new DropCreateDatabaseIfModelChanges<SchoolDBContext>());
+            //Database.SetInitializer<ModelDbContext>(new DropCreateDatabaseIfModelChanges<ModelDbContext>());
         }
 
         virtual public DbSet<Batch> Batches { get; set; }
@@ -26,6 +26,7 @@ namespace CfdiService
         virtual public DbSet<Employee> Employees { get; set; }
         virtual public DbSet<SignaturePurchase> SignaturePurchases { get; set; }
         virtual public DbSet<User> Users { get; set; }
+        virtual public DbSet<SystemSettings> Settings { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

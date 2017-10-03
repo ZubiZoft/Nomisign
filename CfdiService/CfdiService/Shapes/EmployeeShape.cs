@@ -18,7 +18,8 @@ namespace CfdiService.Shapes
         public string CURP { get; set; }
         public string RFC { get; set; }
         public int CreatedByUserId { get; set; }
-        public string PasswordHash { get; internal set; }
+        public string PasswordHash { get; set; }
+        public string EmailAddress { get; set; }
 
         public static EmployeeShape FromDataModel(Employee employee, HttpRequestMessage request)
         {
@@ -32,6 +33,7 @@ namespace CfdiService.Shapes
                 LastName2 = employee.LastName2,
                 CURP = employee.CURP,
                 RFC = employee.RFC,
+                EmailAddress = employee.EmailAddress,
                 PasswordHash = employee.PasswordHash,
                 CreatedByUserId = employee.CreatedByUserId,
                 Links = new LinksClass()
@@ -54,6 +56,7 @@ namespace CfdiService.Shapes
             employee.LastName2 = employeeShape.LastName2;
             employee.CURP = employeeShape.CURP;
             employee.RFC = employeeShape.RFC;
+            employee.EmailAddress = employeeShape.EmailAddress;
             employee.PasswordHash = employeeShape.PasswordHash;
             employee.CreatedByUserId = employeeShape.CreatedByUserId;
 

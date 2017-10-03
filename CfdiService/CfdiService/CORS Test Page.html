@@ -1,0 +1,51 @@
+﻿<html>
+<head>
+    <title>Test for CORS</title>
+    <script type="text/javascript">
+         //Modified from the code found at test-cors.org
+         function testcors(url){
+             var createCORSRequest = function(method, url) {
+                 var xhr = new XMLHttpRequest();
+                 if ("withCredentials" in xhr) {
+                     // Most browsers.
+                     xhr.open(method, url, true);
+                 } else if (typeof XDomainRequest != "undefined") {
+                     // IE8 & IE9
+                     xhr = new XDomainRequest();
+                     xhr.open(method, url);
+                 } else {
+                     // CORS not supported.
+                     xhr = null;
+                 }
+                 return xhr;
+             };
+              var method = 'POST';
+             var xhr = createCORSRequest(method, url);
+              xhr.onload = function() {
+                 // Success code goes here.
+                 thendothis(true);
+             };
+              xhr.onerror = function() {
+                 // Error code goes here.
+                 thendothis(false);
+             };
+              xhr.send();
+             //return iscors;
+         }
+          function thendothis(iscors){
+             var resptxt = "No";
+             if (iscors) { resptxt = "Yes"; }
+             document.getElementById("res").innerHTML = resptxt;
+         }
+          function runtest(frm){
+             testcors(frm.url.value);
+         }
+    </script>
+</head>
+<body>
+    <form>
+        URL: <input type="text" name="url" id="url" style="width:500px" /></br>         <input type="button" value="Test if CORS" onclick="runtest(this.form)" />
+    </form>
+    <div>URL is CORS: <span id="res"></span></div>
+</body>
+</html> 
