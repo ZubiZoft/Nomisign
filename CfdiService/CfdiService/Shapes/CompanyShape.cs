@@ -52,10 +52,10 @@ namespace CfdiService.Shapes
                 TotalSignaturesPurchased = company.TotalSignaturesPurchased,
                 SignatureBalance = company.SignatureBalance,
                 AccountStatus = (int)company.AccountStatus,
-                Links = new LinksClass()
+                //Links = new LinksClass()
             };
 
-            companyShape.Links.SelfUri = request.GetLinkUri($"companies/{companyShape.CompanyId}");
+            //companyShape.Links.SelfUri = request.GetLinkUri($"companies/{companyShape.CompanyId}");
             return companyShape;
         }
 

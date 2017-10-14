@@ -28,10 +28,10 @@ namespace CfdiService.Shapes
                 CompanyName = company.CompanyName,
                 CompanyRFC = company.CompanyRFC,
                 AccountStatus = (int)company.AccountStatus,
-                Links = new LinksClass()
+                //Links = new LinksClass()
             };
 
-            companyShape.Links.SelfUri = request.GetLinkUri($"companies/{companyShape.CompanyId}");
+            //companyShape.Links.SelfUri = request.GetLinkUri($"companies/{companyShape.CompanyId}");
             return companyShape;
         }
     }

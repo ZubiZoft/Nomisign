@@ -10,7 +10,7 @@ namespace CfdiService.Shapes
     public class UserShape
     {
         public int UserId { set; get; }
-        public int EmployeeId { get; set; }
+        //public int EmployeeId { get; set; }
         public string EmailAddress { get; set; }
         public string DisplayName { get; set; }  // is this needed
         public string PhoneNumber { get; set; }
@@ -19,13 +19,15 @@ namespace CfdiService.Shapes
         public DateTime LastLogin { get; set; }
         public DateTime LastPasswordChange { get; set; }
         public bool ForcePasswordReset { get; set; }
+        public int CompanyId { get; set; }
 
         public static UserShape FromDataModel(User user, HttpRequestMessage request)
         {
             var userShape = new UserShape
             {
                 UserId = user.UserId,
-                EmployeeId = user.EmployeeId,
+                //EmployeeId = user.EmployeeId,
+                CompanyId = user.CompanyId,
                 EmailAddress = user.EmailAddress,
                 DisplayName = user.DisplayName,
                 PhoneNumber = user.PhoneNumber,
@@ -47,7 +49,8 @@ namespace CfdiService.Shapes
                 user = new User();
 
             user.UserId = userShape.UserId;
-            user.EmployeeId = userShape.EmployeeId;
+            //user.EmployeeId = userShape.EmployeeId;
+            user.CompanyId = userShape.CompanyId;
             user.EmailAddress = userShape.EmailAddress;
             user.DisplayName = userShape.DisplayName;
             user.PhoneNumber = userShape.PhoneNumber;

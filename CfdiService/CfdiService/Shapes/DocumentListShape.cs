@@ -12,7 +12,7 @@ namespace CfdiService.Shapes
         public int DocumentId { set; get; }
         public int EmployeeId { get; set; }
         public DateTime PayperiodDate { get; set; }
-        public int SignStatus { get; set; }
+        public string SignStatus { get; set; }
 
         public class LinksClass
         {
@@ -28,7 +28,7 @@ namespace CfdiService.Shapes
                 EmployeeId = document.EmployeeId,
                 DocumentId = document.DocumentId,
                 PayperiodDate = document.PayperiodDate,
-                SignStatus = (int)document.SignStatus,
+                SignStatus = document.SignStatus.ToString(),
                 Links = new LinksClass()
             };
 

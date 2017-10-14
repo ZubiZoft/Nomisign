@@ -32,7 +32,7 @@ namespace CfdiService.Controllers
         // GET: api/companyusers/5
         [HttpGet]
         [Route("employees/{cid}/{id}")]
-        public IHttpActionResult GetCompanyEmployee(int cid, int id)
+        public IHttpActionResult GetCompanyEmployee(int id)
         {
             // not validating company ID here
             Employee employee = db.Employees.Find(id);
@@ -42,6 +42,21 @@ namespace CfdiService.Controllers
             }
             return Ok(EmployeeShape.FromDataModel(employee, Request));
         }
+
+        // GET: api/employee/5
+        [HttpGet]
+        [Route("employee/{id}")]
+        public IHttpActionResult GetEmployee(int id)
+        {
+            // not validating company ID here
+            Employee employee = db.Employees.Find(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            return Ok(EmployeeShape.FromDataModel(employee, Request));
+        }
+
 
         [HttpPut]
         [Route("employees/{id}")]

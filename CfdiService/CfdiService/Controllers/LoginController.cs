@@ -26,7 +26,7 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("login")]
-        [EnableCors(origins: "http://www.ogrean.com", headers: "*", methods: "*")]
+        //[EnableCors(origins: "http://www.ogrean.com", headers: "*", methods: "*")]
         public IHttpActionResult DoEmployeeLogin(EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)

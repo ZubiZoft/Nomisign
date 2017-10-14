@@ -13,6 +13,7 @@ namespace CfdiService.Shapes
         public string EmailAddress { get; set; }
         public int UserStatus { get; set; }
         public DateTime LastLogin { get; set; }
+        public int CompanyId { get; set; }
 
         public class LinksClass
         {
@@ -26,6 +27,7 @@ namespace CfdiService.Shapes
             var companyUserShape = new UserListShape
             {
                 UserId = user.UserId,
+                CompanyId = user.CompanyId,
                 EmailAddress = user.EmailAddress,
                 UserStatus = (int)user.UserStatus,
                 LastLogin = user.LastLogin,

@@ -21,8 +21,7 @@ namespace CfdiService.Controllers
             var result = new List<UserListShape>();
             foreach (var c in db.Users)
             {
-                Employee e = db.Employees.Find(c.EmployeeId);
-                if (null != e && e.CompanyId == cid)
+                if (c.CompanyId == cid)
                 {
                     result.Add(UserListShape.FromDataModel(c, Request));
                 }
@@ -77,6 +76,9 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
             User user = UserShape.ToDataModel(userShape);
+            // default these
+            user.LastLogin = DateTime.Now;
+            user.LastPasswordChange = DateTime.Now;
             db.Users.Add(user);
             db.SaveChanges();
             return Ok(UserShape.FromDataModel(user, Request));

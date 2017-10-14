@@ -8,8 +8,9 @@ namespace CfdiService.Model
 
     public class User
     {
+        public int CompanyId { get; set; }
         public int UserId { set; get; }
-        public int EmployeeId { get; set; }
+        public int EmployeeId { get { return 0; } set { } }
         public string EmailAddress { get; set; }
         public string DisplayName { get; set; }  // is this needed
         public string PhoneNumber { get; set; }
