@@ -54,7 +54,7 @@ namespace CfdiService.Shapes
         private static string GetDocBytesAsbase64(int docId, string path)
         {
             try {
-                Byte[] bytes = File.ReadAllBytes(Path.Combine("e:\\web\\ogreancom00\\htdocs\\nomisign\\" + path, docId.ToString() + ".jpg"));
+                Byte[] bytes = File.ReadAllBytes(Path.Combine(path, docId.ToString() + ".jpg"));
                 String file = Convert.ToBase64String(bytes);
                 return "data:image/jpeg;base64," + file;
             }

@@ -44,5 +44,27 @@ namespace CfdiService.Controllers
 
             return BadRequest("Invalid Login");
         }
+
+        // POST: api/companyusers
+        [HttpPost]
+        [Route("adminlogin")]
+        //[EnableCors(origins: "http://www.ogrean.com", headers: "*", methods: "*")]
+        public IHttpActionResult DoAdminLogin(UserShape userShape)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            foreach (var adminUser in db.Users)
+            {
+                if (adminUser.EmailAddress == userShape.EmailAddress && adminUser.PasswordHash == userShape.PasswordHash)
+                {
+                    return Ok(adminUser);
+                }
+            }
+
+            return BadRequest("Invalid Login");
+        }
     }
 }

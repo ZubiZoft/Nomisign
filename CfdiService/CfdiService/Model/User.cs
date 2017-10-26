@@ -4,7 +4,7 @@ using System;
 
 namespace CfdiService.Model
 {
-    public enum UserStatusType { Invalid = 0, Unverified = 1, Active = 2, Locked = 3, Deactivated = 4 }
+    public enum UserStatusType { Invalid = 0, Unverified = 1, Active = 2, Locked = 3, Deactivated = 4, CompanyAdmin = 5, GlobalAdmin = 6 }
 
     public class User
     {

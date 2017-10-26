@@ -10,5 +10,6 @@ namespace CfdiService.Shapes
         public string companyId { get; set; }
         public string authToken { get; set; }
         public int fileCount { get; set; }
+        public int BatchId { get; set; }
     }
 }
