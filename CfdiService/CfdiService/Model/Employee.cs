@@ -18,8 +18,12 @@ namespace CfdiService.Model
         public string LastName2 { get; set; }
         public string CURP { get; set; }
         public string RFC { get; set; }
+        public string CellPhoneNumber { get; set; }
+        public string CellPhoneCarrier { get; set; }
         public int CreatedByUserId{ get; set; }
+
         [ForeignKey("CreatedByUserId")]
         public virtual User CreatedByUser { get; set; }
+        public DateTime LastLogin { get; set; }
     }
 }

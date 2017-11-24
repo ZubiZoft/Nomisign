@@ -11,8 +11,11 @@ namespace CfdiService.Shapes
     {
         public int DocumentId { set; get; }
         public int EmployeeId { get; set; }
-        public DateTime PayperiodDate { get; set; }
+        public string PayperiodDate { get; set; }
+        public string UploadTime { get; set; }
         public string SignStatus { get; set; }
+        public string EmployeeName { get; set; }
+        public string EmployeeConcern { get; set; }
 
         public class LinksClass
         {
@@ -25,9 +28,12 @@ namespace CfdiService.Shapes
         {
             var documentListShape = new DocumentListShape
             {
+                EmployeeName = "Admin", //string.Format("{0} {1} {2}", document.Employee.FirstName, document.Employee.LastName1, document.Employee.LastName2),
+                EmployeeConcern = document.EmployeeConcern,
                 EmployeeId = document.EmployeeId,
+                UploadTime = document.UploadTime.ToShortDateString(),
                 DocumentId = document.DocumentId,
-                PayperiodDate = document.PayperiodDate,
+                PayperiodDate = document.PayperiodDate.ToShortDateString(),
                 SignStatus = document.SignStatus.ToString(),
                 Links = new LinksClass()
             };

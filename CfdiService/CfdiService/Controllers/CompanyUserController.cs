@@ -21,7 +21,7 @@ namespace CfdiService.Controllers
             var result = new List<UserListShape>();
             foreach (var c in db.Users)
             {
-                if (c.CompanyId == cid)
+                if (c.CompanyId == cid && c.UserStatus != UserStatusType.GlobalAdmin)
                 {
                     result.Add(UserListShape.FromDataModel(c, Request));
                 }
@@ -40,7 +40,15 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-            return Ok(UserShape.FromDataModel(user, Request));
+
+            var userShape = UserShape.FromDataModel(user, Request);
+
+            // hack till i figure out EF
+            var createdByUser = db.Users.Find(user.CreatedByUserId);
+            if (createdByUser != null) {
+                userShape.CreatedByUserName = createdByUser.DisplayName;
+            }
+            return Ok(userShape);
         }
 
         [HttpPut]
@@ -79,6 +87,9 @@ namespace CfdiService.Controllers
             // default these
             user.LastLogin = DateTime.Now;
             user.LastPasswordChange = DateTime.Now;
+           
+            // hard coded for now
+            user.CreatedByUserId = 1;
             db.Users.Add(user);
             db.SaveChanges();
             return Ok(UserShape.FromDataModel(user, Request));

@@ -26,7 +26,6 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("login")]
-        //[EnableCors(origins: "http://www.ogrean.com", headers: "*", methods: "*")]
         public IHttpActionResult DoEmployeeLogin(EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
@@ -34,11 +33,14 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
-            foreach (var employee in db.Employees)
+            var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            foreach (Employee emp in employeeByEmail)
             {
-                if (employee.EmailAddress == employeeShape.EmailAddress && employee.PasswordHash == employeeShape.PasswordHash)
+                if (emp.PasswordHash == employeeShape.PasswordHash)
                 {
-                    return Ok(EmployeeShape.FromDataModel(employee, Request));
+                    emp.LastLogin = DateTime.Now;
+                    db.SaveChanges();
+                    return Ok(EmployeeShape.FromDataModel(emp, Request));
                 }
             }
 
@@ -48,7 +50,6 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("adminlogin")]
-        //[EnableCors(origins: "http://www.ogrean.com", headers: "*", methods: "*")]
         public IHttpActionResult DoAdminLogin(UserShape userShape)
         {
             if (!ModelState.IsValid)
@@ -56,11 +57,15 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
-            foreach (var adminUser in db.Users)
+            var userByEmail = db.Users.Where(u => u.EmailAddress.Equals(userShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            foreach (User user in userByEmail)
             {
-                if (adminUser.EmailAddress == userShape.EmailAddress && adminUser.PasswordHash == userShape.PasswordHash)
+                if (user.PasswordHash == userShape.PasswordHash)
                 {
-                    return Ok(adminUser);
+                    user.LastLogin = DateTime.Now;
+                    db.SaveChanges();
+                    // return DB user.  NOt shape because need user stats as a int
+                    return Ok(user);
                 }
             }
 

@@ -12,6 +12,7 @@ namespace CfdiService.Model
         public Nullable<int> BatchId { get; set; }
         public virtual Batch Batch { get; set; }
         public int EmployeeId { get; set; }
+        public int CompanyId { get; set; }
         public virtual Employee Employee { get; set; }
         public DateTime UploadTime { get; set; }
         public DateTime PayperiodDate { get; set; }
@@ -20,5 +21,6 @@ namespace CfdiService.Model
         public SignStatus SignStatus { get; set; }
         public string PathToSignatureFile { get; set; }  // what is this?
         public string SignatureFileHash { get; set; }
+        public string EmployeeConcern { get; set; }
     }
 }

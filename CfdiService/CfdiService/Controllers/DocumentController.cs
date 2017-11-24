@@ -19,12 +19,51 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetDocuments(int eid)
         {
             var result = new List<DocumentListShape>();
-            foreach (var c in db.Documents)
+            var docListResult = db.Documents.Where(x => x.EmployeeId == eid).ToList();
+            foreach (Document doc in docListResult)
             {
-                if (c.EmployeeId == eid)
+                result.Add(DocumentListShape.FromDataModel(doc, Request));
+            }
+            return Ok(result);
+        }
+
+        // GET: api/companydocs
+        [HttpGet]
+        [Route("documents/rejected/{cid}")]
+        public IHttpActionResult GetRejectedCompanyDocuments(int cid)
+        {
+            var result = new List<DocumentListShape>();
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.Refused).ToList();
+            foreach (Document doc in docListResult)
+            {
+                var docShape = DocumentListShape.FromDataModel(doc, Request);
+                // not validating company ID here
+                Employee employee = db.Employees.Find(doc.EmployeeId);
+                if (employee != null)
                 {
-                    result.Add(DocumentListShape.FromDataModel(c, Request));
+                    docShape.EmployeeName = string.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2);
                 }
+                result.Add(docShape);
+            }
+            return Ok(result);
+        }
+
+        // GET: api/companydocs
+        [HttpGet]
+        [Route("documents/unsigned/{cid}")]
+        public IHttpActionResult GetUnsignedCompanyDocuments(int cid)
+        {
+            var result = new List<DocumentListShape>();
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.Unsigned).ToList();
+            foreach (Document doc in docListResult)
+            {
+                var docShape = DocumentListShape.FromDataModel(doc, Request);
+                Employee employee = db.Employees.Find(doc.EmployeeId);
+                if (employee != null)
+                {
+                    docShape.EmployeeName = string.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2);
+                }
+                result.Add(docShape);
             }
             return Ok(result);
         }
@@ -35,6 +74,7 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetDocument(int id)
         {
             Document document = db.Documents.Find(id);
+            db.Entry(document).Reference(b => b.Batch).Load();
             if (document == null)
             {
                 return NotFound();

@@ -17,9 +17,13 @@ namespace CfdiService.Shapes
         public string LastName2 { get; set; }
         public string CURP { get; set; }
         public string RFC { get; set; }
+        public string CreatedByUserName { get; set; }
         public int CreatedByUserId { get; set; }
         public string PasswordHash { get; set; }
         public string EmailAddress { get; set; }
+        public string CellPhoneNumber { get; set; }
+        public string CellPhoneCarrier { get; set; }
+        public string LastLogin { get; set; }
 
         public static EmployeeShape FromDataModel(Employee employee, HttpRequestMessage request)
         {
@@ -35,6 +39,10 @@ namespace CfdiService.Shapes
                 RFC = employee.RFC,
                 EmailAddress = employee.EmailAddress,
                 PasswordHash = employee.PasswordHash,
+                CreatedByUserName = employee.CreatedByUser.DisplayName,
+                CellPhoneCarrier = employee.CellPhoneCarrier,
+                CellPhoneNumber = employee.CellPhoneNumber,
+                LastLogin = employee.LastLogin.ToShortDateString(),
                 CreatedByUserId = employee.CreatedByUserId,
                 Links = new LinksClass()
             };
@@ -49,6 +57,9 @@ namespace CfdiService.Shapes
                 employee = new Employee();
 
             employee.UserId = employeeShape.UserId;
+            var now = DateTime.Now;
+            if(DateTime.TryParse(employeeShape.LastLogin, out now))
+            { employee.LastLogin = now; }
             employee.EmployeeId = employeeShape.EmployeeId;
             employee.CompanyId = employeeShape.CompanyId;
             employee.FirstName = employeeShape.FirstName;
@@ -58,6 +69,8 @@ namespace CfdiService.Shapes
             employee.RFC = employeeShape.RFC;
             employee.EmailAddress = employeeShape.EmailAddress;
             employee.PasswordHash = employeeShape.PasswordHash;
+            employee.CellPhoneCarrier = employeeShape.CellPhoneCarrier;
+            employee.CellPhoneNumber = employeeShape.CellPhoneNumber;
             employee.CreatedByUserId = employeeShape.CreatedByUserId;
 
             return employee;

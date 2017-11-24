@@ -1,4 +1,5 @@
 ﻿using CfdiService.Model;
+using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace CfdiService.Controllers
     public class EmployeeController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();
+        private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
 
         // GET: api/employees
         [HttpGet]
@@ -55,7 +57,16 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-            return Ok(EmployeeShape.FromDataModel(employee, Request));
+
+            var employeeShape = EmployeeShape.FromDataModel(employee, Request);
+
+            // hack till i figure out EF
+            var createdByUser = db.Users.Find(employee.CreatedByUserId);
+            if (createdByUser != null)
+            {
+                employeeShape.CreatedByUserName = createdByUser.DisplayName;
+            }
+            return Ok(employeeShape);
         }
 
 
@@ -93,15 +104,30 @@ namespace CfdiService.Controllers
             }
 
             Employee employee = EmployeeShape.ToDataModel(employeeShape);
+            // set last login to non null
+            employee.LastLogin = DateTime.Now;
             db.Employees.Add(employee);
             db.SaveChanges();
 
             // try send email
             try
             {
-                string msgBody = String.Format("Dear {0} {1},\r\n\r\nWecome to the nomisign application.  Please visit the site at www.ogrean.com/nomisign to login.\r\n\r\nPlease use the email address of {2} and password {3} to log in the first time!",
-                    employee.FirstName, employee.LastName1, employee.EmailAddress, employee.PasswordHash);
-                SendUserEmail(employee.EmailAddress, "Welcome new user to Nomisign web site", msgBody);
+                // TODO: move these settings to a cache class so it does not get pulled from web.config every time
+                string msgBody = String.Format("Dear {0} {1},\r\n\r\nWecome to the nomisign application.  Please visit the site at http://{2}/nomisign/account/{3} to complete your user setup.\r\n\r\nPlease use the email address of {4} to set up your password!",
+                    employee.FirstName,
+                    employee.LastName1,
+                    httpDomain,
+                    employee.EmployeeId, 
+                    employee.EmailAddress);
+
+                if (null != employee.CellPhoneNumber)
+                {
+                    string smsBody = String.Format("Your user has been created for the Nomisign application.  Please visit the site at http://{0}/nomisign/account/{1} or check email for login deatils",
+                        httpDomain, employee.EmployeeId );
+                    SendSMS.SendSMSMsg(employee.CellPhoneNumber, smsBody);
+                }
+
+                SendEmail.SendEmailMessage(employee.EmailAddress, "Welcome new user to Nomisign web site", msgBody);
             }
             catch (Exception ex)
             {
@@ -110,18 +136,6 @@ namespace CfdiService.Controllers
             return Ok(EmployeeShape.FromDataModel(employee, Request));
         }
 
-        private void SendUserEmail(string toAddress, string subject, string body)
-        {
-            System.Net.Mail.MailMessage message = new System.Net.Mail.MailMessage();
-            message.To.Add(toAddress);
-            message.To.Add("ted@ogrean.com");
-            message.Subject = subject;
-            message.From = new System.Net.Mail.MailAddress("postmaster@ogrean.com");
-            message.Body = body;
-            System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient("smtp.ogrean.com");
-            //smtp.Credentials = new NetworkCredential("postmaster@ogrean.com", "Maryjo11#");
-            smtp.Send(message);
-        }
 
         // DELETE: api/companyusers/5
         [HttpDelete]

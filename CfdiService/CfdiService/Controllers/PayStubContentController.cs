@@ -1,4 +1,5 @@
 ﻿using CfdiService.Model;
+using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -14,9 +15,8 @@ namespace CfdiService.Controllers
     [RoutePrefix("api/upload")]
     public class UploadController : ApiController
     {
-        private ModelDbContext db = new ModelDbContext();
-        // temp !!!
-        private const string httpRootpath = "e:\\web\\ogreancom00\\htdocs\\nomisign\\";
+        private ModelDbContext db = new ModelDbContext();      
+        private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
 
         [HttpPost]
         [Route("openbatch/{rfc}")]
@@ -39,8 +39,8 @@ namespace CfdiService.Controllers
             batch.BatchCloseTime = DateTime.Now;
             batch.ItemCount = batchInfo.fileCount;
             batch.ActualItemCount = batchInfo.fileCount;
-            batch.WorkDirectory = company.DocStoragePath1;
-            
+            batch.WorkDirectory = Guid.NewGuid().ToString(); // has hyphyns but no {}
+
             db.Batches.Add(batch);
             db.SaveChanges();
             return Ok(new OpenBatch() { BatchId = batch.BatchId, companyId = company.CompanyId.ToString(), fileCount = batchInfo.fileCount  } );
@@ -61,44 +61,49 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
+
             // create doc record for employee
             Document doc = new Document();
-            doc.BatchId = int.Parse(batchid);
-            doc.EmployeeId = emp.EmployeeId;
-            doc.SignStatus = SignStatus.Unsigned;
-            doc.PathToSignatureFile = batch.WorkDirectory;
-            doc.PathToFile = Path.Combine(httpRootpath + batch.WorkDirectory);
-            doc.PayperiodDate = DateTime.Now;
-            doc.UploadTime = DateTime.Now;
-            doc.SignatureFileHash = "not sure";
-            db.Documents.Add(doc);
-            db.SaveChanges();
-
             try
             {
-                // write file to working directory for company
-                SaveByteArrayAsImage(Path.Combine(doc.PathToFile, doc.DocumentId + ".jpg"), batchInfo.Content);
+                doc.BatchId = int.Parse(batchid);
+                doc.Batch = batch;
+                doc.EmployeeId = emp.EmployeeId;
+                doc.CompanyId = batch.CompanyId;
+                doc.SignStatus = SignStatus.Unsigned;
+                doc.PathToSignatureFile = Guid.NewGuid().ToString(); // has hyphyns but no {}
+                doc.PathToFile = Guid.NewGuid().ToString(); // has hyphyns but no {}
+                doc.PayperiodDate = DateTime.Now;
+                doc.UploadTime = DateTime.Now;
+                doc.SignatureFileHash = "not sure";
+                db.Documents.Add(doc);
+                db.SaveChanges();
             }
-            catch(Exception ex)
+            catch (Exception dbex)
             {
-                // what to do if file write fails
-                return BadRequest(ex.Message);
+                return BadRequest(dbex.Message);
+            }
+
+            // write file to Disk
+            // TODO: remove JPG and only support PDF's
+            // write file to working directory for company, and only send msg's if file write succeeds
+            if (NomiFileAccess.WriteFile(doc, batchInfo.Content))
+            {
+                // send notifications
+                string smsBody = String.Format("Please visit nomisign site for review of new docs, http://{0}/nomisign", httpDomain);
+                SendEmail.SendEmailMessage(emp.EmailAddress, "review your new docs", smsBody);
+                if (null != emp.CellPhoneNumber)
+                {
+                    SendSMS.SendSMSMsg(emp.CellPhoneNumber, smsBody);
+                }
+            }
+            else
+            {
+                // should i delete doc table row, add error writing to file column, what??
+                return BadRequest("Error Writing file to disk!");
             }
 
             return Ok();
-        }
-
-        private void SaveByteArrayAsImage(string fullOutputPath, string base64String)
-        {
-            byte[] bytes = Convert.FromBase64String(base64String);
-
-            Image image;
-            using (MemoryStream ms = new MemoryStream(bytes))
-            {
-                image = Image.FromStream(ms);
-                image.Save(fullOutputPath, System.Drawing.Imaging.ImageFormat.Jpeg);
-            }
-           
         }
 
         [HttpPost]
@@ -115,19 +120,6 @@ namespace CfdiService.Controllers
             db.SaveChanges();
             return Ok();
         }
-
-/*
-        [HttpGet]
-        [Route("companies")]
-        public IHttpActionResult GetCompanies()
-        {
-            IList<Company> Companys = new List<Company>();
-            Companys.Add(new Company() { CompanyID = 1, DocStoragePath1 = @"C:\cdfi\acme\filestore1", DocStoragePath2 = @"C:\cdfi\acme\filestore2", CompanyRFC = "CAAI951203PR6" });
-            Companys.Add(new Company() { CompanyID = 2, DocStoragePath1 = @"C:\cdfi\amazon\filestore1", DocStoragePath2 = @"C:\cdfi\amazon\filestore2", CompanyRFC = "CAAK8833774Z0" });
-            Companys.Add(new Company() { CompanyID = 3, DocStoragePath1 = @"C:\cdfi\ibm\filestore1", DocStoragePath2 = @"C:\cdfi\ibm\filestore2", CompanyRFC = "CAAI776644PP1" });
-            return Ok<IList<Company>>(Companys);
-        }
-*/
     }
 
 }

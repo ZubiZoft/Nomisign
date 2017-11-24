@@ -71,8 +71,8 @@ namespace CfdiService.Shapes
             company.State = companyShape.State;
             company.PostalCode = companyShape.PostalCode;
             company.PayPeriod = (PayPeriodType)companyShape.PayPeriod;
-            company.DocStoragePath1 = companyShape.DocStoragePath1;
-            company.DocStoragePath2 = companyShape.DocStoragePath2;
+            company.DocStoragePath1 = Guid.NewGuid().ToString(); // has hyphyns but no {}
+            company.DocStoragePath2 = Guid.NewGuid().ToString(); // has hyphyns but no {}
             company.CompanyRFC = companyShape.CompanyRFC;
             company.BillingEmailAddress = companyShape.BillingEmailAddress;
             company.CorporateEmailDomain = companyShape.CorporateEmailDomain;

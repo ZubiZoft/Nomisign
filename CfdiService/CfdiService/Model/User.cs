@@ -20,6 +20,6 @@ namespace CfdiService.Model
         public DateTime LastPasswordChange { get; set; }
         public int FailedLoginCount { get; set; }
         public bool ForcePasswordReset { get; set; }
-        //  public string LanguagePreference { get; set; } ?? 
+        public int  CreatedByUserId { get; set; }
     }
 }

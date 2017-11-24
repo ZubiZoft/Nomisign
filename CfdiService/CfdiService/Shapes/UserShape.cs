@@ -15,11 +15,12 @@ namespace CfdiService.Shapes
         public string DisplayName { get; set; }  // is this needed
         public string PhoneNumber { get; set; }
         public string PasswordHash { get; set; }
-        public int UserStatus { get; set; }
-        public DateTime LastLogin { get; set; }
+        public string UserStatus { get; set; }
+        public string LastLogin { get; set; }
         public DateTime LastPasswordChange { get; set; }
         public bool ForcePasswordReset { get; set; }
         public int CompanyId { get; set; }
+        public string CreatedByUserName { get; set; }
 
         public static UserShape FromDataModel(User user, HttpRequestMessage request)
         {
@@ -32,10 +33,11 @@ namespace CfdiService.Shapes
                 DisplayName = user.DisplayName,
                 PhoneNumber = user.PhoneNumber,
                 PasswordHash = user.PasswordHash,
-                UserStatus = (int)user.UserStatus,
-                LastLogin = user.LastLogin,
+                UserStatus = user.UserStatus.ToString(),
+                LastLogin = user.LastLogin.ToShortDateString(),
                 LastPasswordChange = user.LastPasswordChange,
                 ForcePasswordReset = user.ForcePasswordReset,
+                //CreatedByUserName = user.CreatedByUser.DisplayName,
                 Links = new LinksClass()
             };
 
@@ -55,8 +57,13 @@ namespace CfdiService.Shapes
             user.DisplayName = userShape.DisplayName;
             user.PhoneNumber = userShape.PhoneNumber;
             user.PasswordHash = userShape.PasswordHash;
-            user.UserStatus = (UserStatusType)userShape.UserStatus;
-            user.LastLogin = userShape.LastLogin;
+
+            UserStatusType status = UserStatusType.Active;
+            Enum.TryParse<UserStatusType>(userShape.UserStatus, out status);
+            user.UserStatus = status;
+            var now = DateTime.Now;
+            if (DateTime.TryParse(userShape.LastLogin, out now))
+            { user.LastLogin = now; }
             user.LastPasswordChange = userShape.LastPasswordChange;
             user.ForcePasswordReset = userShape.ForcePasswordReset;
 
