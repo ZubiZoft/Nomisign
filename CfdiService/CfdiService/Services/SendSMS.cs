@@ -13,7 +13,7 @@ namespace CfdiService.Services
         public static void SendSMSMsg(string cellPhoneNumber, string smsBody)
         {
             const string accountSid = "AC7d4cbd0f3db4469d6987ea846fb5b234";
-            const string authToken = "a8407e9400297d0197feb63fc40380d0";
+            const string authToken = "";
             TwilioClient.Init(accountSid, authToken);
 
 
