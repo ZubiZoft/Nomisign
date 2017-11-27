@@ -22,10 +22,13 @@ namespace CfdiService.Services
             message.Subject = subject;
             message.From = new System.Net.Mail.MailAddress("tmogrean@gmail.com");
             message.Body = body;
-            System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com");
-            smtp.EnableSsl = true;
-            smtp.Credentials = new NetworkCredential("tmogrean@gmail.com", "maryjo22");
-            smtp.Send(message);
+            using (System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587))
+            {
+                smtp.EnableSsl = true;
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new NetworkCredential("tmogrean@gmail.com", "maryjo22");
+                smtp.Send(message);
+            }
         }
     }
 }

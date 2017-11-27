@@ -1,4 +1,5 @@
 ﻿using CfdiService.Model;
+using CfdiService.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace CfdiService.Shapes
     public class EmployeeShape
     {
         public int EmployeeId { set; get; }
-        public int UserId { get; set; }
+        //public int UserId { get; set; }
         public int CompanyId { get; set; }
         public string FirstName { get; set; }
         public string LastName1 { get; set; }
@@ -22,15 +23,16 @@ namespace CfdiService.Shapes
         public string PasswordHash { get; set; }
         public string EmailAddress { get; set; }
         public string CellPhoneNumber { get; set; }
-        public string CellPhoneCarrier { get; set; }
+        //public string CellPhoneCarrier { get; set; }
         public string LastLogin { get; set; }
+        public EmployeeStatusType EmployeeStatus { get; set; }
 
         public static EmployeeShape FromDataModel(Employee employee, HttpRequestMessage request)
         {
             var employeeShape = new EmployeeShape
             {
                 EmployeeId = employee.EmployeeId,
-                UserId = employee.UserId,
+                //UserId = employee.UserId,
                 CompanyId = employee.CompanyId,
                 FirstName = employee.FirstName,
                 LastName1 = employee.LastName1,
@@ -38,15 +40,19 @@ namespace CfdiService.Shapes
                 CURP = employee.CURP,
                 RFC = employee.RFC,
                 EmailAddress = employee.EmailAddress,
-                PasswordHash = employee.PasswordHash,
-                CreatedByUserName = employee.CreatedByUser.DisplayName,
-                CellPhoneCarrier = employee.CellPhoneCarrier,
+                PasswordHash = String.Empty, // employee.PasswordHash.  no need to ever let this out
                 CellPhoneNumber = employee.CellPhoneNumber,
-                LastLogin = employee.LastLogin.ToShortDateString(),
+                LastLogin = employee.LastLoginDate.ToShortDateString(),
                 CreatedByUserId = employee.CreatedByUserId,
+                EmployeeStatus = employee.EmployeeStatus,
                 Links = new LinksClass()
             };
 
+            // if this is not a DB op, created by user is null, so check
+            if (null != employee.CreatedByUser)
+            {
+                employeeShape.CreatedByUserName = employee.CreatedByUser.DisplayName;
+            }
             employeeShape.Links.SelfUri = request.GetLinkUri($"employees/{employeeShape.EmployeeId}");
             return employeeShape;
         }
@@ -56,10 +62,9 @@ namespace CfdiService.Shapes
             if (employee == null)
                 employee = new Employee();
 
-            employee.UserId = employeeShape.UserId;
             var now = DateTime.Now;
             if(DateTime.TryParse(employeeShape.LastLogin, out now))
-            { employee.LastLogin = now; }
+            { employee.LastLoginDate = now; }
             employee.EmployeeId = employeeShape.EmployeeId;
             employee.CompanyId = employeeShape.CompanyId;
             employee.FirstName = employeeShape.FirstName;
@@ -68,11 +73,14 @@ namespace CfdiService.Shapes
             employee.CURP = employeeShape.CURP;
             employee.RFC = employeeShape.RFC;
             employee.EmailAddress = employeeShape.EmailAddress;
-            employee.PasswordHash = employeeShape.PasswordHash;
-            employee.CellPhoneCarrier = employeeShape.CellPhoneCarrier;
+            // password is not set on initial employee creation
+            if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
+            {
+                employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash);
+            }
             employee.CellPhoneNumber = employeeShape.CellPhoneNumber;
             employee.CreatedByUserId = employeeShape.CreatedByUserId;
-
+            employee.EmployeeStatus = employeeShape.EmployeeStatus;
             return employee;
         }
 

@@ -16,7 +16,7 @@ namespace CfdiService.Shapes
         public string EmailAddress { get; set; }
         public string CellPhoneNumber { get; set; }
         public string CellPhoneCarrier { get; set; }
-        public DateTime LastLogin { get; set; }
+        public DateTime LastLoginDate { get; set; }
 
         public class LinksClass
         {
@@ -34,9 +34,9 @@ namespace CfdiService.Shapes
                 FirstName = employee.FirstName,
                 LastName1 = employee.LastName1,
                 LastName2 = employee.LastName2,
-                CellPhoneCarrier = employee.CellPhoneCarrier,
+                //CellPhoneCarrier = employee.CellPhoneCarrier,
                 CellPhoneNumber = employee.CellPhoneNumber,
-                LastLogin = employee.LastLogin,
+                LastLoginDate = employee.LastLoginDate,
                 Links = new LinksClass()
             };
 

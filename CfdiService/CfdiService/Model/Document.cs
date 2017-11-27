@@ -10,6 +10,7 @@ namespace CfdiService.Model
     {
         public int DocumentId { set; get; }
         public Nullable<int> BatchId { get; set; }
+        [ForeignKey("BatchId")]
         public virtual Batch Batch { get; set; }
         public int EmployeeId { get; set; }
         public int CompanyId { get; set; }
@@ -19,8 +20,7 @@ namespace CfdiService.Model
         public string PathToFile { get; set; }
         public string FileHash { get; set; }
         public SignStatus SignStatus { get; set; }
-        public string PathToSignatureFile { get; set; }  // what is this?
-        public string SignatureFileHash { get; set; }
-        public string EmployeeConcern { get; set; }
+        public string EmployeeConcern { get; set; } 
+        public int AlwaysShow { get; set; } // 0 = no, 1 = yes
     }
 }

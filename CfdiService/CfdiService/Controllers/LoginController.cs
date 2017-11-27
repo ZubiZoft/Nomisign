@@ -1,4 +1,5 @@
 ﻿using CfdiService.Model;
+using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -33,15 +34,27 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
+            Employee emp;
             var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            foreach (Employee emp in employeeByEmail)
+            if (employeeByEmail.Count != 1)
             {
-                if (emp.PasswordHash == employeeShape.PasswordHash)
-                {
-                    emp.LastLogin = DateTime.Now;
-                    db.SaveChanges();
-                    return Ok(EmployeeShape.FromDataModel(emp, Request));
-                }
+                return BadRequest("Invalid Login Data");
+            }
+            else
+            {
+                emp = employeeByEmail[0];
+            }
+
+            // no null passwords allowed
+            if (null != emp.PasswordHash && 
+                emp.EmployeeStatus == EmployeeStatusType.Active && 
+                emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash))
+            {
+                emp.LastLoginDate = DateTime.Now;
+                db.SaveChanges();
+                // hide password 
+                emp.PasswordHash = string.Empty;
+                return Ok(EmployeeShape.FromDataModel(emp, Request));
             }
 
             return BadRequest("Invalid Login");
@@ -57,16 +70,27 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
+            User user;
             var userByEmail = db.Users.Where(u => u.EmailAddress.Equals(userShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            foreach (User user in userByEmail)
+            if (userByEmail.Count != 1)
             {
-                if (user.PasswordHash == userShape.PasswordHash)
-                {
-                    user.LastLogin = DateTime.Now;
-                    db.SaveChanges();
-                    // return DB user.  NOt shape because need user stats as a int
-                    return Ok(user);
-                }
+                return BadRequest("Invalid Login Data");
+            }
+            else
+            {
+                user = userByEmail[0];
+            }
+
+            if(null != user.PasswordHash && 
+                user.UserStatus == UserStatusType.Active && 
+                user.PasswordHash == EncryptionService.Sha256_hash(userShape.PasswordHash))
+            {
+                user.LastLogin = DateTime.Now;
+                db.SaveChanges();
+                // return DB user.  Not shape because need user stats as a int
+                // Dont return password 
+                user.PasswordHash = string.Empty;
+                return Ok(user);
             }
 
             return BadRequest("Invalid Login");

@@ -21,7 +21,7 @@ namespace CfdiService.Shapes
         public string DocStoragePath2 { get; set; }
         public string CompanyRFC { get; set; }
         public string BillingEmailAddress { get; set; }
-        public string CorporateEmailDomain { get; set; }
+        //public string CorporateEmailDomain { get; set; }
         public long TotalSignaturesPurchased { get; set; }
         public long SignatureBalance { get; set; }
         public int AccountStatus { get; set; }
@@ -48,7 +48,7 @@ namespace CfdiService.Shapes
                 DocStoragePath2 = company.DocStoragePath2,
                 CompanyRFC = company.CompanyRFC,
                 BillingEmailAddress = company.BillingEmailAddress,
-                CorporateEmailDomain = company.CorporateEmailDomain,
+                //CorporateEmailDomain = company.CorporateEmailDomain,
                 TotalSignaturesPurchased = company.TotalSignaturesPurchased,
                 SignatureBalance = company.SignatureBalance,
                 AccountStatus = (int)company.AccountStatus,
@@ -75,7 +75,7 @@ namespace CfdiService.Shapes
             company.DocStoragePath2 = Guid.NewGuid().ToString(); // has hyphyns but no {}
             company.CompanyRFC = companyShape.CompanyRFC;
             company.BillingEmailAddress = companyShape.BillingEmailAddress;
-            company.CorporateEmailDomain = companyShape.CorporateEmailDomain;
+            //company.CorporateEmailDomain = companyShape.CorporateEmailDomain;
             company.AccountStatus = (AccountStatusType)companyShape.AccountStatus;
 
             // these should not be directly overwritten

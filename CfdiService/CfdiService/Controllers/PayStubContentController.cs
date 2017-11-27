@@ -71,17 +71,29 @@ namespace CfdiService.Controllers
                 doc.EmployeeId = emp.EmployeeId;
                 doc.CompanyId = batch.CompanyId;
                 doc.SignStatus = SignStatus.Unsigned;
-                doc.PathToSignatureFile = Guid.NewGuid().ToString(); // has hyphyns but no {}
                 doc.PathToFile = Guid.NewGuid().ToString(); // has hyphyns but no {}
                 doc.PayperiodDate = DateTime.Now;
                 doc.UploadTime = DateTime.Now;
-                doc.SignatureFileHash = "not sure";
                 db.Documents.Add(doc);
                 db.SaveChanges();
             }
             catch (Exception dbex)
             {
-                return BadRequest(dbex.Message);
+                if (dbex.InnerException != null)
+                {
+                    if (dbex.InnerException.InnerException != null)
+                    {
+                        return BadRequest(dbex.InnerException.InnerException.Message);
+                    }
+                    else
+                    {
+                        return BadRequest(dbex.InnerException.Message);
+                    }
+                }
+                else
+                {
+                    return BadRequest(dbex.Message);
+                }
             }
 
             // write file to Disk

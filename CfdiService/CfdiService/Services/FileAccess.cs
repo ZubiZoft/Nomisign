@@ -58,7 +58,7 @@ namespace CfdiService.Services
                 Directory.CreateDirectory(fullFilePath);
 
                 // need to manage root path from this class properties
-                SaveByteArrayAsImage(Path.Combine(fullFilePath, document.PathToFile + ".jpg"), base64String); // TODO: jpg needs removed and PDF supported
+                SaveByteArrayAsImage(Path.Combine(fullFilePath, document.PathToFile + ".pdf"), base64String); // TODO: jpg needs removed and PDF supported
             }
             catch(Exception ex)
             {
@@ -105,19 +105,24 @@ namespace CfdiService.Services
         {
             try
             {
-                var fullFilePath = Path.Combine(path, docNameGuid + ".jpg");
+                var fullFilePath = Path.Combine(path, docNameGuid + ".pdf");
+
                 if (File.Exists(fullFilePath))
                 {
-                    Byte[] bytes = File.ReadAllBytes(fullFilePath);
-                    String file = Convert.ToBase64String(bytes);
-                    return "data:image/jpeg;base64," + file;
+                    using (MemoryStream pdfAsImage = ConvertPdfToJpg(fullFilePath))
+                    {
+                        //Byte[] bytes = File.ReadAllBytes(fullFilePath);
+                        Byte[] bytes = pdfAsImage.ToArray();
+                        String file = Convert.ToBase64String(bytes);
+                        return "data:image/png;base64," + file;
+                    }
                 }
 
                 var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("Document Not Found!!");
                 // TODO: this dont seem to work!!
                 return "data:text/plain;base64," + System.Convert.ToBase64String(plainTextBytes);
             }
-            catch
+            catch(Exception ex)
             {
                 var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("Document Not Found!!");
                 // TODO: this dont seem to work!!
@@ -126,16 +131,29 @@ namespace CfdiService.Services
 
         }
 
+        private static MemoryStream ConvertPdfToJpg(string fullFilePath)
+        {
+            Aspose.Pdf.Document pdfDoc = new Aspose.Pdf.Document(fullFilePath);
+            return pdfDoc.ConvertPageToPNGMemoryStream(pdfDoc.Pages[1]);
+        }
+
         private static void SaveByteArrayAsImage(string fullOutputPath, string base64String)
         {
             byte[] bytes = Convert.FromBase64String(base64String);
 
-            Image image;
-            using (MemoryStream ms = new MemoryStream(bytes))
+            using (System.IO.FileStream stream = new FileStream(fullOutputPath, FileMode.CreateNew))
             {
-                image = Image.FromStream(ms);
-                image.Save(fullOutputPath, System.Drawing.Imaging.ImageFormat.Jpeg);
+                System.IO.BinaryWriter writer =
+                    new BinaryWriter(stream);
+                writer.Write(bytes, 0, bytes.Length);
+                writer.Close();
             }
+            //Image image;
+            //using (MemoryStream ms = new MemoryStream(bytes))
+            //{
+            //    image = Image.FromStream(ms);
+            //    image.Save(fullOutputPath, System.Drawing.Imaging.ImageFormat.Jpeg);
+            //}
 
         }
     }

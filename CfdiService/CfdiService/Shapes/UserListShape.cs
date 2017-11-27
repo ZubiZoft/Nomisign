@@ -29,7 +29,7 @@ namespace CfdiService.Shapes
                 UserId = user.UserId,
                 CompanyId = user.CompanyId,
                 EmailAddress = user.EmailAddress,
-                UserStatus = (int)user.UserStatus,
+                UserStatus = (int)user.UserType, // this is due to change, need to align this 
                 LastLogin = user.LastLogin,
                 Links = new LinksClass()
             };

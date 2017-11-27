@@ -21,7 +21,7 @@ namespace CfdiService.Controllers
             var result = new List<UserListShape>();
             foreach (var c in db.Users)
             {
-                if (c.CompanyId == cid && c.UserStatus != UserStatusType.GlobalAdmin)
+                if (c.CompanyId == cid) // && c.UserType != UserAdminType.GlobalAdmin)
                 {
                     result.Add(UserListShape.FromDataModel(c, Request));
                 }
@@ -87,9 +87,11 @@ namespace CfdiService.Controllers
             // default these
             user.LastLogin = DateTime.Now;
             user.LastPasswordChange = DateTime.Now;
-           
-            // hard coded for now
-            user.CreatedByUserId = 1;
+            user.DateUserCreated = DateTime.Now;
+            user.UserStatus = UserStatusType.Active; // may need to change this to unverified once this is an option 
+
+            // TODO: hard coded for now
+            // user.CreatedByUserId = 1;
             db.Users.Add(user);
             db.SaveChanges();
             return Ok(UserShape.FromDataModel(user, Request));

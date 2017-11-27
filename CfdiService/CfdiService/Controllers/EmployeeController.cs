@@ -104,8 +104,10 @@ namespace CfdiService.Controllers
             }
 
             Employee employee = EmployeeShape.ToDataModel(employeeShape);
+            employee.CreatedDate = DateTime.Now;
             // set last login to non null
-            employee.LastLogin = DateTime.Now;
+            employee.LastLoginDate = DateTime.Now;
+            employee.EmployeeStatus = EmployeeStatusType.PasswordAwaitingLocked;
             db.Employees.Add(employee);
             db.SaveChanges();
 
