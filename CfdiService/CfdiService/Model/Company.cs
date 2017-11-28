@@ -19,7 +19,7 @@ namespace CfdiService.Model
             Employees = new HashSet<Employee>();
             Batches = new HashSet<Batch>();
         }
-        public int NewEmployeeGetDoc { get; set; }
+        public NewEmployeeGetDocType NewEmployeeGetDoc { get; set; }
         public string NewEmployeeDocument { get; set; }
         public int CompanyId { set; get; }
         public string CompanyName { get; set; }

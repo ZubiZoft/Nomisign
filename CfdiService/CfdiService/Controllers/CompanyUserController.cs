@@ -15,15 +15,26 @@ namespace CfdiService.Controllers
 
         // GET: api/companyusers
         [HttpGet]
-        [Route("companyusers/{cid}")]
-        public IHttpActionResult GetCompanyUsers(int cid)
+        [Route("companyusers/{cid}/{utid}")]
+        public IHttpActionResult GetCompanyUsers(int cid, int utid)
         {
             var result = new List<UserListShape>();
+            UserAdminType type = UserAdminType.Invalid;
+            Enum.TryParse<UserAdminType>(utid.ToString(), out type);
+
             foreach (var c in db.Users)
             {
-                if (c.CompanyId == cid) // && c.UserType != UserAdminType.GlobalAdmin)
+                if (c.CompanyId == cid)
                 {
-                    result.Add(UserListShape.FromDataModel(c, Request));
+                    // filter global admins so only global admins can view / edit
+                    if (c.UserType == UserAdminType.GlobalAdmin && type == UserAdminType.GlobalAdmin)
+                    {
+                        result.Add(UserListShape.FromDataModel(c, Request));
+                    }
+                    else if(c.UserType != UserAdminType.GlobalAdmin)
+                    {
+                        result.Add(UserListShape.FromDataModel(c, Request));
+                    }
                 }
             }
             return Ok(result);
@@ -31,7 +42,7 @@ namespace CfdiService.Controllers
 
         // GET: api/companyusers/5
         [HttpGet]
-        [Route("companyusers/{cid}/{id}")]
+        [Route("companyuser/{cid}/{id}")]
         public IHttpActionResult GetCompanyUser(int cid, int id)
         {
             // not validating cid here

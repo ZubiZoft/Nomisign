@@ -3,6 +3,7 @@ using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -111,6 +112,54 @@ namespace CfdiService.Controllers
             db.Employees.Add(employee);
             db.SaveChanges();
 
+            // add company agreement doc
+            if(null == employee.Company)
+            {
+                Company company = db.Companies.Find(employee.CompanyId);
+                if(null != company)
+                {
+                    employee.Company = company;
+                }
+            }
+            
+            if(employee.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument)
+            {
+                // need a batch first
+                Batch batch = new Batch()
+                {
+                    CompanyId = employee.CompanyId,
+                    BatchOpenTime = DateTime.Now,
+                    BatchCloseTime = DateTime.Now,
+                    ActualItemCount = 1,
+                    ItemCount = 1,
+                    WorkDirectory = Guid.NewGuid().ToString()
+                };
+
+                var batchPath = db.Batches.Add(batch);
+                db.SaveChanges();
+
+                string fileName = NomiFileAccess.WriteFile(employee.CompanyId,
+                   batch.WorkDirectory,  //file name to write
+                   employee.Company.NewEmployeeDocument.Trim()); // trim only needed due to DB scheme issue
+
+                if (!String.IsNullOrEmpty(fileName)) 
+                {
+                    // TODO: Write file to DB after copied to disk
+                    Document document = new Document()
+                    {
+                        AlwaysShow = 1,
+                        BatchId = batch.BatchId,
+                        CompanyId = employee.CompanyId,
+                        EmployeeId = employee.EmployeeId,
+                        PathToFile = fileName,
+                        PayperiodDate = DateTime.Now,
+                        SignStatus = SignStatus.Unsigned,
+                        UploadTime = DateTime.Now
+                    };
+                    db.Documents.Add(document);
+                    db.SaveChanges();
+                }
+            }
             // try send email
             try
             {

@@ -17,7 +17,8 @@ namespace CfdiService.Shapes
         //public virtual Employee Employee { get; set; }
         public String UploadTime { get; set; }
         public String PayperiodDate { get; set; }
-        public String SignStatus { get; set; }
+        public int SignStatus { get; set; }
+        public String SignStatusText { get; set; }
         public string DocumentBytes { get; set; }
         
         public Nullable<int> BatchId { get; set; }
@@ -38,10 +39,11 @@ namespace CfdiService.Shapes
                 DocumentId = document.DocumentId,
                 EmployeeId = document.EmployeeId,
                 BatchId = document.BatchId,
-                DocumentBytes = NomiFileAccess.GetFile(document), // GetDocBytesAsbase64(document.DocumentId, document.PathToFile),
+                DocumentBytes = NomiFileAccess.GetFile(document), 
                 UploadTime = document.UploadTime.ToShortDateString(),
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
-                SignStatus = document.SignStatus.ToString(),
+                SignStatusText = document.SignStatus.ToString(),
+                SignStatus = (int)document.SignStatus,
                 Links = new LinksClass()
             };
 
@@ -59,7 +61,7 @@ namespace CfdiService.Shapes
             document.UploadTime = DateTime.Parse(documentShape.UploadTime);
             document.PayperiodDate = DateTime.Parse(documentShape.PayperiodDate);
             SignStatus status = Model.SignStatus.Invalid;
-            Enum.TryParse<SignStatus>(documentShape.SignStatus, out status);
+            Enum.TryParse<SignStatus>(documentShape.SignStatus.ToString(), out status);
             document.SignStatus = status;
             document.BatchId = documentShape.BatchId;
             // make sure this does not change

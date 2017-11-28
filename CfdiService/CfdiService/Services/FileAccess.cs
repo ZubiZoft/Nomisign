@@ -68,6 +68,34 @@ namespace CfdiService.Services
             return true;
         }
 
+        public static string WriteFile(int companyId, string workingDirectory, string companyAgreementFile)
+        {
+            try
+            {
+                verifyCompanyCache(companyId);
+                // path to file is computed
+                // 1. root from web.config
+                // 2. system working directory
+                // 3. company id
+                // 4. batch Id
+                var fullFileDestPath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths[companyId], workingDirectory));
+                var fileSourceDocumentPath = Path.Combine(RootFilePath, RootSystemPath, companyPaths[companyId]);
+
+                // make sure path exists, if not this will create it
+                Directory.CreateDirectory(fullFileDestPath);
+
+                var fileName = Guid.NewGuid().ToString();
+                // need to manage root path from this class properties
+                File.Copy(fileSourceDocumentPath + "\\" + companyAgreementFile, Path.Combine(fullFileDestPath, fileName + ".pdf"));
+                return fileName;
+            }
+            catch (Exception ex)
+            {
+                // log exception
+                return string.Empty;
+            }
+        }
+
         private static void verifyCompanyCache(int companyId)
         {
             // verify company working directory path
@@ -148,13 +176,6 @@ namespace CfdiService.Services
                 writer.Write(bytes, 0, bytes.Length);
                 writer.Close();
             }
-            //Image image;
-            //using (MemoryStream ms = new MemoryStream(bytes))
-            //{
-            //    image = Image.FromStream(ms);
-            //    image.Save(fullOutputPath, System.Drawing.Imaging.ImageFormat.Jpeg);
-            //}
-
         }
     }
 }
