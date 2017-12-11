@@ -15,6 +15,7 @@ namespace CfdiService.Controllers
     public class EmployeeController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
 
         // GET: api/employees
@@ -30,6 +31,8 @@ namespace CfdiService.Controllers
                     result.Add(EmployeeListShape.FromDataModel(c, Request));
                 }
             }
+
+            log.Info("Looking for employees for cid: " + cid);
             return Ok(result);
         }
 
@@ -44,6 +47,8 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
+
+            log.Info("Getting employee data for id: " + id);
             return Ok(EmployeeShape.FromDataModel(employee, Request));
         }
 
@@ -153,7 +158,7 @@ namespace CfdiService.Controllers
                         EmployeeId = employee.EmployeeId,
                         PathToFile = fileName,
                         PayperiodDate = DateTime.Now,
-                        SignStatus = SignStatus.Unsigned,
+                        SignStatus = SignStatus.SinFirma,
                         UploadTime = DateTime.Now
                     };
                     db.Documents.Add(document);
@@ -163,31 +168,48 @@ namespace CfdiService.Controllers
             // try send email
             try
             {
-                // TODO: move these settings to a cache class so it does not get pulled from web.config every time
-                string msgBody = String.Format("Dear {0} {1},\r\n\r\nWecome to the nomisign application.  Please visit the site at http://{2}/nomisign/account/{3} to complete your user setup.\r\n\r\nPlease use the email address of {4} to set up your password!",
-                    employee.FirstName,
-                    employee.LastName1,
-                    httpDomain,
-                    employee.EmployeeId, 
-                    employee.EmailAddress);
+                string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge,
+                    httpDomain, employee.EmployeeId);
+
 
                 if (null != employee.CellPhoneNumber)
                 {
-                    string smsBody = String.Format("Your user has been created for the Nomisign application.  Please visit the site at http://{0}/nomisign/account/{1} or check email for login deatils",
-                        httpDomain, employee.EmployeeId );
-                    SendSMS.SendSMSMsg(employee.CellPhoneNumber, smsBody);
+                    SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
                 }
 
-                SendEmail.SendEmailMessage(employee.EmailAddress, "Welcome new user to Nomisign web site", msgBody);
+                SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, msgBodySpanish);
             }
             catch (Exception ex)
             {
+                log.Error("Error sending Msg - Adding employee: " + employeeShape.EmployeeId, ex);
                 return BadRequest(ex.Message);
             }
             return Ok(EmployeeShape.FromDataModel(employee, Request));
         }
 
-
+        // POST: api/companyusers
+        [HttpPost]
+        [Route("employee/verifycell")]
+        public IHttpActionResult VerifyEmployeePhoneNumber(EmployeeShape employeeShape)
+        {
+            if (null != employeeShape.CellPhoneNumber)
+            {
+                try
+                {
+                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
+                    return Ok("Success");
+                }
+                catch(Exception ex)
+                {
+                    log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber, ex);
+                    return Ok("Cell Phone not verified");
+                }
+            }
+            else {
+                log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber);
+                return BadRequest("Cell Phone Number empty");
+            }
+        }
         // DELETE: api/companyusers/5
         [HttpDelete]
         [Route("employees/{id}") ]

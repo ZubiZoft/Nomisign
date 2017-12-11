@@ -27,7 +27,7 @@ namespace CfdiService
         virtual public DbSet<SignaturePurchase> SignaturePurchases { get; set; }
         virtual public DbSet<User> Users { get; set; }
         virtual public DbSet<SystemSettings> Settings { get; set; }
-        //virtual public DbSet<EmployeeSecurityQuestions> SecurityQuestions { get; set; }
+        virtual public DbSet<EmployeeSecurityQuestions> SecurityQuestions { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

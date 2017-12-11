@@ -78,6 +78,8 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
             Company company = CompanyShape.ToDataModel(companyShape);
+            company.PayPeriod = PayPeriodType.Monthly;
+            company.BillingEmailAddress = "billing@somewhere.com";
             db.Companies.Add(company);
             db.SaveChanges();
             return Ok(CompanyShape.FromDataModel(company, Request));

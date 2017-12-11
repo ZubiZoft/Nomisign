@@ -8,7 +8,7 @@ using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
-
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace CfdiService
 {
     public class Startup

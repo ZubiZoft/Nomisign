@@ -14,7 +14,8 @@ namespace CfdiService.Controllers
     public class LoginController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();
-
+        private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         // POST: api/companyusers
         [HttpGet]
@@ -22,6 +23,28 @@ namespace CfdiService.Controllers
         public IHttpActionResult Ping()
         {
             return Ok();
+        }
+
+        [HttpPost]
+        [Route("login/reset")]
+        public IHttpActionResult DoEmployeeLoginReset(EmployeeShape employeeShape)
+        {
+            var employeeByEmail = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            if(employeeByEmail.Count == 1)
+            {
+                var employeeForReset = employeeByEmail[0];
+                employeeForReset.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
+                db.SaveChanges();
+                SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password", httpDomain, employeeForReset.EmployeeId));
+                log.Info("Reset password request for user: " + employeeForReset.EmployeeId);
+                return Ok();
+            }
+            else
+            {
+                log.Info("Invalid password request for user: " + employeeShape.EmailAddress);
+                return BadRequest("Invalid Login Data");
+            }
+            
         }
 
         // POST: api/companyusers
@@ -35,9 +58,10 @@ namespace CfdiService.Controllers
             }
 
             Employee emp;
-            var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            var employeeByEmail = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (employeeByEmail.Count != 1)
             {
+                log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
                 return BadRequest("Invalid Login Data");
             }
             else
@@ -57,6 +81,7 @@ namespace CfdiService.Controllers
                 return Ok(EmployeeShape.FromDataModel(emp, Request));
             }
 
+            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + emp.PasswordHash);
             return BadRequest("Invalid Login");
         }
 
@@ -74,6 +99,7 @@ namespace CfdiService.Controllers
             var userByEmail = db.Users.Where(u => u.EmailAddress.Equals(userShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (userByEmail.Count != 1)
             {
+                log.Info("Invalid login request for user: " + userShape.EmailAddress);
                 return BadRequest("Invalid Login Data");
             }
             else
@@ -93,6 +119,7 @@ namespace CfdiService.Controllers
                 return Ok(user);
             }
 
+            log.Info("Invalid login request for user: " + userShape.EmailAddress);
             return BadRequest("Invalid Login");
         }
     }

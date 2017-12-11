@@ -1,4 +1,5 @@
 ﻿using CfdiService.Model;
+using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace CfdiService.Controllers
     [RoutePrefix("api")]
     public class DocumentController : ApiController
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         private ModelDbContext db = new ModelDbContext();
 
         // GET: api/employees
@@ -33,7 +36,7 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetRejectedCompanyDocuments(int cid)
         {
             var result = new List<DocumentListShape>();
-            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.Refused).ToList();
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.Rechazado).ToList();
             foreach (Document doc in docListResult)
             {
                 var docShape = DocumentListShape.FromDataModel(doc, Request);
@@ -54,7 +57,7 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetUnsignedCompanyDocuments(int cid)
         {
             var result = new List<DocumentListShape>();
-            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.Unsigned).ToList();
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.SinFirma).ToList();
             foreach (Document doc in docListResult)
             {
                 var docShape = DocumentListShape.FromDataModel(doc, Request);
@@ -66,6 +69,30 @@ namespace CfdiService.Controllers
                 result.Add(docShape);
             }
             return Ok(result);
+        }
+
+        // GET: api/companydocs
+        [HttpGet]
+        [Route("documents/unsigned/notify/{cid}")]
+        public IHttpActionResult NotifyUnsignedCompanyDocuments(int cid)
+        {
+            //var result = new List<DocumentListShape>();
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.SinFirma).ToList();
+            foreach (Document doc in docListResult)
+            {
+                try {
+                    if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
+                    {
+                        string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                        SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    log.Error("Error sending SMS", ex);
+                }
+            }
+            return Ok("Success");
         }
 
         // GET: api/companyusers/5

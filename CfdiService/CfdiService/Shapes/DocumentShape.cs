@@ -20,7 +20,7 @@ namespace CfdiService.Shapes
         public int SignStatus { get; set; }
         public String SignStatusText { get; set; }
         public string DocumentBytes { get; set; }
-        
+        public string EmployeeConcern { get; set; }
         public Nullable<int> BatchId { get; set; }
 
         public class LinksClass
@@ -40,9 +40,10 @@ namespace CfdiService.Shapes
                 EmployeeId = document.EmployeeId,
                 BatchId = document.BatchId,
                 DocumentBytes = NomiFileAccess.GetFile(document), 
+                EmployeeConcern = document.EmployeeConcern,
                 UploadTime = document.UploadTime.ToShortDateString(),
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
-                SignStatusText = document.SignStatus.ToString(),
+                SignStatusText =  document.SignStatus == Model.SignStatus.SinFirma ?  "Sin Firma": document.SignStatus.ToString(),
                 SignStatus = (int)document.SignStatus,
                 Links = new LinksClass()
             };
@@ -58,13 +59,16 @@ namespace CfdiService.Shapes
 
             document.DocumentId = documentShape.DocumentId;
             document.EmployeeId = documentShape.EmployeeId;
+            document.EmployeeConcern = documentShape.EmployeeConcern;
             document.UploadTime = DateTime.Parse(documentShape.UploadTime);
             document.PayperiodDate = DateTime.Parse(documentShape.PayperiodDate);
             SignStatus status = Model.SignStatus.Invalid;
             Enum.TryParse<SignStatus>(documentShape.SignStatus.ToString(), out status);
             document.SignStatus = status;
-            document.BatchId = documentShape.BatchId;
-            // make sure this does not change
+            if (null != documentShape.BatchId)
+            {
+                document.BatchId = documentShape.BatchId;
+            }
             return document;
         }
     }

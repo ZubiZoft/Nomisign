@@ -48,14 +48,10 @@ namespace CfdiService.Shapes
                 DocStoragePath2 = company.DocStoragePath2,
                 CompanyRFC = company.CompanyRFC,
                 BillingEmailAddress = company.BillingEmailAddress,
-                //CorporateEmailDomain = company.CorporateEmailDomain,
                 TotalSignaturesPurchased = company.TotalSignaturesPurchased,
                 SignatureBalance = company.SignatureBalance,
                 AccountStatus = (int)company.AccountStatus,
-                //Links = new LinksClass()
             };
-
-            //companyShape.Links.SelfUri = request.GetLinkUri($"companies/{companyShape.CompanyId}");
             return companyShape;
         }
 
@@ -71,11 +67,10 @@ namespace CfdiService.Shapes
             company.State = companyShape.State;
             company.PostalCode = companyShape.PostalCode;
             company.PayPeriod = (PayPeriodType)companyShape.PayPeriod;
-            company.DocStoragePath1 = Guid.NewGuid().ToString(); // has hyphyns but no {}
-            company.DocStoragePath2 = Guid.NewGuid().ToString(); // has hyphyns but no {}
+            company.DocStoragePath1 = String.IsNullOrEmpty(companyShape.DocStoragePath1) ?  Guid.NewGuid().ToString(): companyShape.DocStoragePath1; 
+            company.DocStoragePath2 = String.IsNullOrEmpty(companyShape.DocStoragePath2) ? Guid.NewGuid().ToString() : companyShape.DocStoragePath2; 
             company.CompanyRFC = companyShape.CompanyRFC;
             company.BillingEmailAddress = companyShape.BillingEmailAddress;
-            //company.CorporateEmailDomain = companyShape.CorporateEmailDomain;
             company.AccountStatus = (AccountStatusType)companyShape.AccountStatus;
 
             // these should not be directly overwritten

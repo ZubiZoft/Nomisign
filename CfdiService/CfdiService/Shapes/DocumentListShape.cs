@@ -34,7 +34,7 @@ namespace CfdiService.Shapes
                 UploadTime = document.UploadTime.ToShortDateString(),
                 DocumentId = document.DocumentId,
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
-                SignStatus = document.SignStatus.ToString(),
+                SignStatus = document.SignStatus == Model.SignStatus.SinFirma ? "Sin Firma" : document.SignStatus.ToString(),
                 Links = new LinksClass()
             };
 

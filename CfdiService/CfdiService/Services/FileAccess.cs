@@ -11,6 +11,7 @@ namespace CfdiService.Services
     public static class NomiFileAccess
     {
         private static readonly string _rootDiskPath = System.Configuration.ConfigurationManager.AppSettings["rootDiskPath"];
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static string _rootSystemPath;
         private static Dictionary<int, string> companyPaths;
         
@@ -62,7 +63,7 @@ namespace CfdiService.Services
             }
             catch(Exception ex)
             {
-                // log exception
+                log.Error("Error writing file to disk: ", ex);
                 return false;
             }
             return true;
@@ -91,7 +92,7 @@ namespace CfdiService.Services
             }
             catch (Exception ex)
             {
-                // log exception
+                log.Error("Error copying file to disk: ", ex);
                 return string.Empty;
             }
         }
@@ -145,13 +146,14 @@ namespace CfdiService.Services
                         return "data:image/png;base64," + file;
                     }
                 }
-
+                log.Error("Document Not Found: " + fullFilePath);
                 var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("Document Not Found!!");
                 // TODO: this dont seem to work!!
                 return "data:text/plain;base64," + System.Convert.ToBase64String(plainTextBytes);
             }
             catch(Exception ex)
             {
+                log.Error("Document Not Found: " + path + "\\" + docNameGuid + ".pdf", ex);
                 var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("Document Not Found!!");
                 // TODO: this dont seem to work!!
                 return "data:text/plain;base64," + System.Convert.ToBase64String(plainTextBytes);

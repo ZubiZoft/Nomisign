@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CfdiService.Model
 {
-    public enum SignStatus { Invalid = 0, Unsigned = 1, Signed = 2, Refused = 3 }
+    public enum SignStatus { Invalid = 0, SinFirma = 1, Firmado = 2, Rechazado = 3 }
 
     public class Document
     {

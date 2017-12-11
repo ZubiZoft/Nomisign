@@ -15,7 +15,8 @@ namespace CfdiService.Controllers
     [RoutePrefix("api/upload")]
     public class UploadController : ApiController
     {
-        private ModelDbContext db = new ModelDbContext();      
+        private ModelDbContext db = new ModelDbContext();
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
 
         [HttpPost]
@@ -70,7 +71,7 @@ namespace CfdiService.Controllers
                 doc.Batch = batch;
                 doc.EmployeeId = emp.EmployeeId;
                 doc.CompanyId = batch.CompanyId;
-                doc.SignStatus = SignStatus.Unsigned;
+                doc.SignStatus = SignStatus.SinFirma;
                 doc.PathToFile = Guid.NewGuid().ToString(); // has hyphyns but no {}
                 doc.PayperiodDate = DateTime.Now;
                 doc.UploadTime = DateTime.Now;
@@ -79,6 +80,7 @@ namespace CfdiService.Controllers
             }
             catch (Exception dbex)
             {
+                log.Error("Error adding document: ", dbex);
                 if (dbex.InnerException != null)
                 {
                     if (dbex.InnerException.InnerException != null)
@@ -102,8 +104,8 @@ namespace CfdiService.Controllers
             if (NomiFileAccess.WriteFile(doc, batchInfo.Content))
             {
                 // send notifications
-                string smsBody = String.Format("Please visit nomisign site for review of new docs, http://{0}/nomisign", httpDomain);
-                SendEmail.SendEmailMessage(emp.EmailAddress, "review your new docs", smsBody);
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                SendEmail.SendEmailMessage(emp.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                 if (null != emp.CellPhoneNumber)
                 {
                     SendSMS.SendSMSMsg(emp.CellPhoneNumber, smsBody);
