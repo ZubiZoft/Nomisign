@@ -121,6 +121,49 @@ namespace CfdiService.Controllers
         }
 
         [HttpPost]
+        [Route("addcompanyfile/{companyId}")]
+        public IHttpActionResult AddCompanyAgreementFile(string companyId, [FromBody] CfdiService.Shapes.FileUpload batchInfo)
+        {
+            Company company = db.Companies.FirstOrDefault(e => e.CompanyId.ToString() == companyId);
+            if (company == null)
+            {
+                log.Error("Error adding company document: company not found");
+                return NotFound();
+            }
+
+            try
+            {
+                // write file to working directory for company, and only send msg's if file write succeeds
+                NomiFileAccess.WriteCompanyAgreementFile(company, batchInfo);
+                // write filename to DB
+                company.NewEmployeeDocument = batchInfo.FileName;
+                db.SaveChanges();
+            }
+            catch (Exception dbex)
+            {
+                log.Error("Error adding company document: ", dbex);
+                if (dbex.InnerException != null)
+                {
+                    if (dbex.InnerException.InnerException != null)
+                    {
+                        return BadRequest(dbex.InnerException.InnerException.Message);
+                    }
+                    else
+                    {
+                        return BadRequest(dbex.InnerException.Message);
+                    }
+                }
+                else
+                {
+                    return BadRequest(dbex.Message);
+                }
+            }
+
+            
+            return Ok();
+        }
+
+        [HttpPost]
         [Route("closebatch/{batchid}")]
         public IHttpActionResult CloseBatch(string batchid)
         {

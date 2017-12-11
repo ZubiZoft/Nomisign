@@ -25,7 +25,9 @@ namespace CfdiService.Shapes
         public long TotalSignaturesPurchased { get; set; }
         public long SignatureBalance { get; set; }
         public int AccountStatus { get; set; }
-        
+        public bool NewEmployeeGetDoc { get; set; }
+        public string NewEmployeeDocument { get; set; }
+
         public class LinksClass
         {
             public string SelfUri { get; set; }
@@ -51,6 +53,8 @@ namespace CfdiService.Shapes
                 TotalSignaturesPurchased = company.TotalSignaturesPurchased,
                 SignatureBalance = company.SignatureBalance,
                 AccountStatus = (int)company.AccountStatus,
+                NewEmployeeGetDoc = company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument,
+                NewEmployeeDocument = company.NewEmployeeDocument
             };
             return companyShape;
         }
@@ -72,7 +76,8 @@ namespace CfdiService.Shapes
             company.CompanyRFC = companyShape.CompanyRFC;
             company.BillingEmailAddress = companyShape.BillingEmailAddress;
             company.AccountStatus = (AccountStatusType)companyShape.AccountStatus;
-
+            company.NewEmployeeGetDoc = companyShape.NewEmployeeGetDoc ? NewEmployeeGetDocType.AddDocument : NewEmployeeGetDocType.None;
+            company.NewEmployeeDocument = companyShape.NewEmployeeDocument;
             // these should not be directly overwritten
             // company.TotalSignaturesPurchased,
             // company.SignatureBalance,

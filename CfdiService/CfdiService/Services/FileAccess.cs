@@ -1,4 +1,5 @@
 ﻿using CfdiService.Model;
+using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -42,6 +43,31 @@ namespace CfdiService.Services
             }
         }
 
+        public static bool WriteCompanyAgreementFile(Company company, FileUpload fileInfo)
+        {
+            try
+            {
+                verifyCompanyCache(company.CompanyId);
+                // path to file is computed
+                // 1. root from web.config
+                // 2. system working directory
+                // 3. company id
+                // 4. batch Id
+                var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\", companyPaths[company.CompanyId]));
+
+                // make sure path exists, if not this will create it
+                Directory.CreateDirectory(fullFilePath);
+
+                // need to manage root path from this class properties
+                SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.Content); // TODO: jpg needs removed and PDF supported
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error writing company file to disk: ", ex);
+                return false;
+            }
+            return true;
+        }
 
         public static bool WriteFile(Document document, string base64String)
         {
