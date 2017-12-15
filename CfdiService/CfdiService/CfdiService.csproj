@@ -147,6 +147,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\ClientController.cs" />
     <Compile Include="Controllers\CompaniesController.cs" />
     <Compile Include="Controllers\DocumentController.cs" />
     <Compile Include="Controllers\EmployeeSecurityQuestionController.cs" />
@@ -161,9 +162,12 @@
     </Compile>
     <Compile Include="ModelDbContext.cs" />
     <Compile Include="Model\Batch.cs" />
+    <Compile Include="Model\Client.cs" />
+    <Compile Include="Model\ClientUser.cs" />
     <Compile Include="Model\Company.cs" />
     <Compile Include="Model\Document.cs" />
     <Compile Include="Model\Employee.cs" />
+    <Compile Include="Model\EmployeesCode.cs" />
     <Compile Include="Model\EmployeeSecurityQuestions.cs" />
     <Compile Include="Model\SignaturePurchase.cs" />
     <Compile Include="Model\SystemSettings.cs" />
@@ -173,6 +177,8 @@
     <Compile Include="Services\FileAccess.cs" />
     <Compile Include="Services\SendEmail.cs" />
     <Compile Include="Services\SendSMS.cs" />
+    <Compile Include="Shapes\ClientShape.cs" />
+    <Compile Include="Shapes\ClientUserShape.cs" />
     <Compile Include="Shapes\CompanyListShape.cs" />
     <Compile Include="Shapes\CompanyShape.cs" />
     <Compile Include="Shapes\DocumentShape.cs" />
