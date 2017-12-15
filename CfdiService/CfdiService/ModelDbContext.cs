@@ -28,6 +28,9 @@ namespace CfdiService
         virtual public DbSet<User> Users { get; set; }
         virtual public DbSet<SystemSettings> Settings { get; set; }
         virtual public DbSet<EmployeeSecurityQuestions> SecurityQuestions { get; set; }
+        virtual public DbSet<EmployeesCode> EmployeeSecurityCodes { get; set; }
+        virtual public DbSet<Client> Clients { get; set; }
+        virtual public DbSet<ClientUser> ClientUsers { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

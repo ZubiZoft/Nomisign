@@ -14,6 +14,7 @@ namespace CfdiService.Model
         public virtual Batch Batch { get; set; }
         public int EmployeeId { get; set; }
         public int CompanyId { get; set; }
+        public Nullable<int> ClientCompanyId { get; set; }
         public virtual Employee Employee { get; set; }
         public DateTime UploadTime { get; set; }
         public DateTime PayperiodDate { get; set; }
@@ -22,5 +23,6 @@ namespace CfdiService.Model
         public SignStatus SignStatus { get; set; }
         public string EmployeeConcern { get; set; } 
         public int AlwaysShow { get; set; } // 0 = no, 1 = yes
+        public decimal PayAmount { get; set; }
     }
 }

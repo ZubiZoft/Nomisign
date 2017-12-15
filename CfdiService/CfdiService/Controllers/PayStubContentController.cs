@@ -57,10 +57,24 @@ namespace CfdiService.Controllers
                 return NotFound();
             }
 
+
             Employee emp = db.Employees.FirstOrDefault(e => e.CURP == batchInfo.EmployeeCURP);
             if (emp == null)
             {
+                log.Error("Error adding document: employee not found: " + emp.EmployeeId);
                 return NotFound();
+            }
+
+            Client client = null;
+            // TODO: will need to deal with RFC and non RFC doc storage - i think!!
+            if (!String.IsNullOrEmpty(emp.RFC))
+            {
+                client = db.Clients.FirstOrDefault(e => e.ClientCompanyRFC.ToString() == emp.RFC);
+                if (client == null)
+                {
+                    log.Error("Error adding client document: client not found: " + emp.RFC);
+                    return NotFound();
+                }
             }
 
             // create doc record for employee
@@ -75,6 +89,11 @@ namespace CfdiService.Controllers
                 doc.PathToFile = Guid.NewGuid().ToString(); // has hyphyns but no {}
                 doc.PayperiodDate = DateTime.Now;
                 doc.UploadTime = DateTime.Now;
+
+                if (null != client)
+                {
+                    doc.ClientCompanyId = client.ClientCompanyID;
+                }
                 db.Documents.Add(doc);
                 db.SaveChanges();
             }

@@ -93,8 +93,29 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-
+            // transform to data model
             EmployeeShape.ToDataModel(employeeShape, employee);
+
+            // Get security codes
+            EmployeesCode codes = db.EmployeeSecurityCodes.Find(employee.EmployeeId);
+
+            // IF this is a password reset update, verify code.  dont make changes if not
+            // TODO: add time expiration to vcode
+            if (employee.EmployeeStatus != EmployeeStatusType.Active && employeeShape.SecurityCode != codes.Vcode)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                // password is not set on initial employee creation
+                if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
+                {
+                    employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                }
+                codes.Vcode = string.Empty;
+                db.SaveChanges();
+            }
+            
             db.SaveChanges();
             return Ok(employeeShape);
         }
@@ -168,8 +189,12 @@ namespace CfdiService.Controllers
             // try send email
             try
             {
+                EmployeesCode codes = new EmployeesCode() { EmployeeId = employee.EmployeeId, GeneratedDate = DateTime.Now, Prefix = Guid.NewGuid().ToString(), Vcode = EncryptionService.GenerateSecurityCode() };
+                db.EmployeeSecurityCodes.Add(codes);
+                db.SaveChanges();
+
                 string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge,
-                    httpDomain, employee.EmployeeId);
+                    httpDomain, employee.EmployeeId, codes.Vcode);
 
 
                 if (null != employee.CellPhoneNumber)
@@ -196,7 +221,7 @@ namespace CfdiService.Controllers
             {
                 try
                 {
-                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
+                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage + ": " + employeeShape.CRUP);
                     return Ok("Success");
                 }
                 catch(Exception ex)

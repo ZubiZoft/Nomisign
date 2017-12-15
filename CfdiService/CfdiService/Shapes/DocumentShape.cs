@@ -14,7 +14,7 @@ namespace CfdiService.Shapes
         public int DocumentId { set; get; }
         public int EmployeeId { get; set; }
         public int CompanyId { get; set; }
-        //public virtual Employee Employee { get; set; }
+        public Nullable<int> ClientCompanyId { get; set; }
         public String UploadTime { get; set; }
         public String PayperiodDate { get; set; }
         public int SignStatus { get; set; }
@@ -22,6 +22,8 @@ namespace CfdiService.Shapes
         public string DocumentBytes { get; set; }
         public string EmployeeConcern { get; set; }
         public Nullable<int> BatchId { get; set; }
+        public string PayAmount { get; set; }
+        public int AlwaysShow { get; set; }
 
         public class LinksClass
         {
@@ -37,13 +39,16 @@ namespace CfdiService.Shapes
             var documentShape = new DocumentShape
             {
                 DocumentId = document.DocumentId,
+                ClientCompanyId = document.ClientCompanyId,
                 EmployeeId = document.EmployeeId,
                 BatchId = document.BatchId,
                 DocumentBytes = NomiFileAccess.GetFile(document), 
                 EmployeeConcern = document.EmployeeConcern,
+                AlwaysShow = document.AlwaysShow,
+                PayAmount = document.PayAmount.ToString(),
                 UploadTime = document.UploadTime.ToShortDateString(),
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
-                SignStatusText =  document.SignStatus == Model.SignStatus.SinFirma ?  "Sin Firma": document.SignStatus.ToString(),
+                SignStatusText =  document.SignStatus == Model.SignStatus.SinFirma ?  "Sin Firma": document.SignStatus.ToString(), // this Sin Firma needs addressed and not hard coded
                 SignStatus = (int)document.SignStatus,
                 Links = new LinksClass()
             };
@@ -57,6 +62,8 @@ namespace CfdiService.Shapes
             if (document == null)
                 document = new Document();
 
+            document.PayAmount = decimal.Parse(documentShape.PayAmount);
+            document.ClientCompanyId = documentShape.ClientCompanyId;
             document.DocumentId = documentShape.DocumentId;
             document.EmployeeId = documentShape.EmployeeId;
             document.EmployeeConcern = documentShape.EmployeeConcern;

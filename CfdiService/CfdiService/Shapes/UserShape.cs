@@ -63,7 +63,7 @@ namespace CfdiService.Shapes
             user.ForcePasswordReset = userShape.ForcePasswordReset;
             if (!String.IsNullOrEmpty(userShape.PasswordHash))
             {
-                user.PasswordHash = EncryptionService.Sha256_hash(userShape.PasswordHash);
+                user.PasswordHash = EncryptionService.Sha256_hash(userShape.PasswordHash, string.Empty);
             }
 
             // user status enum
