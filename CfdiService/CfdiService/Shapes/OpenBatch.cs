@@ -7,9 +7,8 @@ namespace CfdiService.Shapes
 {
     public class OpenBatch
     {
-        public string companyId { get; set; }
-        public string authToken { get; set; }
-        public int fileCount { get; set; }
-        public int BatchId { get; set; }
+        public string CompanyRfc { get; set; }
+        public string ApiKey { get; set; }
+        public int FileCount { get; set; }
     }
 }

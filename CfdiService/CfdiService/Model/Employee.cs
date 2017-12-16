@@ -18,6 +18,7 @@ namespace CfdiService.Model
         public string FirstName { get; set; }
         public string LastName1 { get; set; }
         public string LastName2 { get; set; }
+        public string FullName { get; set; }
         public string CURP { get; set; }
         public string RFC { get; set; }
         public string CellPhoneNumber { get; set; }

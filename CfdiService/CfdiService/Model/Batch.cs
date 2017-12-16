@@ -21,6 +21,8 @@ namespace CfdiService.Model
         public int ItemCount { get; set; }
         public int ActualItemCount { get; set; }
         public string WorkDirectory { get; set; }
+        public string ApiKey { get; set; }
+        public BatchStatus BatchStatus { get; set; }
         public virtual ICollection<Document> Documents { get; set; }
     }
 }

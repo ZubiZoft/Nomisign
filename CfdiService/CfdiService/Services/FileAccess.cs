@@ -59,7 +59,7 @@ namespace CfdiService.Services
                 Directory.CreateDirectory(fullFilePath);
 
                 // need to manage root path from this class properties
-                SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.Content); // TODO: jpg needs removed and PDF supported
+                SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.PDFContent); // TODO: jpg needs removed and PDF supported
             }
             catch (Exception ex)
             {
@@ -69,7 +69,7 @@ namespace CfdiService.Services
             return true;
         }
 
-        public static bool WriteFile(Document document, string base64String)
+        public static bool WriteEncodedFile(Document document, string base64String, string extension)
         {
             try
             {
@@ -85,9 +85,35 @@ namespace CfdiService.Services
                 Directory.CreateDirectory(fullFilePath);
 
                 // need to manage root path from this class properties
-                SaveByteArrayAsImage(Path.Combine(fullFilePath, document.PathToFile + ".pdf"), base64String); // TODO: jpg needs removed and PDF supported
+                SaveByteArrayAsImage(Path.Combine(fullFilePath, document.PathToFile + extension), base64String);
             }
             catch(Exception ex)
+            {
+                log.Error("Error writing file to disk: ", ex);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool WriteFile(Document document, string content, string extension)
+        {
+            try
+            {
+                verifyCompanyCache(document.CompanyId);
+                // path to file is computed
+                // 1. root from web.config
+                // 2. system working directory
+                // 3. company id
+                // 4. batch Id
+                var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths[document.CompanyId], document.Batch.WorkDirectory));
+
+                // make sure path exists, if not this will create it
+                Directory.CreateDirectory(fullFilePath);
+
+                // need to manage root path from this class properties
+                File.WriteAllText(Path.Combine(fullFilePath, document.PathToFile + extension), content);
+            }
+            catch (Exception ex)
             {
                 log.Error("Error writing file to disk: ", ex);
                 return false;
