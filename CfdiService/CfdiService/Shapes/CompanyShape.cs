@@ -27,6 +27,7 @@ namespace CfdiService.Shapes
         public int AccountStatus { get; set; }
         public bool NewEmployeeGetDoc { get; set; }
         public string NewEmployeeDocument { get; set; }
+        public string ApiKey { get; set; }
 
         public class LinksClass
         {
@@ -38,6 +39,7 @@ namespace CfdiService.Shapes
         {
             var companyShape = new CompanyShape
             {
+                ApiKey = company.ApiKey,
                 CompanyId = company.CompanyId,
                 CompanyName = company.CompanyName,
                 Address1 = company.Address1,
@@ -64,6 +66,7 @@ namespace CfdiService.Shapes
             if (company == null)
                 company = new Company();
 
+            company.ApiKey = companyShape.ApiKey;
             company.CompanyName = companyShape.CompanyName;
             company.Address1 = companyShape.Address1;
             company.Address2 = companyShape.Address2;

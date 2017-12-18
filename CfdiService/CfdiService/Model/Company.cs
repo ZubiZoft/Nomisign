@@ -37,6 +37,7 @@ namespace CfdiService.Model
         public long TotalSignaturesPurchased { get; set; }
         public long SignatureBalance { get; set; }
         public AccountStatusType AccountStatus { get; set; }
+        public string ApiKey { get; set; }
         public virtual ICollection<SignaturePurchase> Purchases { get; set; }
         public virtual ICollection<Employee> Employees { get; set; }
         public virtual ICollection<Batch> Batches { get; set; }
