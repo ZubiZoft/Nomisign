@@ -20,6 +20,33 @@ namespace CfdiService
             //Database.SetInitializer<ModelDbContext>(new DropCreateDatabaseIfModelChanges<ModelDbContext>());
         }
 
+        public Company FindCompanyByRfc(string rfc)
+        {
+            var company = Companies
+                .Where(c => c.CompanyRFC == rfc)
+                .FirstOrDefault();
+
+            return company;
+        }
+
+        public Client FindClientByRfc(string rfc)
+        {
+            var clientCompany = Clients
+                .Where(c => c.ClientCompanyRFC == rfc)
+                .FirstOrDefault();
+
+            return clientCompany;
+        }
+
+        public Employee FindEmployeeByRfc(string rfc)
+        {
+            var employee = Employees
+                .Where(e => e.RFC == rfc)
+                .FirstOrDefault();
+
+            return employee;
+        }
+
         virtual public DbSet<Batch> Batches { get; set; }
         virtual public DbSet<Company> Companies { get; set; }
         virtual public DbSet<Document> Documents { get; set; }
