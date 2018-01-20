@@ -39,5 +39,8 @@ namespace CfdiService
         public static readonly string visitSiteTosignDocumentMessageEmailSubject = "revisar y firmar su documento";
 
         public static readonly string verifyCurpNumberSMSText = "Este mensaje es para comprobar el numero del celular. Por favor compruebe que su CRUP está correcto";
+
+        public static readonly string PDF_EXT = ".pdf";
+        public static readonly string XML_EXT = ".xml";
     }
 }

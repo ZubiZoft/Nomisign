@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Aspose.Pdf;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -9,15 +10,16 @@ namespace CfdiService
 {
     public class Global : System.Web.HttpApplication
     {
-
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         protected void Application_Start(object sender, EventArgs e)
         {
-            
+            License lic = new License();
+            lic.SetLicense("Aspose.Pdf.lic");
+            log.Error("Aspose Lic Set");
         }
 
         protected void Session_Start(object sender, EventArgs e)
         {
-
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)

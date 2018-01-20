@@ -26,7 +26,21 @@ namespace CfdiService.Services
             // cache company root path guids
             companyPaths = db.Companies.ToDictionary(t => t.CompanyId, t => t.DocStoragePath1);
         }
-            
+
+        internal static string GetFilePath(Document document)
+        {
+            verifyCompanyCache(document.CompanyId);
+            // get full path to file
+            // path to file is computed
+            // 1. root from web.config
+            // 2. system working directory
+            // 3. company id
+            // 4. batch Id
+            var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths[document.CompanyId], document.Batch.WorkDirectory));
+            // return image
+            return Path.Combine(fullFilePath, document.PathToFile + ".pdf");
+        }
+
         private static string RootFilePath
         {
             get
@@ -59,7 +73,7 @@ namespace CfdiService.Services
                 Directory.CreateDirectory(fullFilePath);
 
                 // need to manage root path from this class properties
-                SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.PDFContent); // TODO: jpg needs removed and PDF supported
+                SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.PDFContent); 
             }
             catch (Exception ex)
             {
@@ -121,7 +135,7 @@ namespace CfdiService.Services
             return true;
         }
 
-        public static string WriteFile(int companyId, string workingDirectory, string companyAgreementFile)
+        public static string CopyCompanyAgreementFileForEmployee(int companyId, string workingDirectory, string companyAgreementFile)
         {
             try
             {
@@ -139,7 +153,7 @@ namespace CfdiService.Services
 
                 var fileName = Guid.NewGuid().ToString();
                 // need to manage root path from this class properties
-                File.Copy(fileSourceDocumentPath + "\\" + companyAgreementFile, Path.Combine(fullFileDestPath, fileName));
+                File.Copy(fileSourceDocumentPath + "\\" + companyAgreementFile, Path.Combine(fullFileDestPath, fileName + Strings.PDF_EXT));
                 return fileName;
             }
             catch (Exception ex)
@@ -180,7 +194,6 @@ namespace CfdiService.Services
             // return image
             return GetDocBytesAsbase64(fullFilePath, document.PathToFile);
         }
-
 
         private static string GetDocBytesAsbase64(string path, string docNameGuid)
         {

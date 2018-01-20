@@ -20,9 +20,9 @@ namespace CfdiService.Controllers
     [RoutePrefix("api/upload")]
     public class UploadController : ApiController
     {
-        private static readonly string PDF_EXT = ".pdf";
-        private static readonly string XML_EXT = ".xml";
+        
         private ModelDbContext db = new ModelDbContext();
+        private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         [HttpPost]
@@ -32,10 +32,12 @@ namespace CfdiService.Controllers
             Company company = db.Companies.Find(id);
             if (company == null)
             {
+                log.Error("Error adding document: company not found: " + id);
                 return BadRequest();
             }
             if (company.ApiKey != batchInfo.ApiKey)
             {
+                log.Error("Error adding document: invalid Api Key: " + batchInfo.ApiKey);
                 return BadRequest();
             }
             if (company.AccountStatus != AccountStatusType.Active)
@@ -83,10 +85,12 @@ namespace CfdiService.Controllers
             Batch batch = db.Batches.Find(batchid);
             if (batch == null)
             {
+                log.Error("Error adding document: batch not found: " + batchid);
                 return BadRequest();
             }
             if (batch.ItemCount == batch.ActualItemCount)
             {
+                log.Error("Error adding document: canceling batch due to item count: " + batchid);
                 CancelBatch(batch);
                 return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
             }
@@ -112,15 +116,33 @@ namespace CfdiService.Controllers
             }
             catch (Exception ex)
             {
+                log.Error("Error adding document: verification failed", ex);
                 // log exception
                 return BadRequest();
             }
 
             SaveContent(upload, newDoc);
-            db.Documents.Add(newDoc);
-            batch.ActualItemCount++;
-            db.SaveChanges();
-            // update order to allow for teh document id to be the base filename
+
+            // send notifications - if fail, log but dont return error code.
+            try {
+                // Send SMS alerting employee of new docs
+                // send notifications
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
+                if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                {
+                    SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                }
+            }
+            catch(Exception ex) {
+                log.Error("warning adding document: one or both notifications failed to send", ex);
+            }
+            finally
+            { // commit to DB
+                db.Documents.Add(newDoc);
+                batch.ActualItemCount++;
+                db.SaveChanges();
+            }
 
             return Ok(new BatchResult(batch.BatchId, BatchResultCode.Ok, batch.ItemCount));
         }
@@ -146,6 +168,48 @@ namespace CfdiService.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        [Route("addcompanyfile/{companyId}")]
+        public IHttpActionResult AddCompanyAgreementFile(string companyId, [FromBody] CfdiService.Shapes.FileUpload batchInfo)
+        {
+            Company company = db.Companies.FirstOrDefault(e => e.CompanyId.ToString() == companyId);
+            if (company == null)
+            {
+                log.Error("Error adding company document: company not found");
+                return NotFound();
+            }
+
+            try
+            {
+                // write file to working directory for company, and only send msg's if file write succeeds
+                NomiFileAccess.WriteCompanyAgreementFile(company, batchInfo);
+                // write filename to DB
+                company.NewEmployeeDocument = batchInfo.FileName;
+                db.SaveChanges();
+            }
+            catch (Exception dbex)
+            {
+                log.Error("Error adding company document: ", dbex);
+                if (dbex.InnerException != null)
+                {
+                    if (dbex.InnerException.InnerException != null)
+                    {
+                        return BadRequest(dbex.InnerException.InnerException.Message);
+                    }
+                    else
+                    {
+                        return BadRequest(dbex.InnerException.Message);
+                    }
+                }
+                else
+                {
+                    return BadRequest(dbex.Message);
+                }
+            }
+
+
+            return Ok();
+        }
 
         private void CancelBatch(Batch batch)
         {
@@ -161,6 +225,7 @@ namespace CfdiService.Controllers
                 throw new Exception("Employee not found");
             }
             doc.EmployeeId = emp.EmployeeId;
+            doc.Employee = emp;
 
             Client client = null;
             // TODO: will need to deal with RFC and non RFC doc storage - i think!!
@@ -187,76 +252,114 @@ namespace CfdiService.Controllers
         private void EvaluateBulkUpload(FileUpload upload, Batch batch, Document doc)
         {
             // No need for this if only a PDF doc is uploadded by admin screen
-            if (!string.IsNullOrEmpty(upload.XMLContent))
+            if (string.IsNullOrEmpty(upload.XMLContent))
             {
-                byte[] content = Encoding.UTF8.GetBytes(upload.XMLContent);
-                ValidateContentHash(content, upload.FileHash);
-                XElement root;
-                using (MemoryStream ms = new MemoryStream(content))
-                    root = XElement.Load(ms);
-
-                XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
-                XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
-                XElement elem = root.Element(cfdi + "Emisor");
-                XAttribute emisorRfc = elem.Attribute("rfc");
-                elem = root.Element(cfdi + "Conceptos");
-                elem = elem.Descendants(cfdi + "Concepto").First();
-                XAttribute payAmount = elem.Attribute("importe");
-                elem = root.Element(cfdi + "Receptor");
-                XAttribute receptorRfc = elem.Attribute("rfc");
-                XAttribute fullName = elem.Attribute("nombre");
-                elem = root.Descendants(nomina12 + "Nomina").First();
-                XAttribute payPeriod = elem.Attribute("FechaFinalPago");
-                elem = elem.Descendants(nomina12 + "Receptor").First();
-                XAttribute receptorCurp = elem.Attribute("Curp");
-                XAttribute clientRfc = null;
-                try
-                {
-                    elem = root.Element(cfdi + "Complemento");
-                    elem = elem.Descendants(nomina12 + "Nomina").First();
-                    elem = elem.Descendants(nomina12 + "Receptor").First();
-                    elem = elem.Descendants(nomina12 + "SubContratacion").First();
-                    clientRfc = elem.Attribute("rfcLabora");
-                }
-                catch (Exception)
-                { }
-
-                if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
-                    throw new ApplicationException("Invalid XML format");
-
-                Employee emp = db.FindEmployeeByRfc((string)receptorRfc);
-                if (emp == null)
-                {
-                    // create employee setting full name
-                    // employee status is provisional (to be completed at a later time)
-                    // throw new ApplicationException("Cannot find employee RFC with ID: " + receptorRfc);
-                    emp = new Employee
-                    {
-                        RFC = (string)receptorRfc,
-                        FullName = (string)fullName,
-                        CURP = (string)receptorCurp
-                    };
-                    emp.Company = batch.Company;
-                    db.Employees.Add(emp);
-                }
-
-
-                if (emp.Company.CompanyRFC != emisorRfc.Value)
-                    throw new ApplicationException("Employee RFC with ID: " + receptorRfc + " does not match Company RFC: " + emisorRfc);
-
-                if (clientRfc != null)
-                {
-                    Client client = db.FindClientByRfc(clientRfc.Value);
-                    if (client != null)
-                        doc.ClientCompanyId = client.ClientCompanyID;
-                }
-
-                // VALIDATE CURP?
-                doc.Employee = emp;
-                doc.PayAmount = Decimal.Parse(payAmount.Value);
-                doc.FileHash = upload.FileHash;
-                doc.PayperiodDate = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                return;
             }
+            byte[] content = Encoding.UTF8.GetBytes(upload.XMLContent);
+            ValidateContentHash(content, upload.FileHash);
+            XElement root;
+            using (MemoryStream ms = new MemoryStream(content))
+                root = XElement.Load(ms);
+
+            XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
+            XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+            XElement elem = root.Element(cfdi + "Emisor");
+            XAttribute emisorRfc = elem.Attribute("rfc");
+            elem = root.Element(cfdi + "Conceptos");
+            elem = elem.Descendants(cfdi + "Concepto").First();
+            XAttribute payAmount = elem.Attribute("importe");
+            elem = root.Element(cfdi + "Receptor");
+            XAttribute receptorRfc = elem.Attribute("rfc");
+            XAttribute fullName = elem.Attribute("nombre");
+            elem = root.Descendants(nomina12 + "Nomina").First();
+            XAttribute payPeriod = elem.Attribute("FechaFinalPago");
+            elem = elem.Descendants(nomina12 + "Receptor").First();
+            XAttribute receptorCurp = elem.Attribute("Curp");
+            XAttribute clientRfc = null;
+
+            // try to get client RFC - may not be one
+            try
+            {
+                elem = root.Element(cfdi + "Complemento");
+                elem = elem.Descendants(nomina12 + "Nomina").First();
+                elem = elem.Descendants(nomina12 + "Receptor").First();
+                elem = elem.Descendants(nomina12 + "SubContratacion").First();
+                clientRfc = elem.Attribute("RfcLabora");
+            }
+            catch (Exception ex)
+            { log.Error("Error adding document: bulk verification failed", ex); }
+
+            if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
+                throw new ApplicationException("Invalid XML format");
+
+            Employee emp = db.FindEmployeeByCurp((string)receptorCurp);
+            if (emp == null)
+            {
+                // create employee setting full name
+                // employee status is provisional (to be completed at a later time)
+                // throw new ApplicationException("Cannot find employee RFC with ID: " + receptorRfc);
+                emp = new Employee
+                {
+                    RFC = (string)receptorRfc,
+                    FullName = (string)fullName,
+                    CURP = (string)receptorCurp,
+                    CreatedDate = DateTime.Now,
+                    LastLoginDate = SqlDateTime.MinValue.Value,
+                    EmployeeStatus = EmployeeStatusType.Unverified,
+                    CreatedByUserId = 1, // what to put here?
+                    CellPhoneNumber = "52."
+                };
+                emp.Company = batch.Company;
+                db.Employees.Add(emp);
+
+                // add company default doc
+                if (emp.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument)
+                {
+                    batch.ActualItemCount++;
+                    string fileName = NomiFileAccess.CopyCompanyAgreementFileForEmployee(emp.CompanyId,
+                       batch.WorkDirectory,  //file name to write
+                       emp.Company.NewEmployeeDocument.Trim()); // trim only needed due to DB scheme issue
+
+                    if (!String.IsNullOrEmpty(fileName))
+                    {
+                        // TODO: Write file to DB after copied to disk
+                        Document document = new Document()
+                        {
+                            AlwaysShow = 1,
+                            BatchId = batch.BatchId,
+                            CompanyId = emp.CompanyId,
+                            EmployeeId = emp.EmployeeId,
+                            PathToFile = fileName,
+                            PayperiodDate = DateTime.Now,
+                            SignStatus = SignStatus.SinFirma,
+                            UploadTime = DateTime.Now
+                        };
+                        db.Documents.Add(document);
+                    }
+                }
+                log.Error("warning adding document: employee not found for CURP " + (string)receptorCurp);
+            }
+
+
+            if (emp.Company.CompanyRFC != emisorRfc.Value)
+                throw new ApplicationException("Employee RFC with ID: " + receptorRfc + " does not match Company RFC: " + emisorRfc);
+
+            if (clientRfc != null)
+            {
+                Client client = db.FindClientByRfc(clientRfc.Value);
+                if (client != null)
+                    doc.ClientCompanyId = client.ClientCompanyID;
+            }
+
+            // VALIDATE CURP?
+            doc.Employee = emp;
+            doc.EmployeeId = emp.EmployeeId;
+            doc.CompanyId = emp.Company.CompanyId;
+            doc.PayAmount = Decimal.Parse(payAmount.Value);
+            doc.FileHash = upload.FileHash;
+            doc.PayperiodDate = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
         }
 
         private void ValidateContentHash(byte[] content, string hash)
@@ -281,8 +384,8 @@ namespace CfdiService.Controllers
         private void SaveContent(FileUpload upload, Document doc)
         {
             // Admin screen upload does not include Xml
-            if (!string.IsNullOrEmpty(upload.XMLContent)){ NomiFileAccess.WriteFile(doc, upload.XMLContent, XML_EXT); }
-            NomiFileAccess.WriteEncodedFile(doc, upload.PDFContent, PDF_EXT);
+            if (!string.IsNullOrEmpty(upload.XMLContent)){ NomiFileAccess.WriteFile(doc, upload.XMLContent, Strings.XML_EXT); }
+            NomiFileAccess.WriteEncodedFile(doc, upload.PDFContent, Strings.PDF_EXT);
         }
 
         private void GetVolumePaths(out string vol1, out string path1, out string vol2, out string path2, string companyDir)

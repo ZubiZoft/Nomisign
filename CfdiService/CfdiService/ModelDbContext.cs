@@ -47,6 +47,15 @@ namespace CfdiService
             return employee;
         }
 
+        public Employee FindEmployeeByCurp(string curp)
+        {
+            var employee = Employees
+                .Where(e => e.CURP == curp)
+                .FirstOrDefault();
+
+            return employee;
+        }
+
         virtual public DbSet<Batch> Batches { get; set; }
         virtual public DbSet<Company> Companies { get; set; }
         virtual public DbSet<Document> Documents { get; set; }

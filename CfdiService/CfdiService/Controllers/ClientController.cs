@@ -22,7 +22,7 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetClientDocuments(int clientId)
         {
             var result = new List<DocumentListShape>();
-            var docListResult = db.Documents.Where(x => x.ClientCompanyId == clientId).ToList();
+            var docListResult = db.Documents.Where(x => x.ClientCompanyId == clientId).OrderBy(r => r.CompanyId).ToList();
             foreach (Document doc in docListResult)
             {
                 result.Add(DocumentListShape.FromDataModel(doc, Request));

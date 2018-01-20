@@ -15,7 +15,17 @@ namespace CfdiService.Controllers
     {
         private ModelDbContext db = new ModelDbContext();
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
+        private static bool allowDefaultAdmin = false;
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        static LoginController()
+        {
+            if (null != System.Configuration.ConfigurationManager.AppSettings["allowDefaultAdmin"])
+            {
+                // verify to allow global admin account - for new installs
+                Boolean.TryParse(System.Configuration.ConfigurationManager.AppSettings["allowDefaultAdmin"], out allowDefaultAdmin);
+            }
+        }
 
         [HttpGet]
         [Route("login")]
@@ -34,12 +44,27 @@ namespace CfdiService.Controllers
                 // lock employee account
                 var employeeForReset = employeeByCell[0];
                 employeeForReset.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
-                db.SaveChanges();
+                //db.SaveChanges();
 
                 // generate code
                 EmployeesCode code = db.EmployeeSecurityCodes.Find(employeeForReset.EmployeeId);
-                code.Vcode = EncryptionService.GenerateSecurityCode();
-                code.GeneratedDate = DateTime.Now;
+                if(null == code)
+                {
+                    code = new EmployeesCode()
+                    {
+                        Vcode = EncryptionService.GenerateSecurityCode(),
+                        GeneratedDate = DateTime.Now,
+                        EmployeeId = employeeForReset.EmployeeId,
+                        Prefix = Guid.NewGuid().ToString()
+                    };
+                    db.EmployeeSecurityCodes.Add(code);
+                }
+                else
+                {
+                    code.Vcode = EncryptionService.GenerateSecurityCode();
+                    code.GeneratedDate = DateTime.Now;
+                }
+                
                 db.SaveChanges();
 
                 SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}", 
@@ -53,6 +78,64 @@ namespace CfdiService.Controllers
                 return BadRequest("Invalid Login Data");
             }
             
+        }
+
+        [HttpPost]
+        [Route("adminlogin/reset")]
+        public IHttpActionResult DoAdminLoginReset(UserShape userShape)
+        {
+            var userByEmail = db.Users.Where(e => e.EmailAddress.Equals(userShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            if (userByEmail.Count == 1)
+            {
+                // lock employee account
+                var userForReset = userByEmail[0];
+                userForReset.UserStatus = UserStatusType.PasswordResetLocked;
+                //db.SaveChanges();
+
+                db.SaveChanges();
+
+                SendEmail.SendEmailMessage(userForReset.EmailAddress,
+                    "Reset password request for " + userForReset.DisplayName,
+                    String.Format("Password reset was requested.  Please visit http://{0}/nomiadmin/account/{1} to reset password.", httpDomain, userForReset.UserId
+                    ));
+                log.Info("Reset password request for user: " + userForReset.UserId);
+                return Ok();
+            }
+            else
+            {
+                log.Info("Invalid password request for user: " + userShape.EmailAddress);
+                return BadRequest("Invalid Login Data");
+            }
+
+        }
+
+        [HttpPost]
+        [Route("clientlogin/reset")]
+        public IHttpActionResult DoClientLoginReset(UserShape userShape)
+        {
+            var clientUserByEmail = db.ClientUsers.Where(e => e.EmailAddress.Equals(userShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            if (clientUserByEmail.Count == 1)
+            {
+                // lock employee account
+                var userForReset = clientUserByEmail[0];
+                userForReset.UserStatus = UserStatusType.PasswordResetLocked;
+                //db.SaveChanges();
+
+                db.SaveChanges();
+
+                SendEmail.SendEmailMessage(userForReset.EmailAddress,
+                    "Reset password request for " + userForReset.DisplayName,
+                    String.Format("Password reset was requested.  Please visit http://{0}/nomiadmin/account/{1} to reset password.", httpDomain, userForReset.ClientUserID
+                    ));
+                log.Info("Reset password request for user: " + userForReset.ClientUserID);
+                return Ok();
+            }
+            else
+            {
+                log.Info("Invalid password request for user: " + userShape.EmailAddress);
+                return BadRequest("Invalid Login Data");
+            }
+
         }
 
         [HttpPost]
@@ -107,6 +190,15 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
+            if (allowDefaultAdmin)
+            {
+                User defaultAdminUser = new Model.User();
+                if(VerifyDefaultAdminAccount(userShape, defaultAdminUser))
+                {
+                    return Ok(defaultAdminUser);
+                }
+            }
+
             User user;
             var userByEmail = db.Users.Where(u => u.EmailAddress.Equals(userShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (userByEmail.Count != 1)
@@ -148,7 +240,7 @@ namespace CfdiService.Controllers
             var userByEmail = db.ClientUsers.Where(u => u.EmailAddress.Equals(clientUserShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (userByEmail.Count != 1)
             {
-                log.Info("Invalid login request for user: " + clientUserShape.EmailAddress);
+                log.Info("Invalid login request for user (wrong username): " + clientUserShape.EmailAddress);
                 return BadRequest("Invalid Login Data");
             }
             else
@@ -168,8 +260,25 @@ namespace CfdiService.Controllers
                 return Ok(clientUser);
             }
 
-            log.Info("Invalid login request for user: " + clientUserShape.EmailAddress);
+            log.Info("Invalid login request for user (wrong password): " + clientUserShape.EmailAddress);
             return BadRequest("Invalid Login");
+        }
+
+        private bool VerifyDefaultAdminAccount(UserShape shape, User adminUser)
+        {
+            if(shape.EmailAddress == "admin" && shape.PasswordHash == "password123")
+            {
+                adminUser.UserStatus = UserStatusType.Active;
+                adminUser.UserType = UserAdminType.GlobalAdmin;
+                adminUser.UserId = 0;
+                adminUser.DisplayName = "Administrator";
+                adminUser.CompanyId = 0;
+                adminUser.EmailAddress = "manager@nomisign.com";
+                adminUser.PhoneNumber = "";
+                return true;
+            }
+
+            return false;
         }
     }
 }

@@ -13,6 +13,8 @@ namespace CfdiService.Model
         {
             Documents = new HashSet<Document>();
         }
+        
+        public BatchStatus BatchStatus { set; get; }
         public int BatchId { set; get; }
         public int CompanyId { get; set; }
         public virtual Company Company { get; set; }

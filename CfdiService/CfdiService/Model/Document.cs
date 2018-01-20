@@ -14,6 +14,8 @@ namespace CfdiService.Model
         public virtual Batch Batch { get; set; }
         public int EmployeeId { get; set; }
         public int CompanyId { get; set; }
+        [ForeignKey("CompanyId")]
+        public virtual Company Company { get; set; }
         public Nullable<int> ClientCompanyId { get; set; }
         public virtual Employee Employee { get; set; }
         public DateTime UploadTime { get; set; }

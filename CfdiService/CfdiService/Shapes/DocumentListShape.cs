@@ -18,7 +18,7 @@ namespace CfdiService.Shapes
         public string EmployeeConcern { get; set; }
         public string PayAmount { get; set; }
         public int AlwaysShow { get; set; }
-
+        public string CompanyName { get; set; }
         public class LinksClass
         {
             public string SelfUri { get; set; }
@@ -39,6 +39,7 @@ namespace CfdiService.Shapes
                 AlwaysShow = document.AlwaysShow,
                 PayAmount = document.PayAmount.ToString(),
                 SignStatus = document.SignStatus == Model.SignStatus.SinFirma ? "Sin Firma" : document.SignStatus.ToString(),
+                CompanyName = document.Company.CompanyName,
                 Links = new LinksClass()
             };
 

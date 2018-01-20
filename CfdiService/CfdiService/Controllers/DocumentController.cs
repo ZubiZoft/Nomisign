@@ -22,11 +22,20 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetDocuments(int eid)
         {
             var result = new List<DocumentListShape>();
-            var docListResult = db.Documents.Where(x => x.EmployeeId == eid).ToList();
-            foreach (Document doc in docListResult)
-            {
-                result.Add(DocumentListShape.FromDataModel(doc, Request));
+            try {
+                
+                var docListResult = db.Documents.Where(x => x.EmployeeId == eid).ToList();
+                foreach (Document doc in docListResult)
+                {
+                    result.Add(DocumentListShape.FromDataModel(doc, Request));
+                }
             }
+            catch(Exception ex)
+            {
+                log.Error("Error getting documents for user Id:  " + eid, ex);
+                return BadRequest(ex.Message);
+            }
+
             return Ok(result);
         }
 
@@ -100,12 +109,21 @@ namespace CfdiService.Controllers
         [Route("documents/{eid}/{id}")]
         public IHttpActionResult GetDocument(int id)
         {
-            Document document = db.Documents.Find(id);
-            db.Entry(document).Reference(b => b.Batch).Load();
-            if (document == null)
-            {
-                return NotFound();
+            Document document = null;
+            try {
+                document = db.Documents.Find(id);
+                db.Entry(document).Reference(b => b.Batch).Load();
+                if (document == null)
+                {
+                    return NotFound();
+                }
             }
+            catch(Exception ex)
+            {
+                log.Error("Error getting document Id:  " + id, ex);
+                return BadRequest(ex.Message);
+            }
+
             return Ok(DocumentShape.FromDataModel(document, Request));
         }
 
@@ -126,7 +144,11 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-
+            if(documentShape.SignStatus == 2 && document.SignStatus != SignStatus.Firmado)
+            {
+                // sign document
+                DigitalSignatures.SignPdfDocument(document);
+            }
             DocumentShape.ToDataModel(documentShape, document);
             db.SaveChanges();
             return Ok(documentShape);

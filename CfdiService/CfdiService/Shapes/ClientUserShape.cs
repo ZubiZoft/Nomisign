@@ -16,7 +16,7 @@ namespace CfdiService.Shapes
         public string DisplayName { get; set; }
         public string PhoneNumber { get; set; }
         public string PasswordHash { get; set; }
-        public string UserStatus { get; set; }
+        public int UserStatus { get; set; }
         public string LastLogin { get; set; }
         public bool ForcePasswordReset { get; set; }
         public int CreatedByUserId { get; set; }
@@ -33,7 +33,7 @@ namespace CfdiService.Shapes
                 DisplayName = clientUser.DisplayName,
                 PhoneNumber = clientUser.PhoneNumber,
                 PasswordHash = string.Empty, // user.PasswordHash, this should always return empty, or not at all.  for login and password reset dont use the shape 
-                UserStatus = clientUser.UserStatus.ToString(),
+                UserStatus = (int)clientUser.UserStatus,
                 ClientUserType = clientUser.ClientUserType.ToString(),
                 LastLogin = clientUser.LastLogin.ToShortDateString(),
                 ForcePasswordReset = clientUser.ForcePasswordReset,
@@ -63,7 +63,7 @@ namespace CfdiService.Shapes
 
             // user status enum
             UserStatusType status = UserStatusType.Active;
-            Enum.TryParse<UserStatusType>(clientUserShape.UserStatus, out status);
+            Enum.TryParse<UserStatusType>(clientUserShape.UserStatus.ToString(), out status);
             clientUser.UserStatus = status;
 
             // user type enum

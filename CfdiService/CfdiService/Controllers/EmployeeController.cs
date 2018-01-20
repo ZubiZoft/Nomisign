@@ -75,10 +75,9 @@ namespace CfdiService.Controllers
             return Ok(employeeShape);
         }
 
-
         [HttpPut]
-        [Route("employees/{id}")]
-        public IHttpActionResult UpdateEmployee(int id, EmployeeShape employeeShape)
+        [Route("employees/password/{id}")]
+        public IHttpActionResult UpdateEmployeePassword(int id, EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
             {
@@ -99,7 +98,7 @@ namespace CfdiService.Controllers
             // Get security codes
             EmployeesCode codes = db.EmployeeSecurityCodes.Find(employee.EmployeeId);
 
-            // IF this is a password reset update, verify code.  dont make changes if not
+            // IF this is a password reset update, verify code.  dont make changes if not, unless unverified.
             // TODO: add time expiration to vcode
             if (employee.EmployeeStatus != EmployeeStatusType.Active && employeeShape.SecurityCode != codes.Vcode)
             {
@@ -113,9 +112,73 @@ namespace CfdiService.Controllers
                     employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
                 }
                 codes.Vcode = string.Empty;
-                db.SaveChanges();
+                //db.SaveChanges(); redundant
             }
-            
+
+            db.SaveChanges();
+            return Ok(employeeShape);
+        }
+
+        [HttpPut]
+        [Route("employees/{id}")]
+        public IHttpActionResult UpdateEmployee(int id, EmployeeShape employeeShape)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != employeeShape.EmployeeId)
+            {
+                return BadRequest();
+            }
+            Employee employee = db.Employees.Find(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            // transform to data model
+            EmployeeShape.ToDataModel(employeeShape, employee);
+
+            //seperate service for password change
+            // but for one time updates for auto generated users need to set code
+            try
+            {
+                if (employeeShape.EmployeeStatus == EmployeeStatusType.PasswordAwaitingLocked)
+                {
+                    EmployeesCode codes = db.EmployeeSecurityCodes.Find(employee.EmployeeId);
+                    if (codes != null)
+                    {
+                        codes.Vcode = EncryptionService.GenerateSecurityCode();
+                        codes.GeneratedDate = DateTime.Now;
+                    }
+                    else
+                    {
+                        // verify a codes row does not already exist, if not create one, otherwise add new vcode
+                        codes = new EmployeesCode() { EmployeeId = employee.EmployeeId, GeneratedDate = DateTime.Now, Prefix = Guid.NewGuid().ToString(), Vcode = EncryptionService.GenerateSecurityCode() };
+                        db.EmployeeSecurityCodes.Add(codes);
+                    }
+                    db.SaveChanges();
+                     
+                    string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge,
+                        httpDomain, employee.EmployeeId, codes.Vcode);
+
+
+                    if (null != employee.CellPhoneNumber)
+                    {
+                        SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
+                    }
+
+                    SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, msgBodySpanish);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error sending Msg - Adding employee: " + employeeShape.EmployeeId, ex);
+                return BadRequest(ex.Message);
+            }
+
             db.SaveChanges();
             return Ok(employeeShape);
         }
@@ -164,7 +227,7 @@ namespace CfdiService.Controllers
                 var batchPath = db.Batches.Add(batch);
                 db.SaveChanges();
 
-                string fileName = NomiFileAccess.WriteFile(employee.CompanyId,
+                string fileName = NomiFileAccess.CopyCompanyAgreementFileForEmployee(employee.CompanyId,
                    batch.WorkDirectory,  //file name to write
                    employee.Company.NewEmployeeDocument.Trim()); // trim only needed due to DB scheme issue
 

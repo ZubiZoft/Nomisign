@@ -40,6 +40,8 @@ namespace CfdiService.Upload
             }
             uploader.CloseBatch();
 
+            Console.WriteLine("Upload Completed");
+            Console.ReadLine();
             Environment.Exit(0);
         }
 
