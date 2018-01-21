@@ -34,6 +34,8 @@ namespace CfdiService.Services
                         signature.Certify(1, "Signature Reason", "Contact", "Location", true, rect, docMdpSignature);
                         // Save output PDF file
                         signature.Save(originalPdfDocumentPath);
+                        // Create backup of signed copy to location 2 - no database record needed
+                        NomiFileAccess.BackupFileToLocation2(originalPdfDocument.CompanyId, originalPdfDocumentPath);
                     }
                 }
             }

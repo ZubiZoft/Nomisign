@@ -13,6 +13,8 @@ namespace CfdiService.Shapes
         public string CompanyName { get; set; }
         public string CompanyRFC { get; set; }
         public int AccountStatus { get; set; }
+        public long TotalSignaturesPurchased { get; set; }
+        public long SignatureBalance { get; set; }
 
         public class LinksClass
         {
@@ -28,8 +30,9 @@ namespace CfdiService.Shapes
                 CompanyName = company.CompanyName,
                 CompanyRFC = company.CompanyRFC,
                 AccountStatus = (int)company.AccountStatus,
-                //Links = new LinksClass()
-            };
+                TotalSignaturesPurchased = company.TotalSignaturesPurchased,
+                SignatureBalance = company.SignatureBalance,
+    };
 
             //companyShape.Links.SelfUri = request.GetLinkUri($"companies/{companyShape.CompanyId}");
             return companyShape;

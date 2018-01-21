@@ -159,11 +159,13 @@ namespace CfdiService.Controllers
             batch.BatchStatus = BatchStatus.Completed;
             batch.BatchCloseTime = DateTime.Now;
 
-            int licenseCorrection = batch.ItemCount - batch.ActualItemCount;
-            if (licenseCorrection > 0)
-            {
-                batch.Company.SignatureBalance += licenseCorrection;
-            }
+            // There can be a race condition when uploading via admin screen.  so removing this for now
+            // not sure its needed.  USe case i guess is batch has 10 docs, but for some reason one fails to upload...
+            //int licenseCorrection = batch.ItemCount - batch.ActualItemCount;
+            //if (licenseCorrection > 0)
+            //{
+            //    batch.Company.SignatureBalance += licenseCorrection;
+            //}
             db.SaveChanges();
             return Ok();
         }
