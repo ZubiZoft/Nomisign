@@ -24,15 +24,65 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetCompanyEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
+            var company = db.Companies.Find(cid);
+            if (company == null)
+                return Ok(result);
             foreach (var c in db.Employees)
             {
                 if (c.CompanyId == cid)
                 {
-                    result.Add(EmployeeListShape.FromDataModel(c, Request));
+                    result.Add(EmployeeListShape.FromDataModel(c, Request, company.CompanyName));
                 }
             }
 
             log.Info("Looking for employees for cid: " + cid);
+            return Ok(result);
+        }
+
+        // GET: api/employees
+        [HttpGet]
+        [Route("employees/{cid}/new")]
+        public IHttpActionResult GetCompanyNewEmployees(int cid)
+        {
+            var result = new List<EmployeeListShape>();
+            var employeeResult = db.Employees.Where(x => x.CompanyId == cid 
+                    && (x.EmailAddress == null || x.EmailAddress.Equals("")) 
+                    && (x.CellPhoneNumber == null || x.CellPhoneNumber.Equals(""))).ToList();
+            var company = db.Companies.Find(cid);
+            if (company == null)
+                return Ok(result);
+            foreach (var c in employeeResult)
+            {
+                result.Add(EmployeeListShape.FromDataModel(c, Request, company.CompanyName));
+            }
+
+            log.Info("Looking for employees that doesn't have email and phone for cid: " + cid);
+            return Ok(result);
+        }
+
+        // GET: api/employees
+        [HttpGet]
+        [Route("employees/{cid}/disable")]
+        public IHttpActionResult GetCompanyDisableEmployees(int cid)
+        {
+            var result = new List<EmployeeListShape>();
+
+            var company = db.Companies.Find(cid);
+            if (company == null)
+                return Ok(result);
+
+            var employeesIds = db.Documents.Where(d => d.CompanyId == cid).GroupBy(d => d.EmployeeId)
+                .Select(doc => new {
+                    EmployeeId = doc.Key,
+                    LastDate = doc.Max(d => d.UploadTime)
+                });
+
+            employeesIds = employeesIds.Where(d => d.LastDate.CompareTo(DateTime.Now.AddMonths(-3)) >= 0);
+
+            foreach (var empId in employeesIds)
+            {
+                result.Add(EmployeeListShape.FromDataModel(db.Employees.Find(empId.EmployeeId), Request, company.CompanyName));
+            }
             return Ok(result);
         }
 
@@ -284,7 +334,7 @@ namespace CfdiService.Controllers
             {
                 try
                 {
-                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage + ": " + employeeShape.CRUP);
+                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage + ": " + employeeShape.CURP);
                     return Ok("Success");
                 }
                 catch(Exception ex)

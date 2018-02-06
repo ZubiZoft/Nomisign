@@ -17,7 +17,7 @@ namespace CfdiService.Shapes
         public string LastName1 { get; set; }
         public string LastName2 { get; set; }
         public string FullName { get; set; }
-        public string CRUP { get; set; }
+        public string CURP { get; set; }
         public string RFC { get; set; }
         public string CreatedByUserName { get; set; }
         public int CreatedByUserId { get; set; }
@@ -39,7 +39,7 @@ namespace CfdiService.Shapes
                 LastName1 = employee.LastName1,
                 LastName2 = employee.LastName2,
                 FullName = !string.IsNullOrEmpty(employee.FullName) ? employee.FullName: (String.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2)),
-                CRUP = employee.CURP,
+                CURP = employee.CURP,
                 RFC = employee.RFC,
                 EmailAddress = employee.EmailAddress,
                 PasswordHash = String.Empty, // employee.PasswordHash.  no need to ever let this out
@@ -73,7 +73,7 @@ namespace CfdiService.Shapes
             employee.LastName1 = employeeShape.LastName1;
             employee.LastName2 = employeeShape.LastName2;
             employee.FullName = string.IsNullOrEmpty(employeeShape.FullName) ? string.Format("{0} {1} {2}", employeeShape.FirstName, employeeShape.LastName1, employeeShape.LastName2) : employeeShape.FullName;
-            employee.CURP = employeeShape.CRUP;
+            employee.CURP = employeeShape.CURP;
             employee.RFC = employeeShape.RFC;
             employee.EmailAddress = employeeShape.EmailAddress;
             employee.CellPhoneNumber = employeeShape.CellPhoneNumber;

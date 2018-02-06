@@ -21,7 +21,9 @@ namespace CfdiService.Controllers
             var result = new List<UserListShape>();
             UserAdminType type = UserAdminType.Invalid;
             Enum.TryParse<UserAdminType>(utid.ToString(), out type);
-
+            var company = db.Companies.Find(cid);
+            if (company == null)
+                return Ok(result);
             foreach (var c in db.Users)
             {
                 if (c.CompanyId == cid)
@@ -29,11 +31,11 @@ namespace CfdiService.Controllers
                     // filter global admins so only global admins can view / edit
                     if (c.UserType == UserAdminType.GlobalAdmin && type == UserAdminType.GlobalAdmin)
                     {
-                        result.Add(UserListShape.FromDataModel(c, Request));
+                        result.Add(UserListShape.FromDataModel(c, Request, company.CompanyName));
                     }
-                    else if(c.UserType != UserAdminType.GlobalAdmin)
+                    else if (c.UserType != UserAdminType.GlobalAdmin)
                     {
-                        result.Add(UserListShape.FromDataModel(c, Request));
+                        result.Add(UserListShape.FromDataModel(c, Request, company.CompanyName));
                     }
                 }
             }

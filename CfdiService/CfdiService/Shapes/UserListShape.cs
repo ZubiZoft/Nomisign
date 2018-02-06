@@ -14,6 +14,7 @@ namespace CfdiService.Shapes
         public int UserStatus { get; set; }
         public DateTime LastLogin { get; set; }
         public int CompanyId { get; set; }
+        public string CompanyName { get; set; }
 
         public class LinksClass
         {
@@ -24,10 +25,29 @@ namespace CfdiService.Shapes
 
         public static UserListShape FromDataModel(User user, HttpRequestMessage request)
         {
+
             var companyUserShape = new UserListShape
             {
                 UserId = user.UserId,
                 CompanyId = user.CompanyId,
+                EmailAddress = user.EmailAddress,
+                UserStatus = (int)user.UserType, // this is due to change, need to align this 
+                LastLogin = user.LastLogin,
+                Links = new LinksClass()
+            };
+
+            companyUserShape.Links.SelfUri = request.GetLinkUri($"companyusers/{companyUserShape.UserId}");
+            return companyUserShape;
+        }
+
+        public static UserListShape FromDataModel(User user, HttpRequestMessage request, string companyName)
+        {
+
+            var companyUserShape = new UserListShape
+            {
+                UserId = user.UserId,
+                CompanyId = user.CompanyId,
+                CompanyName = companyName,
                 EmailAddress = user.EmailAddress,
                 UserStatus = (int)user.UserType, // this is due to change, need to align this 
                 LastLogin = user.LastLogin,

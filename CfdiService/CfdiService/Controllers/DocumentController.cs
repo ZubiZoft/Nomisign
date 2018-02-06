@@ -41,6 +41,27 @@ namespace CfdiService.Controllers
 
         // GET: api/companydocs
         [HttpGet]
+        [Route("documentsByCompany/{cid}")]
+        public IHttpActionResult GetDocumentsByCompany(int cid)
+        {
+            var result = new List<DocumentListShape>();
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid).ToList();
+            foreach (Document doc in docListResult)
+            {
+                var docShape = DocumentListShape.FromDataModel(doc, Request);
+                // not validating company ID here
+                Employee employee = db.Employees.Find(doc.EmployeeId);
+                if (employee != null)
+                {
+                    docShape.EmployeeName = string.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2);
+                }
+                result.Add(docShape);
+            }
+            return Ok(result);
+        }
+
+        // GET: api/companydocs
+        [HttpGet]
         [Route("documents/rejected/{cid}")]
         public IHttpActionResult GetRejectedCompanyDocuments(int cid)
         {
@@ -78,6 +99,33 @@ namespace CfdiService.Controllers
                 result.Add(docShape);
             }
             return Ok(result);
+        }
+
+        // POST: api/companydocs
+        [HttpPost]
+        [Route("documents/rejected")]
+        public IHttpActionResult SendDocumentsToUnsignedStatus([FromBody] List<int> dids)
+        {
+            if (dids == null)
+            {
+                BadRequest();
+            }
+            var docs = new List<Document>();
+            foreach (int id in dids)
+            {
+                Document document = db.Documents.Find(id);
+                if (document == null)
+                {
+                    return NotFound();
+                }
+                docs.Add(document);
+            }
+            foreach (var d in docs)
+            {
+                d.SignStatus = SignStatus.SinFirma;
+            }
+            db.SaveChanges();
+            return Ok();
         }
 
         // GET: api/companydocs

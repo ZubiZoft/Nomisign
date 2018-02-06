@@ -18,7 +18,9 @@ namespace CfdiService.Shapes
         public string CellPhoneNumber { get; set; }
         public string CellPhoneCarrier { get; set; }
         public DateTime LastLoginDate { get; set; }
-
+        public string CompanyName { get; set; }
+        public string RFC { get; set; }
+        public string CURP { get; set; }
         public class LinksClass
         {
             public string SelfUri { get; set; }
@@ -26,7 +28,7 @@ namespace CfdiService.Shapes
 
         public LinksClass Links { get; set; }
 
-        public static EmployeeListShape FromDataModel(Employee employee, HttpRequestMessage request)
+        public static EmployeeListShape FromDataModel(Employee employee, HttpRequestMessage request, string companyName)
         {
             var employeeUserShape = new EmployeeListShape
             {
@@ -38,6 +40,9 @@ namespace CfdiService.Shapes
                 FullName = employee.FullName,
                 CellPhoneNumber = employee.CellPhoneNumber,
                 LastLoginDate = employee.LastLoginDate,
+                CURP = employee.CURP,
+                RFC = employee.RFC,
+                CompanyName = companyName,
                 Links = new LinksClass()
             };
 
