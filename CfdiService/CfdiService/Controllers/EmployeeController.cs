@@ -62,26 +62,36 @@ namespace CfdiService.Controllers
 
         // GET: api/employees
         [HttpGet]
-        [Route("employees/{cid}/disable")]
+        [Route("employees/{cid}/inactive")]
         public IHttpActionResult GetCompanyDisableEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
-
-            var company = db.Companies.Find(cid);
-            if (company == null)
-                return Ok(result);
-
-            var employeesIds = db.Documents.Where(d => d.CompanyId == cid).GroupBy(d => d.EmployeeId)
-                .Select(doc => new {
-                    EmployeeId = doc.Key,
-                    LastDate = doc.Max(d => d.UploadTime)
-                });
-
-            employeesIds = employeesIds.Where(d => d.LastDate.CompareTo(DateTime.Now.AddMonths(-3)) >= 0);
-
-            foreach (var empId in employeesIds)
+            try
             {
-                result.Add(EmployeeListShape.FromDataModel(db.Employees.Find(empId.EmployeeId), Request, company.CompanyName));
+                var company = db.Companies.Find(cid);
+                if (company == null)
+                    return Ok(result);
+
+                var employeesIds = db.Documents.Where(d => d.CompanyId == cid).GroupBy(d => d.EmployeeId)
+                    .Select(doc => new
+                    {
+                        EmployeeId = doc.Key,
+                        LastDate = doc.Max(d => d.PayperiodDate)
+                    }).ToList();
+
+                var auxDate = DateTime.Now.AddMonths(-3);
+                employeesIds = employeesIds.Where(d => d.LastDate.CompareTo(auxDate) <= 0).ToList();
+
+                foreach (var empId in employeesIds)
+                {
+                    result.Add(EmployeeListShape.FromDataModel(db.Employees.Find(empId.EmployeeId), Request, company.CompanyName));
+                }
+            } catch (Exception ex)
+            {
+                log.Error(ex);
+                log.Error(ex.Message);
+                log.Error(ex.Source);
+                log.Error(ex.StackTrace);
             }
             return Ok(result);
         }
