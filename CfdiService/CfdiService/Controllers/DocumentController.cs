@@ -16,6 +16,30 @@ namespace CfdiService.Controllers
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         private ModelDbContext db = new ModelDbContext();
 
+        
+        /*[HttpGet]
+        [Route("documents/{id}/{file}/Download")]
+        public IHttpActionResult GetReceipts(int id)
+        {
+            var result = new List<DocumentListShape>();
+            try {
+
+                var docListResult = db.Documents.Where(x => x.DocumentId == id).ToList();
+                foreach (Document doc in docListResult)
+                {
+                   
+                }
+            }
+            catch(Exception ex)
+            {
+                log.Error("No Reciepts found under that id");
+                return BadRequest(ex.Message);
+            }
+            
+            return Ok(result);
+        }
+        */
+
         // GET: api/employees
         [HttpGet]
         [Route("documents/{eid}")]

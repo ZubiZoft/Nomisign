@@ -13,6 +13,23 @@ namespace CfdiService.Controllers
     {
         private ModelDbContext db = new ModelDbContext();
 
+        
+        //Get:
+        [HttpGet]
+        [Route("signaturepurchases")]
+        public IHttpActionResult GetCompanyPurchases(int cid)
+        {
+           SignaturePurchase SigPurchase = db.SignaturePurchases.Find(cid);
+           if(SigPurchase == null)
+            {
+                return NotFound();
+            }
+
+            string Companyinfo = string.Format("{0}{1}{2}{3}{4}", SigPurchase.SignaturePurchaseId, SigPurchase.LicensesPurchased, SigPurchase.PurchaseDate, SigPurchase.PurchaseDate.AddYears(1), SigPurchase.Price);
+
+            return Ok(Companyinfo);
+        }
+
         // GET: api/signaturepurchases
         [HttpGet]
         [Route("signaturepurchases")]
