@@ -149,7 +149,7 @@ namespace CfdiService.Controllers
                 d.SignStatus = SignStatus.SinFirma;
             }
             db.SaveChanges();
-            return Ok();
+            return Ok("Success");
         }
 
         // GET: api/companydocs
@@ -169,6 +169,31 @@ namespace CfdiService.Controllers
                     }
                 }
                 catch(Exception ex)
+                {
+                    log.Error("Error sending SMS", ex);
+                }
+            }
+            return Ok("Success");
+        }
+
+        // POST: api/companydocs
+        [HttpPost]
+        [Route("documents/unsigned/notify")]
+        public IHttpActionResult NotifyUnsignedDocuments([FromBody] List<int> cid)
+        {
+            //var result = new List<DocumentListShape>();
+            var docListResult = db.Documents.Where(x => cid.Contains(x.DocumentId) && x.SignStatus == SignStatus.SinFirma).ToList();
+            foreach (Document doc in docListResult)
+            {
+                try
+                {
+                    if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
+                    {
+                        string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                        SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                    }
+                }
+                catch (Exception ex)
                 {
                     log.Error("Error sending SMS", ex);
                 }
