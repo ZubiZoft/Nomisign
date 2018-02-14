@@ -16,7 +16,7 @@ namespace CfdiService.Shapes
         public string SignStatus { get; set; }
         public string EmployeeName { get; set; }
         public string EmployeeConcern { get; set; }
-        public string PayAmount { get; set; }
+        public decimal PayAmount { get; set; }
         public int AlwaysShow { get; set; }
         public string CompanyName { get; set; }
         public class LinksClass
@@ -37,7 +37,7 @@ namespace CfdiService.Shapes
                 DocumentId = document.DocumentId,
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
                 AlwaysShow = document.AlwaysShow,
-                PayAmount = document.PayAmount.ToString(),
+                PayAmount = document.PayAmount,
                 SignStatus = document.SignStatus == Model.SignStatus.SinFirma ? "Sin Firma" : document.SignStatus.ToString(),
                 CompanyName = document.Company.CompanyName,
                 Links = new LinksClass()

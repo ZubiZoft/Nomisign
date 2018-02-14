@@ -84,6 +84,52 @@ namespace CfdiService.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("documentsByCompanyDateRange/{cid}")]
+        public IHttpActionResult GetDocumentsByCompanyDateRange(int cid, DateRangeRequest range)
+        {
+            var result = new List<DocumentListShape>();
+            log.Info("Init Date: " + range.InitDate);
+            log.Info("End Date: " + range.EndDate);
+            DateTime initdateT = DateTime.Parse(range.InitDate);
+            DateTime enddateT = DateTime.Parse(range.EndDate);
+            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.PayperiodDate >= initdateT && enddateT >= x.PayperiodDate).ToList();
+            foreach (Document doc in docListResult)
+            {
+                var docShape = DocumentListShape.FromDataModel(doc, Request);
+                // not validating company ID here
+                Employee employee = db.Employees.Find(doc.EmployeeId);
+                if (employee != null)
+                {
+                    docShape.EmployeeName = string.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2);
+                }
+                result.Add(docShape);
+            }
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("SendNotificationsToUnsignedDocuments/")]
+        public IHttpActionResult SendNotificationsToUnsignedDocuments([FromBody] List<int> dids)
+        {
+            foreach (int a in dids)
+            {
+                Document doc = db.Documents.Where(x => x.DocumentId == a).First();
+                Employee emp = db.Employees.Where(x => x.EmployeeId == doc.EmployeeId).First();
+                string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain);
+
+                if (null != emp.CellPhoneNumber)
+                {
+                    SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
+                }
+                if (null != emp.EmailAddress)
+                {
+                    SendEmail.SendEmailMessage(emp.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, msgBodySpanish);
+                }
+            }
+            return Ok("Success");
+        }
+
         // GET: api/companydocs
         [HttpGet]
         [Route("documents/rejected/{cid}")]
@@ -112,6 +158,26 @@ namespace CfdiService.Controllers
         {
             var result = new List<DocumentListShape>();
             var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.SinFirma).ToList();
+            foreach (Document doc in docListResult)
+            {
+                var docShape = DocumentListShape.FromDataModel(doc, Request);
+                Employee employee = db.Employees.Find(doc.EmployeeId);
+                if (employee != null)
+                {
+                    docShape.EmployeeName = string.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2);
+                }
+                result.Add(docShape);
+            }
+            return Ok(result);
+        }
+
+        // GET: api/companydocs
+        [HttpGet]
+        [Route("documents/employeesigned/{eid}")]
+        public IHttpActionResult GetSignedEmployeeDocuments(int eid)
+        {
+            var result = new List<DocumentListShape>();
+            var docListResult = db.Documents.Where(x => x.EmployeeId == eid && x.SignStatus == SignStatus.Firmado).ToList();
             foreach (Document doc in docListResult)
             {
                 var docShape = DocumentListShape.FromDataModel(doc, Request);
@@ -191,6 +257,7 @@ namespace CfdiService.Controllers
                     {
                         string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
                         SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                        SendEmail.SendEmailMessage(doc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                     }
                 }
                 catch (Exception ex)

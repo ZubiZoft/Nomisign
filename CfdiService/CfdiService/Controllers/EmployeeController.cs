@@ -170,6 +170,9 @@ namespace CfdiService.Controllers
                 if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
                 {
                     employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                    employee.FirstName = employeeShape.FirstName;
+                    employee.LastName1 = employeeShape.LastName1;
+                    employee.LastName2 = employeeShape.LastName2;
                 }
                 codes.Vcode = string.Empty;
                 //db.SaveChanges(); redundant
@@ -221,9 +224,7 @@ namespace CfdiService.Controllers
                     }
                     db.SaveChanges();
                      
-                    string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge,
-                        httpDomain, employee.EmployeeId, codes.Vcode);
-
+                    string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
 
                     if (null != employee.CellPhoneNumber)
                     {
@@ -319,13 +320,14 @@ namespace CfdiService.Controllers
                 string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge,
                     httpDomain, employee.EmployeeId, codes.Vcode);
 
+                SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, msgBodySpanish);
 
                 if (null != employee.CellPhoneNumber)
                 {
                     SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
                 }
 
-                SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, msgBodySpanish);
+                
             }
             catch (Exception ex)
             {

@@ -152,11 +152,20 @@ namespace CfdiService.Controllers
             var employeeByPhone = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (employeeByPhone.Count != 1)
             {
-                log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
-                return BadRequest("Invalid Login Data");
+                log.Info("Login by email: " + employeeShape.EmailAddress);
+                var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Trim().Equals(employeeShape.CellPhoneNumber.Trim(), StringComparison.InvariantCultureIgnoreCase)).ToList();
+                log.Info("Employee : " + employeeByEmail.Count);
+                emp = employeeByEmail[0];
+                code = db.EmployeeSecurityCodes.Find(emp.EmployeeId);
+                if (null == code)
+                {
+                    return BadRequest("Employee password data is not found");
+                }
+                //return BadRequest("Invalid Login Data");
             }
             else
             {
+                log.Info("Login by phone: " + employeeShape.CellPhoneNumber);
                 emp = employeeByPhone[0];
                 code = db.EmployeeSecurityCodes.Find(emp.EmployeeId);
                 if(null == code)

@@ -1,4 +1,7 @@
-﻿using CfdiService.Model;
+﻿using Aspose.Pdf;
+using Aspose.Pdf.Facades;
+using Aspose.Pdf.Forms;
+using CfdiService.Model;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -11,6 +14,8 @@ namespace CfdiService.Services
 {
     public static class NomiFileAccess
     {
+        private static readonly string _pfxFileName = System.Configuration.ConfigurationManager.AppSettings["pfxFileName"];
+        private static readonly string _pfxFilePassword = System.Configuration.ConfigurationManager.AppSettings["pfxFilePassword"];
         private static readonly string _rootDiskPath = System.Configuration.ConfigurationManager.AppSettings["rootDiskPath"];
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static string _rootSystemPath;
@@ -29,7 +34,7 @@ namespace CfdiService.Services
             companyPaths2 = db.Companies.ToDictionary(t => t.CompanyId, t => t.DocStoragePath2);
         }
 
-        internal static string GetFilePath(Document document)
+        internal static string GetFilePath(Model.Document document)
         {
             verifyCompanyCache1(document.CompanyId);
             // get full path to file
@@ -85,7 +90,7 @@ namespace CfdiService.Services
             return true;
         }
 
-        public static bool WriteEncodedFile(Document document, string base64String, string extension)
+        public static bool WriteEncodedFile(Model.Document document, string base64String, string extension)
         {
             try
             {
@@ -111,7 +116,71 @@ namespace CfdiService.Services
             return true;
         }
 
-        public static bool WriteFile(Document document, string content, string extension)
+        public static bool WriteEncodedFileAttachedXML(Model.Document document, string base64String, string extension, string xmlfile, Company company)
+        {
+            try
+            {
+                string originalPdfDocumentPath = NomiFileAccess.GetFilePath(document);
+                var xmlfullFilePath = string.Format(@"{0}\{1}", Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory)), document.PathToFile + ".xml");
+                using (Stream streampdf = GenerateStreamFromString(base64String))
+                {
+                    Aspose.Pdf.Document pdfDocument = new Aspose.Pdf.Document(streampdf, string.Format("{0}.{1}", originalPdfDocumentPath + document.PathToFile, "pdf"));
+                    FileSpecification fileSpecification = new FileSpecification(xmlfullFilePath);
+                    pdfDocument.EmbeddedFiles.Add(fileSpecification);
+                    // Add Signatures Page to Document
+                    pdfDocument.Pages.Add();
+                    pdfDocument.Save(originalPdfDocumentPath);
+                    using (Aspose.Pdf.Document newdoc = new Aspose.Pdf.Document(originalPdfDocumentPath))
+                    {
+                        verifyCompanyCache1(document.CompanyId);
+                        //Build the path to store PDF file
+                        var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory));
+                        //Make sure path exists, if not this will create it
+                        Directory.CreateDirectory(fullFilePath);
+                        //Sign Document as the Company
+                        using (PdfFileSignature signature = new PdfFileSignature(newdoc))
+                        {
+                            PKCS7 pkcs = new PKCS7(_rootDiskPath + @"\" + _pfxFileName, _pfxFilePassword); // "RQP@ssw0rd"); // Use PKCS7/PKCS7Detached objects
+                            pkcs.Location = "Mexico";
+                            pkcs.Reason = "Approved by: " + company.CompanyName;
+                            DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
+                            System.Drawing.Rectangle rect = new System.Drawing.Rectangle(50, 650, 500, 100);
+                            // Create any of the three signature types
+                            signature.Certify(newdoc.Pages.Count, "Signature Reason", "Contact", "Location", true, rect, docMdpSignature);
+                            // Save output PDF file
+                            signature.Save(originalPdfDocumentPath);
+                            // Create backup of signed copy to location 2 - no database record needed
+                            NomiFileAccess.BackupFileToLocation2(document.CompanyId, originalPdfDocumentPath);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error writing file to disk: ", ex);
+                return false;
+            }
+            return true;
+        }
+
+        public static Stream GenerateStreamFromString(string s)
+        {
+            byte[] bytes = Convert.FromBase64String(s);
+            MemoryStream stream = new MemoryStream(bytes);
+            return stream;
+        }
+
+        public static Stream GenerateStreamFromStringXML(string s)
+        {
+            MemoryStream stream = new MemoryStream();
+            StreamWriter writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
+        }
+
+        public static bool WriteFile(Model.Document document, string content, string extension)
         {
             try
             {
@@ -201,7 +270,7 @@ namespace CfdiService.Services
             }
         }
 
-        public static string GetFile(Document document)
+        public static string GetFile(Model.Document document)
         {
             verifyCompanyCache1(document.CompanyId);
             // get full path to file
@@ -233,13 +302,19 @@ namespace CfdiService.Services
 
                 if (File.Exists(fullFilePath))
                 {
-                    using (MemoryStream pdfAsImage = ConvertPdfToJpg(fullFilePath))
+                    /*using (MemoryStream pdfAsImage =)
                     {
                         //Byte[] bytes = File.ReadAllBytes(fullFilePath);
                         Byte[] bytes = pdfAsImage.ToArray();
                         String file = Convert.ToBase64String(bytes);
-                        return "data:image/png;base64," + file;
-                    }
+                        return "data:application/pdf;base64," + file;
+                    }*/
+                    FileStream fs = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read);
+                    byte[] bytes = new byte[fs.Length];
+                    fs.Read(bytes, 0, Convert.ToInt32(fs.Length));
+                    String file = Convert.ToBase64String(bytes,Base64FormattingOptions.None);
+                    //String file = Base64.encodeBase64(bytes);
+                    return "data:application/pdf;base64," + file;
                 }
                 log.Error("Document Not Found: " + fullFilePath);
                 var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("Document Not Found!!");

@@ -22,7 +22,7 @@ namespace CfdiService.Shapes
         public string DocumentBytes { get; set; }
         public string EmployeeConcern { get; set; }
         public Nullable<int> BatchId { get; set; }
-        public string PayAmount { get; set; }
+        public decimal PayAmount { get; set; }
         public int AlwaysShow { get; set; }
 
         public class LinksClass
@@ -45,7 +45,7 @@ namespace CfdiService.Shapes
                 DocumentBytes = NomiFileAccess.GetFile(document), 
                 EmployeeConcern = document.EmployeeConcern,
                 AlwaysShow = document.AlwaysShow,
-                PayAmount = document.PayAmount.ToString(),
+                PayAmount = document.PayAmount,
                 UploadTime = document.UploadTime.ToShortDateString(),
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
                 SignStatusText =  document.SignStatus == Model.SignStatus.SinFirma ?  "Sin Firma": document.SignStatus.ToString(), // this Sin Firma needs addressed and not hard coded
@@ -62,7 +62,7 @@ namespace CfdiService.Shapes
             if (document == null)
                 document = new Document();
 
-            document.PayAmount = decimal.Parse(documentShape.PayAmount);
+            document.PayAmount = documentShape.PayAmount;
             document.ClientCompanyId = documentShape.ClientCompanyId;
             document.DocumentId = documentShape.DocumentId;
             document.EmployeeId = documentShape.EmployeeId;

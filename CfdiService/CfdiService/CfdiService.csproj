@@ -187,6 +187,7 @@
     <Compile Include="Shapes\ClientUserShape.cs" />
     <Compile Include="Shapes\CompanyListShape.cs" />
     <Compile Include="Shapes\CompanyShape.cs" />
+    <Compile Include="Shapes\DateRangeRequest.cs" />
     <Compile Include="Shapes\DocumentShape.cs" />
     <Compile Include="Shapes\DocumentListShape.cs" />
     <Compile Include="Shapes\EmployeeListShape.cs" />

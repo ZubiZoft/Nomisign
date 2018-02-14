@@ -83,6 +83,7 @@ namespace CfdiService.Controllers
         public IHttpActionResult AddFile(int batchid, [FromBody] CfdiService.Shapes.FileUpload upload)
         {
             Batch batch = db.Batches.Find(batchid);
+            Company company = db.Companies.Find(batch.CompanyId);
             if (batch == null)
             {
                 log.Error("Error adding document: batch not found: " + batchid);
@@ -107,7 +108,7 @@ namespace CfdiService.Controllers
                 // this only applies to XML vis bulk uploader
                 if (!string.IsNullOrEmpty(upload.XMLContent))
                 {
-                    EvaluateBulkUpload(upload, batch, newDoc);
+                    EvaluateBulkUpload(upload, batch, newDoc, company);
                 }
                 else // this only applies to admin app uploads where no xml is supplied
                 {
@@ -212,12 +213,117 @@ namespace CfdiService.Controllers
 
             return Ok();
         }
+        [HttpPost]
+        [Route("uploadfilesfront/{companyId}")]
+        public IHttpActionResult UploadFilesFront(int companyId, [FromBody] List<FileUpload> flist)
+        {
+            Company company = db.Companies.Find(companyId);
+            Batch batchn = new Batch
+            {
+                Company = company,
+                CompanyId = company.CompanyId,
+                BatchOpenTime = DateTime.Now,
+                BatchCloseTime = SqlDateTime.MinValue.Value,
+                ItemCount = flist.Count,
+                WorkDirectory = Guid.NewGuid().ToString(),
+                ActualItemCount = 0,
+                BatchStatus = BatchStatus.Open,
+                ApiKey = company.ApiKey,
+            };
 
+            company.SignatureBalance -= flist.Count;
+            db.Batches.Add(batchn);
+            db.SaveChanges();
+            int BatchId = batchn.BatchId;
+            foreach (FileUpload filetemp in flist)
+            {
+                log.Info("XMLContent: " + filetemp.XMLContent + "\n");
+                log.Info("Filehash: " + filetemp.FileHash + "\n");
+
+                //Checking for duplicate Receipt XML Hash
+                //if (CheckifReceiptAlreadyExists(filetemp))
+                    //continue;
+                
+                if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)){ continue; }
+                Batch batch = db.Batches.Find(BatchId);
+                if (batch == null)
+                {
+                    log.Error("Error adding document: batch not found: " + BatchId);
+                    return BadRequest();
+                }
+                if (batch.ItemCount == batch.ActualItemCount)
+                {
+                    log.Error("Error adding document: canceling batch due to item count: " + BatchId);
+                    CancelBatch(batch);
+                    return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
+                }
+                Document newDoc = new Model.Document
+                {
+                    Batch = batch,
+                    UploadTime = DateTime.Now,
+                    SignStatus = SignStatus.SinFirma,
+                    PathToFile = Guid.NewGuid().ToString(),
+                    CompanyId = company.CompanyId
+                };
+
+                try
+                {
+                    // this only applies to XML vis bulk uploader
+                    if (!string.IsNullOrEmpty(filetemp.XMLContent))
+                    {
+                        EvaluateBulkUpload(filetemp, batch, newDoc, company);
+                    }
+                    else // this only applies to admin app uploads where no xml is supplied
+                    {
+                        EvaluateAdminUpload(filetemp, batch, newDoc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Error adding document: verification failed", ex);
+                    // log exception
+                    return BadRequest();
+                }
+
+                SaveContent(filetemp, newDoc);
+
+                // send notifications - if fail, log but dont return error code.
+                try
+                {
+                    // Send SMS alerting employee of new docs
+                    // send notifications
+                    string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                    SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
+                    if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                    {
+                        SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("warning adding document: one or both notifications failed to send", ex);
+                }
+                finally
+                { // commit to DB
+                    db.Documents.Add(newDoc);
+                    batch.ActualItemCount++;
+                    db.SaveChanges();
+                }
+            }
+            return Ok();
+        }
+        private bool CheckifReceiptAlreadyExists(FileUpload filetemp)
+        {
+            var docListResult = db.Documents.Where(x => x.FileHash == filetemp.FileHash).ToList();
+            if (docListResult.Count > 0)
+                return true;
+            else
+                return false;
+        }
         private void CancelBatch(Batch batch)
         {
 
         }
-
         private void EvaluateAdminUpload(FileUpload upload, Batch batch, Document doc)
         {
             Employee emp = db.Employees.FirstOrDefault(e => e.CURP == upload.EmployeeCURP);
@@ -251,7 +357,7 @@ namespace CfdiService.Controllers
             // dont have this data on admin upload
             doc.PayperiodDate = DateTime.Now;
         }
-        private void EvaluateBulkUpload(FileUpload upload, Batch batch, Document doc)
+        private void EvaluateBulkUpload(FileUpload upload, Batch batch, Document doc, Company company)
         {
             // No need for this if only a PDF doc is uploadded by admin screen
             if (string.IsNullOrEmpty(upload.XMLContent))
@@ -266,31 +372,94 @@ namespace CfdiService.Controllers
 
             XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
             XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
-            XElement elem = root.Element(cfdi + "Emisor");
-            XAttribute emisorRfc = elem.Attribute("rfc");
-            elem = root.Element(cfdi + "Conceptos");
-            elem = elem.Descendants(cfdi + "Concepto").First();
-            XAttribute payAmount = elem.Attribute("importe");
-            elem = root.Element(cfdi + "Receptor");
-            XAttribute receptorRfc = elem.Attribute("rfc");
-            XAttribute fullName = elem.Attribute("nombre");
-            elem = root.Descendants(nomina12 + "Nomina").First();
-            XAttribute payPeriod = elem.Attribute("FechaFinalPago");
-            elem = elem.Descendants(nomina12 + "Receptor").First();
-            XAttribute receptorCurp = elem.Attribute("Curp");
+
+            //XElement elem = root.Element(cfdi + "Emisor");
+            XElement elem = null;
+            ElementCheckXMLTagValue(cfdi, "Emisor", root, ref elem);
+            XAttribute emisorRfc = null;
+            AttributeCheckXMLTagValue("rfc", elem, ref emisorRfc);
+            XAttribute emisorName = null;
+            AttributeCheckXMLTagValue("Nombre", elem, ref emisorName);
+            XAttribute emisorRegimenFiscal = null;
+            AttributeCheckXMLTagValue("RegimenFiscal", elem, ref emisorRegimenFiscal);
+            XElement conceptoselem = null;
+            ElementCheckXMLTagValue(cfdi, "Conceptos", root, ref conceptoselem);
+            XElement conceptoelem = null;
+            DescendantsCheckXMLTagValue(cfdi, "Concepto", conceptoselem, ref conceptoelem);
+            XAttribute payAmount = null;
+            AttributeCheckXMLTagValue("importe", conceptoelem, ref payAmount);
+            XElement Receptorelem = null;
+            ElementCheckXMLTagValue(cfdi, "Receptor", root, ref Receptorelem);
+            XAttribute receptorRfc = null;
+            AttributeCheckXMLTagValue("rfc", Receptorelem, ref receptorRfc);
+            XAttribute receptorfullName = null;
+            AttributeCheckXMLTagValue("nombre", Receptorelem, ref receptorfullName);
+            XElement complementoelem = null;
+            ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
+            XElement nomina = null;
+            DescendantsCheckXMLTagValue(nomina12, "Nomina", complementoelem, ref nomina);
+            XAttribute payPeriod = null;
+            AttributeCheckXMLTagValue("FechaFinalPago", nomina, ref payPeriod);
+            XElement nominaReceptor = null;
+            DescendantsCheckXMLTagValue(nomina12, "Receptor", complementoelem, ref nominaReceptor);
+            XAttribute receptorCurp = null;
+            AttributeCheckXMLTagValue("Curp", nominaReceptor, ref receptorCurp);
+            // try to get client RFC - may not be one
+            XElement nominaSubcontracion = null;
+            DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
+            XAttribute clientRfc = null;
+            AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+
+            /* //XElement elem = root.Element(cfdi + "Emisor");
+             XElement elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Emisor", root);
+            //XAttribute emisorRfc = elem.Attribute("rfc");
+            XAttribute emisorRfc = AttributeCheckXMLTagValue("rfc", elem);
+            //elem = root.Element(cfdi + "Conceptos");
+            elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Conceptos", root);
+            //elem = elem.Descendants(cfdi + "Concepto").First();
+            elem = DescendantsCheckXMLTagValue(cfdi.NamespaceName, "Concepto", root);
+            //XAttribute payAmount = elem.Attribute("importe");
+            XAttribute payAmount = AttributeCheckXMLTagValue("importe", elem);
+            //elem = root.Element(cfdi + "Receptor");
+            elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Receptor", root);
+            //XAttribute receptorRfc = elem.Attribute("rfc");
+            XAttribute receptorRfc = AttributeCheckXMLTagValue("rfc", elem);
+            //XAttribute fullName = elem.Attribute("nombre");
+            XAttribute fullName = AttributeCheckXMLTagValue("nombre", elem);
+            //elem = root.Descendants(nomina12 + "Nomina").First();
+            elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Nomina", root);
+            //XAttribute payPeriod = elem.Attribute("FechaFinalPago");
+            XAttribute payPeriod = AttributeCheckXMLTagValue("FechaFinalPago", elem);
+            //elem = elem.Descendants(nomina12 + "Receptor").First();
+            elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Receptor", root);
+            //XAttribute receptorCurp = elem.Attribute("Curp");
+            XAttribute receptorCurp = AttributeCheckXMLTagValue("Curp", elem);
             XAttribute clientRfc = null;
 
             // try to get client RFC - may not be one
             try
             {
-                elem = root.Element(cfdi + "Complemento");
-                elem = elem.Descendants(nomina12 + "Nomina").First();
-                elem = elem.Descendants(nomina12 + "Receptor").First();
-                elem = elem.Descendants(nomina12 + "SubContratacion").First();
-                clientRfc = elem.Attribute("RfcLabora");
+                //elem = root.Element(cfdi + "Complemento");
+                elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Complemento", root);
+                //elem = elem.Descendants(nomina12 + "Nomina").First();
+                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Nomina", elem);
+                //elem = elem.Descendants(nomina12 + "Receptor").First();
+                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Receptor", elem);
+                //elem = elem.Descendants(nomina12 + "SubContratacion").First();
+                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "SubContratacion", elem);
+                //clientRfc = elem.Attribute("RfcLabora");
+                clientRfc = AttributeCheckXMLTagValue("RfcLabora", elem);
             }
             catch (Exception ex)
-            { log.Error("Error adding document: bulk verification failed", ex); }
+            { log.Error("Error adding document: bulk verification failed", ex); }*/
+            if (emisorRfc == null)
+                log.Info("emisorRfc is NULL");
+            if (receptorRfc == null)
+                log.Info("receptorRfc is NULL");
+            if (receptorCurp == null)
+                log.Info("receptorCurp is NULL");
+            if (payPeriod == null)
+                log.Info("payPeriod is NULL");
 
             if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
                 throw new ApplicationException("Invalid XML format");
@@ -304,13 +473,13 @@ namespace CfdiService.Controllers
                 emp = new Employee
                 {
                     RFC = (string)receptorRfc,
-                    FullName = (string)fullName,
+                    FullName = (string)receptorfullName,
                     CURP = (string)receptorCurp,
                     CreatedDate = DateTime.Now,
                     LastLoginDate = SqlDateTime.MinValue.Value,
                     EmployeeStatus = EmployeeStatusType.Unverified,
                     CreatedByUserId = 1, // what to put here?
-                    CellPhoneNumber = "52."
+                    CellPhoneNumber = ""
                 };
                 emp.Company = batch.Company;
                 db.Employees.Add(emp);
@@ -343,9 +512,12 @@ namespace CfdiService.Controllers
                 log.Error("warning adding document: employee not found for CURP " + (string)receptorCurp);
             }
 
-
-            if (emp.Company.CompanyRFC != emisorRfc.Value)
-                throw new ApplicationException("Employee RFC with ID: " + receptorRfc + " does not match Company RFC: " + emisorRfc);
+            log.Info("Emisor: " + emisorRfc);
+            log.Info("Receptor: " + receptorRfc);
+            log.Info("Company: " + emp.Company.CompanyRFC);
+            //Changed emp.Company.CompanyRFC to be current company since one employee can be in several companies.
+            if (company.CompanyRFC != emisorRfc.Value)
+                throw new ApplicationException("Company RFC with ID: " + company.CompanyRFC + " does not match Company RFC in xml: " + emisorRfc);
 
             if (clientRfc != null)
             {
@@ -362,6 +534,65 @@ namespace CfdiService.Controllers
             doc.FileHash = upload.FileHash;
             doc.PayperiodDate = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
+        }
+
+        private void AttributeCheckXMLTagValue(string tag, XElement elem, ref XAttribute element)
+        {
+            try { element = elem.Attribute(tag); } catch { }
+            if (element == null)
+            { try { element = elem.Attribute(FirstCharToUpper(tag)); } catch { } }
+            if (element == null)
+            { try { element = elem.Attribute(FirstCharToLower(tag)); } catch { } }
+            if (element == null)
+            { try { element = elem.Attribute(tag.ToLower()); } catch { } }
+            if (element == null)
+            { try { element = elem.Attribute(tag.ToUpper()); } catch { } }
+        }
+
+        private void DescendantsCheckXMLTagValue(XNamespace cfdi, string tag, XElement root, ref XElement elem)
+        {
+            try { elem = root.Descendants(cfdi + tag).First(); } catch { }
+            if (elem == null)
+            { try { elem = root.Descendants(cfdi + FirstCharToUpper(tag)).First(); } catch { } }
+            if (elem == null)
+            { try { elem = root.Descendants(cfdi + FirstCharToLower(tag)).First(); } catch { } }
+            if (elem == null)
+            { try { elem = root.Descendants(cfdi + tag.ToLower()).First(); } catch { } }
+            if (elem == null)
+            { try { elem = root.Descendants(cfdi + tag.ToUpper()).First(); } catch { } }
+        }
+
+        private void ElementCheckXMLTagValue(XNamespace cfdi, string tag, XElement root, ref XElement elem2)
+        {
+            try { elem2 = root.Element(cfdi + tag); } catch { }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + FirstCharToUpper(tag)); } catch { } }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + FirstCharToLower(tag)); } catch { } }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + tag.ToLower()); } catch { } }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + tag.ToUpper()); } catch { } }
+        }
+
+        public static string FirstCharToLower(string input)
+        {
+            switch (input)
+            {
+                case null: return "";
+                case "": return "";
+                default: return input.First().ToString().ToLower() + input.Substring(1);
+            }
+        }
+
+        public static string FirstCharToUpper(string input)
+        {
+            switch (input)
+            {
+                case null: return "";
+                case "": return "";
+                default: return input.First().ToString().ToUpper() + input.Substring(1);
+            }
         }
 
         private void ValidateContentHash(byte[] content, string hash)
@@ -387,7 +618,9 @@ namespace CfdiService.Controllers
         {
             // Admin screen upload does not include Xml
             if (!string.IsNullOrEmpty(upload.XMLContent)){ NomiFileAccess.WriteFile(doc, upload.XMLContent, Strings.XML_EXT); }
-            NomiFileAccess.WriteEncodedFile(doc, upload.PDFContent, Strings.PDF_EXT);
+            //NomiFileAccess.WriteEncodedFile(doc, upload.PDFContent, Strings.PDF_EXT);
+            var company = db.Companies.Find(doc.CompanyId);
+            NomiFileAccess.WriteEncodedFileAttachedXML(doc, upload.PDFContent, Strings.PDF_EXT, upload.XMLContent, company);
         }
 
         private void GetVolumePaths(out string vol1, out string path1, out string vol2, out string path2, string companyDir)
@@ -406,11 +639,11 @@ namespace CfdiService.Controllers
             vol2 = ConfigurationManager.AppSettings["CurrentVolume-2"];
         }
 
-
         private bool CanWriteTo(string dir)
         {
             return true;
         }
+
     }
 
 }

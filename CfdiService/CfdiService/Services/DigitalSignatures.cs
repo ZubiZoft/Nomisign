@@ -3,6 +3,7 @@ using Aspose.Pdf.Facades;
 using Aspose.Pdf.Forms;
 using System;
 using System.Collections;
+using System.IO;
 
 namespace CfdiService.Services
 {
@@ -26,12 +27,12 @@ namespace CfdiService.Services
                     using (PdfFileSignature signature = new PdfFileSignature(document))
                     {
                         PKCS7 pkcs = new PKCS7(_rootDiskPath + @"\" + _pfxFileName, _pfxFilePassword); // "RQP@ssw0rd"); // Use PKCS7/PKCS7Detached objects
-                        pkcs.Location = "Mejico";
+                        pkcs.Location = "Mexico";
                         pkcs.Reason = "Approved by: " + originalPdfDocument.Employee.FullName;
                         DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
-                        System.Drawing.Rectangle rect = new System.Drawing.Rectangle(100, 100, 500, 100);
+                        System.Drawing.Rectangle rect = new System.Drawing.Rectangle(50, 500, 500, 100);
                         // Create any of the three signature types
-                        signature.Certify(1, "Signature Reason", "Contact", "Location", true, rect, docMdpSignature);
+                        signature.Certify(document.Pages.Count, "Signature Reason", "Contact", "Location", true, rect, docMdpSignature);
                         // Save output PDF file
                         signature.Save(originalPdfDocumentPath);
                         // Create backup of signed copy to location 2 - no database record needed
@@ -42,6 +43,34 @@ namespace CfdiService.Services
             catch (Exception ex)
             {
                 log.Error("Error signing PDF documents:  " + originalPdfDocument, ex);
+            }
+        }
+
+        public static void SignPdfDocumentMergedDocs(CfdiService.Model.Document modeldoc,ref Document document)
+        {
+            try
+            {
+                // get document path
+                string originalPdfDocumentPath = NomiFileAccess.GetFilePath(modeldoc);
+                
+                using (PdfFileSignature signature = new PdfFileSignature(document))
+                {
+                    PKCS7 pkcs = new PKCS7(_rootDiskPath + @"\" + _pfxFileName, _pfxFilePassword); // "RQP@ssw0rd"); // Use PKCS7/PKCS7Detached objects
+                    pkcs.Location = "Mexico";
+                    pkcs.Reason = "Approved by: " + modeldoc.Employee.FullName;
+                    DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
+                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(100, 100, 400, 100);
+                    // Create any of the three signature types
+                    signature.Certify(1, "Signature Reason", "Contact", "Location", true, rect, docMdpSignature);
+                    // Save output PDF file
+                    signature.Save(originalPdfDocumentPath);
+                    // Create backup of signed copy to location 2 - no database record needed
+                    //NomiFileAccess.BackupFileToLocation2(modeldoc.CompanyId, originalPdfDocumentPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error signing PDF documents:  " + modeldoc, ex);
             }
         }
     }
