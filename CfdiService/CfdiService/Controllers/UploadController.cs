@@ -326,7 +326,7 @@ namespace CfdiService.Controllers
         }
         private void EvaluateAdminUpload(FileUpload upload, Batch batch, Document doc)
         {
-            Employee emp = db.Employees.FirstOrDefault(e => e.CURP == upload.EmployeeCURP);
+            Employee emp = db.Employees.FirstOrDefault(e => e.CURP == upload.EmployeeCURP && e.CompanyId == batch.CompanyId);
             if (emp == null)
             {
                 log.Error("Error adding document: employee not found: " + emp.EmployeeId);
@@ -464,7 +464,7 @@ namespace CfdiService.Controllers
             if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
                 throw new ApplicationException("Invalid XML format");
 
-            Employee emp = db.FindEmployeeByCurp((string)receptorCurp);
+            Employee emp = db.FindEmployeeByCURPCompany(company.CompanyId, (string)receptorCurp);
             if (emp == null)
             {
                 // create employee setting full name

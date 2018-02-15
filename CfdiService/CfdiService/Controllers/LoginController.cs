@@ -147,46 +147,57 @@ namespace CfdiService.Controllers
                 return BadRequest(ModelState);
             }
 
-            Employee emp;
-            EmployeesCode code;
+            Dictionary<Employee, EmployeesCode> emps = null;
             var employeeByPhone = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            if (employeeByPhone.Count != 1)
+            if (employeeByPhone.Count < 1)
             {
-                log.Info("Login by email: " + employeeShape.EmailAddress);
                 var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Trim().Equals(employeeShape.CellPhoneNumber.Trim(), StringComparison.InvariantCultureIgnoreCase)).ToList();
-                log.Info("Employee : " + employeeByEmail.Count);
-                emp = employeeByEmail[0];
-                code = db.EmployeeSecurityCodes.Find(emp.EmployeeId);
-                if (null == code)
+                foreach (var e in employeeByEmail)
                 {
-                    return BadRequest("Employee password data is not found");
+                    var code = db.EmployeeSecurityCodes.Find(e.EmployeeId);
+                    if (null == code)
+                    {
+                        continue;
+                    }
+                    emps.Add(e, code);
                 }
-                //return BadRequest("Invalid Login Data");
             }
             else
             {
-                log.Info("Login by phone: " + employeeShape.CellPhoneNumber);
-                emp = employeeByPhone[0];
-                code = db.EmployeeSecurityCodes.Find(emp.EmployeeId);
-                if(null == code)
+                foreach (var e in employeeByPhone)
                 {
-                    return BadRequest("Employee password data is not found");
+                    var code = db.EmployeeSecurityCodes.Find(e.EmployeeId);
+                    if (null == code)
+                    {
+                        continue;
+                    }
+                    emps.Add(e, code);
                 }
             }
 
-            // no null passwords allowed
-            if (null != emp.PasswordHash && 
-                emp.EmployeeStatus == EmployeeStatusType.Active && 
-                emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
+            if (emps.Count < 1)
             {
-                emp.LastLoginDate = DateTime.Now;
-                db.SaveChanges();
-                // hide password 
-                emp.PasswordHash = string.Empty;
-                return Ok(EmployeeShape.FromDataModel(emp, Request));
+                return BadRequest("Employee password data is not found");
             }
 
-            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + emp.PasswordHash);
+            // no null passwords allowed
+            foreach (var e in emps)
+            {
+                var emp = e.Key;
+                var code = e.Value;
+                if (null != emp.PasswordHash &&
+                    emp.EmployeeStatus == EmployeeStatusType.Active &&
+                    emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
+                {
+                    emp.LastLoginDate = DateTime.Now;
+                    db.SaveChanges();
+                    // hide password 
+                    emp.PasswordHash = string.Empty;
+                    return Ok(EmployeeShape.FromDataModel(emp, Request));
+                }
+            }
+
+            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + employeeShape.PasswordHash);
             return BadRequest("Invalid Login");
         } 
 
