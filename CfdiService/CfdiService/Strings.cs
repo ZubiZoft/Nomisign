@@ -22,7 +22,9 @@ namespace CfdiService
         //    httpDomain, employee.EmployeeId );
 
         // Spanish SMS and email message
-        public static readonly string newEmployeeWelcomeMessge = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite este link http://{0}/nomisign/account/{1} para crear su contraseña Codigo de seguridad: {2}";
+        public static readonly string newEmployeeWelcomeMessge = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite este link http://{0}/nomisign/account/{1} para crear su contraseña. Código de seguridad: {2}";
+        public static readonly string newEmployeeWelcomeMessgeMobile = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite el siguiente link para crear su contraseña. Código de seguridad: {0}";
+        public static readonly string newEmployeeWelcomeMessgeMobileLink = "http://{0}/nomisign/account/{1}";
 
         public static readonly string newEmployeeWelcomeMessgeEmailSubject = "Bienvenido a Nomisign";
 

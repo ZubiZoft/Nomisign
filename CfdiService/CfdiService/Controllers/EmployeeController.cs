@@ -262,9 +262,9 @@ namespace CfdiService.Controllers
             {
                 // transform to data model
                 e.CellPhoneNumber = employee.CellPhoneNumber;
-                db.SaveChanges();
+                db.Entry(e).State = System.Data.Entity.EntityState.Modified;
             }
-            
+            db.SaveChanges();
             return Ok(employeeShape);
         }
 
@@ -313,10 +313,11 @@ namespace CfdiService.Controllers
                     db.SaveChanges();
                      
                     string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
-
+                    string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, codes.Vcode);
                     if (null != employee.CellPhoneNumber)
                     {
-                        SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
+                        SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);
+                        SendSMS.SendSMSMsg(employee.CellPhoneNumber, String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId));
                     }
 
                     SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, msgBodySpanish);
