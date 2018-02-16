@@ -3,6 +3,7 @@ using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
@@ -16,7 +17,7 @@ namespace CfdiService.Controllers
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         private ModelDbContext db = new ModelDbContext();
 
-        
+
         /*[HttpGet]
         [Route("documents/{id}/{file}/Download")]
         public IHttpActionResult GetReceipts(int id)
@@ -46,15 +47,20 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetDocuments(int eid)
         {
             var result = new List<DocumentListShape>();
-            try {
-                
-                var docListResult = db.Documents.Where(x => x.EmployeeId == eid).ToList();
-                foreach (Document doc in docListResult)
+            try
+            {
+                var emp = db.Employees.FirstOrDefault(e => e.EmployeeId == eid);
+                var emps = db.Employees.Where(e => e.CURP == emp.CURP).ToList();
+                foreach (var e in emps)
                 {
-                    result.Add(DocumentListShape.FromDataModel(doc, Request));
+                    var docListResult = db.Documents.Where(x => x.EmployeeId == e.EmployeeId).ToList();
+                    foreach (Document doc in docListResult)
+                    {
+                        result.Add(DocumentListShape.FromDataModel(doc, Request));
+                    }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 log.Error("Error getting documents for user Id:  " + eid, ex);
                 return BadRequest(ex.Message);
@@ -92,7 +98,7 @@ namespace CfdiService.Controllers
             log.Info("Init Date: " + range.InitDate);
             log.Info("End Date: " + range.EndDate);
             DateTime initdateT = DateTime.Parse(range.InitDate);
-            DateTime enddateT = DateTime.Parse(range.EndDate);
+            DateTime enddateT = DateTime.Parse(range.EndDate).AddDays(1);
             var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.PayperiodDate >= initdateT && enddateT >= x.PayperiodDate).ToList();
             foreach (Document doc in docListResult)
             {
@@ -227,14 +233,15 @@ namespace CfdiService.Controllers
             var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.SignStatus == SignStatus.SinFirma).ToList();
             foreach (Document doc in docListResult)
             {
-                try {
+                try
+                {
                     if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
                     {
                         string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
                         SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     log.Error("Error sending SMS", ex);
                 }
@@ -274,7 +281,8 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetDocument(int id)
         {
             Document document = null;
-            try {
+            try
+            {
                 document = db.Documents.Find(id);
                 db.Entry(document).Reference(b => b.Batch).Load();
                 if (document == null)
@@ -282,7 +290,7 @@ namespace CfdiService.Controllers
                     return NotFound();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 log.Error("Error getting document Id:  " + id, ex);
                 return BadRequest(ex.Message);
@@ -308,10 +316,17 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-            if(documentShape.SignStatus == 2 && document.SignStatus != SignStatus.Firmado)
+            if (documentShape.SignStatus == 2 && document.SignStatus != SignStatus.Firmado)
             {
                 // sign document
-                DigitalSignatures.SignPdfDocument(document);
+                if (document.AlwaysShow == 0)
+                {
+                    document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
+                }
+                else
+                {
+                    document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
+                }
             }
             DocumentShape.ToDataModel(documentShape, document);
             db.SaveChanges();
@@ -336,7 +351,7 @@ namespace CfdiService.Controllers
 
         // DELETE: api/companyusers/5
         [HttpDelete]
-        [Route("documents/{id}") ]
+        [Route("documents/{id}")]
         public IHttpActionResult DeleteDocument(int id)
         {
             Document document = db.Documents.Find(id);

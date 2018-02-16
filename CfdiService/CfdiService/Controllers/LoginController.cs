@@ -142,64 +142,74 @@ namespace CfdiService.Controllers
         [Route("login")]
         public IHttpActionResult DoEmployeeLogin(EmployeeShape employeeShape)
         {
+            log.Info("1");
             if (!ModelState.IsValid)
             {
+                log.Info("1.1");
                 return BadRequest(ModelState);
             }
-
-            Dictionary<Employee, EmployeesCode> emps = null;
+            log.Info("2");
             var employeeByPhone = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (employeeByPhone.Count < 1)
             {
-                var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Trim().Equals(employeeShape.CellPhoneNumber.Trim(), StringComparison.InvariantCultureIgnoreCase)).ToList();
-                foreach (var e in employeeByEmail)
+                log.Info("2.1");
+                var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.CellPhoneNumber,
+                StringComparison.InvariantCultureIgnoreCase)).ToList();
+                log.Info("3");
+                if (employeeByEmail.Count < 1)
                 {
-                    var code = db.EmployeeSecurityCodes.Find(e.EmployeeId);
-                    if (null == code)
+                    log.Info("3.1");
+                    log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
+                    return BadRequest("Invalid Login Data");
+                }
+                else
+                {
+                    log.Info("3.2");
+                    // no null passwords allowed
+                    foreach (var emp in employeeByEmail)
                     {
-                        continue;
+                        log.Info("3.3");
+                        var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
+                        if (null != emp.PasswordHash &&
+                            emp.EmployeeStatus == EmployeeStatusType.Active &&
+                            emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
+                        {
+                            log.Info("3.4");
+                            emp.LastLoginDate = DateTime.Now;
+                            db.SaveChanges();
+                            // hide password 
+                            emp.PasswordHash = string.Empty;
+                            return Ok(EmployeeShape.FromDataModel(emp, Request));
+                        }
                     }
-                    emps.Add(e, code);
                 }
             }
             else
             {
-                foreach (var e in employeeByPhone)
+                log.Info("2.2");
+                // no null passwords allowed
+                foreach (var emp in employeeByPhone)
                 {
-                    var code = db.EmployeeSecurityCodes.Find(e.EmployeeId);
-                    if (null == code)
+                    log.Info("2.3");
+                    var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
+                    if (null != emp.PasswordHash &&
+                        emp.EmployeeStatus == EmployeeStatusType.Active &&
+                        emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                     {
-                        continue;
+                        log.Info("2.4");
+                        emp.LastLoginDate = DateTime.Now;
+                        db.SaveChanges();
+                        // hide password 
+                        emp.PasswordHash = string.Empty;
+                        return Ok(EmployeeShape.FromDataModel(emp, Request));
                     }
-                    emps.Add(e, code);
-                }
-            }
-
-            if (emps.Count < 1)
-            {
-                return BadRequest("Employee password data is not found");
-            }
-
-            // no null passwords allowed
-            foreach (var e in emps)
-            {
-                var emp = e.Key;
-                var code = e.Value;
-                if (null != emp.PasswordHash &&
-                    emp.EmployeeStatus == EmployeeStatusType.Active &&
-                    emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
-                {
-                    emp.LastLoginDate = DateTime.Now;
-                    db.SaveChanges();
-                    // hide password 
-                    emp.PasswordHash = string.Empty;
-                    return Ok(EmployeeShape.FromDataModel(emp, Request));
                 }
             }
 
             log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + employeeShape.PasswordHash);
             return BadRequest("Invalid Login");
-        } 
+        }
+
 
         [HttpPost]
         [Route("adminlogin")]

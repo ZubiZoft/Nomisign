@@ -128,7 +128,7 @@ namespace CfdiService.Controllers
             try {
                 // Send SMS alerting employee of new docs
                 // send notifications
-                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain);
                 SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
@@ -188,6 +188,7 @@ namespace CfdiService.Controllers
                 NomiFileAccess.WriteCompanyAgreementFile(company, batchInfo);
                 // write filename to DB
                 company.NewEmployeeDocument = batchInfo.FileName;
+                company.NewEmployeeGetDoc = NewEmployeeGetDocType.AddDocument; 
                 db.SaveChanges();
             }
             catch (Exception dbex)

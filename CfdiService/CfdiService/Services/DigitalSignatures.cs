@@ -16,13 +16,14 @@ namespace CfdiService.Services
         private static readonly string _rootDiskPath = System.Configuration.ConfigurationManager.AppSettings["rootDiskPath"];
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static void SignPdfDocument(CfdiService.Model.Document originalPdfDocument)
+        public static string SignPdfDocument(CfdiService.Model.Document originalPdfDocument)
         {
             try
             {
                 // get document path
                 string originalPdfDocumentPath = NomiFileAccess.GetFilePath(originalPdfDocument);
-                using (Document document = new Document(originalPdfDocumentPath))
+                string signedpath = NomiFileAccess.GetFilePathSigned(originalPdfDocument);
+                using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(originalPdfDocumentPath))
                 {
                     using (PdfFileSignature signature = new PdfFileSignature(document))
                     {
@@ -31,19 +32,23 @@ namespace CfdiService.Services
                         pkcs.Reason = "Approved by: " + originalPdfDocument.Employee.FullName;
                         DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
                         System.Drawing.Rectangle rect = new System.Drawing.Rectangle(50, 500, 500, 100);
+                        log.Info("document.Pages.Count : " + document.Pages.Count);
                         // Create any of the three signature types
                         signature.Certify(document.Pages.Count, "Signature Reason", "Contact", "Location", true, rect, docMdpSignature);
                         // Save output PDF file
-                        signature.Save(originalPdfDocumentPath);
-                        // Create backup of signed copy to location 2 - no database record needed
+                        signature.Save(signedpath);
+                        // Create backup of si gned copy to location 2 - no database record needed
                         NomiFileAccess.BackupFileToLocation2(originalPdfDocument.CompanyId, originalPdfDocumentPath);
                     }
                 }
+                File.Delete(originalPdfDocumentPath);
+                return signedpath;
             }
             catch (Exception ex)
             {
                 log.Error("Error signing PDF documents:  " + originalPdfDocument, ex);
             }
+            return null;
         }
 
         public static void SignPdfDocumentMergedDocs(CfdiService.Model.Document modeldoc,ref Document document)

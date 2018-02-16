@@ -136,6 +136,56 @@ namespace CfdiService.Controllers
         }
 
         [HttpPut]
+        [Route("employees/passwordsession/{id}")]
+        public IHttpActionResult UpdateEmployeePasswordSession(int id, EmployeeShape employeeShape)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            if (id != employeeShape.EmployeeId)
+            {
+                return BadRequest();
+            }
+            Employee employee = db.Employees.Find(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            // transform to data model
+            EmployeeShape.ToDataModel(employeeShape, employee);
+
+            // Get security codes
+            EmployeesCode codes = db.EmployeeSecurityCodes.Find(employee.EmployeeId);
+
+            // IF this is a password reset update, verify code.  dont make changes if not, unless unverified.
+            // TODO: add time expiration to vcode
+            if (employee.EmployeeStatus != EmployeeStatusType.Active && employeeShape.SecurityCode != codes.Vcode)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                // password is not set on initial employee creation
+                if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
+                {
+                    employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                    var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
+                    foreach (var e in emps)
+                    {
+                        e.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                    }
+                    db.SaveChanges();
+                }
+                codes.Vcode = string.Empty;
+                //db.SaveChanges(); redundant
+            }
+
+            db.SaveChanges();
+            return Ok(employeeShape);
+        }
+
+        [HttpPut]
         [Route("employees/password/{id}")]
         public IHttpActionResult UpdateEmployeePassword(int id, EmployeeShape employeeShape)
         {
@@ -170,15 +220,51 @@ namespace CfdiService.Controllers
                 if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
                 {
                     employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                    var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
+                    foreach (var e in emps)
+                    {
+                        e.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                    }
                     employee.FirstName = employeeShape.FirstName;
                     employee.LastName1 = employeeShape.LastName1;
                     employee.LastName2 = employeeShape.LastName2;
+                    db.SaveChanges();
                 }
                 codes.Vcode = string.Empty;
                 //db.SaveChanges(); redundant
             }
 
             db.SaveChanges();
+            return Ok(employeeShape);
+        }
+
+        [HttpPut]
+        [Route("employees/phone/{id}")]
+        public IHttpActionResult UpdateEmployeePhone(int id, EmployeeShape employeeShape)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != employeeShape.EmployeeId)
+            {
+                return BadRequest();
+            }
+            log.Info("New Employee Phone : " + employeeShape.CellPhoneNumber);
+            Employee employee = db.Employees.Find(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
+            foreach (var e in emps)
+            {
+                // transform to data model
+                e.CellPhoneNumber = employee.CellPhoneNumber;
+                db.SaveChanges();
+            }
+            
             return Ok(employeeShape);
         }
 
@@ -200,10 +286,12 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-
-            // transform to data model
-            EmployeeShape.ToDataModel(employeeShape, employee);
-
+            var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
+            foreach (var e in emps)
+            {
+                // transform to data model
+                EmployeeShape.ToDataModel(employeeShape, e);
+            }
             //seperate service for password change
             // but for one time updates for auto generated users need to set code
             try
@@ -346,7 +434,7 @@ namespace CfdiService.Controllers
             {
                 try
                 {
-                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage + ": " + employeeShape.CURP);
+                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
                     return Ok("Success");
                 }
                 catch(Exception ex)

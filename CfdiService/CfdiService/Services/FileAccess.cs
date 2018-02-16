@@ -48,6 +48,20 @@ namespace CfdiService.Services
             return Path.Combine(fullFilePath, document.PathToFile + ".pdf");
         }
 
+        internal static string GetFilePathSigned(Model.Document document)
+        {
+            verifyCompanyCache1(document.CompanyId);
+            // get full path to file
+            // path to file is computed
+            // 1. root from web.config
+            // 2. system working directory
+            // 3. company id
+            // 4. batch Id
+            var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory));
+            // return image
+            return Path.Combine(fullFilePath, "signed" + document.PathToFile + ".pdf");
+        }
+
         private static string RootFilePath
         {
             get
@@ -281,6 +295,8 @@ namespace CfdiService.Services
             // 4. batch Id
             var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory));
             // return image
+            log.Info("Print: " + fullFilePath);
+            log.Info("Print 2: " + document.PathToFile);
             return GetDocBytesAsbase64(fullFilePath, document.PathToFile);
         }
 
