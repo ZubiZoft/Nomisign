@@ -56,6 +56,15 @@ namespace CfdiService
             return employee;
         }
 
+        public List<Employee> FindEmployeesByCurp(string curp)
+        {
+            var employees = Employees
+                .Where(e => e.CURP == curp)
+                .ToList();
+
+            return employees;
+        }
+
         public Employee FindEmployeeByCURPCompany(int companyId, string curp)
         {
             var employee = Employees
@@ -63,6 +72,26 @@ namespace CfdiService
                 .FirstOrDefault();
 
             return employee;
+        }
+
+        public Employee FindEmployeeByAccount(string account)
+        {
+            var employee = Employees.Where(e => e.EmailAddress.Equals(account) || e.CellPhoneNumber.Equals(account)).FirstOrDefault();
+            return employee;
+        }
+
+        public int CountDocumentsByCompanyNUser(int companyId, int employeeId)
+        {
+            return Documents.Count(d => d.CompanyId == companyId && d.EmployeeId == employeeId && d.AlwaysShow == 1);
+        }
+
+        public List<Document> CountDocumentsNotSignedByCompanyNUser(int companyId, int employeeId)
+        {
+            return Documents.Where(d => d.CompanyId == companyId && 
+                    d.EmployeeId == employeeId && 
+                    d.AlwaysShow == 1 && 
+                    d.SignStatus == SignStatus.SinFirma)
+                    .ToList();
         }
 
         virtual public DbSet<Batch> Batches { get; set; }

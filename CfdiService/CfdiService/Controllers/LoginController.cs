@@ -145,66 +145,58 @@ namespace CfdiService.Controllers
         [Route("login")]
         public IHttpActionResult DoEmployeeLogin(EmployeeShape employeeShape)
         {
-            log.Info("1");
             if (!ModelState.IsValid)
             {
-                log.Info("1.1");
                 return BadRequest(ModelState);
             }
-            log.Info("2");
             var employeeByPhone = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (employeeByPhone.Count < 1)
             {
-                log.Info("2.1");
                 var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.CellPhoneNumber,
                 StringComparison.InvariantCultureIgnoreCase)).ToList();
-                log.Info("3");
                 if (employeeByEmail.Count < 1)
                 {
-                    log.Info("3.1");
                     log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
                     return BadRequest("Invalid Login Data");
                 }
                 else
                 {
-                    log.Info("3.2");
                     // no null passwords allowed
                     foreach (var emp in employeeByEmail)
                     {
-                        log.Info("3.3");
                         var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
                         if (null != emp.PasswordHash &&
                             emp.EmployeeStatus == EmployeeStatusType.Active &&
                             emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                         {
-                            log.Info("3.4");
                             emp.LastLoginDate = DateTime.Now;
                             db.SaveChanges();
                             // hide password 
                             emp.PasswordHash = string.Empty;
-                            return Ok(EmployeeShape.FromDataModel(emp, Request));
+                            var eShape = EmployeeShape.FromDataModel(emp, Request);
+                            eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                            return Ok(eShape);
                         }
                     }
                 }
             }
             else
             {
-                log.Info("2.2");
                 // no null passwords allowed
                 foreach (var emp in employeeByPhone)
                 {
-                    log.Info("2.3");
                     var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
                     if (null != emp.PasswordHash &&
                         emp.EmployeeStatus == EmployeeStatusType.Active &&
                         emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                     {
-                        log.Info("2.4");
                         emp.LastLoginDate = DateTime.Now;
                         db.SaveChanges();
                         // hide password 
                         emp.PasswordHash = string.Empty;
-                        return Ok(EmployeeShape.FromDataModel(emp, Request));
+                        var eShape = EmployeeShape.FromDataModel(emp, Request);
+                        eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                        return Ok(eShape);
                     }
                 }
             }
@@ -213,6 +205,27 @@ namespace CfdiService.Controllers
             return BadRequest("Invalid Login");
         }
 
+        [HttpPost]
+        [Route("contracts")]
+        public IHttpActionResult HasContractToSign(EmployeeShape employeeShape)
+        {
+            try
+            {
+                if (LooksForAUnSignedContract(employeeShape.CellPhoneNumber))
+                {
+                    return Ok("ContractToSign");
+                }
+                return Ok("NoContractToSIgn");
+            }
+            catch(Exception e)
+            {
+                log.Info(e);
+                log.Info(e.StackTrace);
+                log.Info(e.Message);
+                log.Info(e.Source);
+            }
+            return BadRequest("Server Error");
+        }
 
         [HttpPost]
         [Route("adminlogin")]
@@ -309,6 +322,36 @@ namespace CfdiService.Controllers
                 adminUser.EmailAddress = "manager@nomisign.com";
                 adminUser.PhoneNumber = "";
                 return true;
+            }
+
+            return false;
+        }
+
+        private bool LooksForAUnSignedContract(string account)
+        {
+            var employeeAcc = db.FindEmployeeByAccount(account);
+
+            var commonEmplyees = db.FindEmployeesByCurp(employeeAcc.CURP);
+
+            foreach (var e in commonEmplyees)
+            {
+                var countDocs = db.CountDocumentsByCompanyNUser(e.CompanyId, e.EmployeeId);
+                if (countDocs > 1)
+                {
+                    continue;
+                }
+                else
+                {
+                    var unsignedDocs = db.CountDocumentsNotSignedByCompanyNUser(e.CompanyId, e.EmployeeId);
+                    if (unsignedDocs.Count() < 1)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
             }
 
             return false;
