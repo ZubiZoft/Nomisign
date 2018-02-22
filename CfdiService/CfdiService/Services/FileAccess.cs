@@ -62,6 +62,20 @@ namespace CfdiService.Services
             return Path.Combine(fullFilePath, "signed" + document.PathToFile + ".pdf");
         }
 
+        internal static string GetFilePathTemp(Model.Document document)
+        {
+            verifyCompanyCache1(document.CompanyId);
+            // get full path to file
+            // path to file is computed
+            // 1. root from web.config
+            // 2. system working directory
+            // 3. company id
+            // 4. batch Id
+            var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory));
+            // return image
+            return Path.Combine(fullFilePath, "temp" + document.PathToFile + ".pdf");
+        }
+
         private static string RootFilePath
         {
             get
@@ -141,10 +155,10 @@ namespace CfdiService.Services
                     Aspose.Pdf.Document pdfDocument = new Aspose.Pdf.Document(streampdf, string.Format("{0}.{1}", originalPdfDocumentPath + document.PathToFile, "pdf"));
                     FileSpecification fileSpecification = new FileSpecification(xmlfullFilePath);
                     pdfDocument.EmbeddedFiles.Add(fileSpecification);
-                    // Add Signatures Page to Document
                     pdfDocument.Pages.Add();
                     pdfDocument.Save(originalPdfDocumentPath);
-                    using (Aspose.Pdf.Document newdoc = new Aspose.Pdf.Document(originalPdfDocumentPath))
+                    NomiFileAccess.BackupFileToLocation2(document.CompanyId, originalPdfDocumentPath);
+                    /*using (Aspose.Pdf.Document newdoc = new Aspose.Pdf.Document(originalPdfDocumentPath))
                     {
                         verifyCompanyCache1(document.CompanyId);
                         //Build the path to store PDF file
@@ -166,7 +180,7 @@ namespace CfdiService.Services
                             // Create backup of signed copy to location 2 - no database record needed
                             NomiFileAccess.BackupFileToLocation2(document.CompanyId, originalPdfDocumentPath);
                         }
-                    }
+                    }*/
                 }
             }
             catch (Exception ex)

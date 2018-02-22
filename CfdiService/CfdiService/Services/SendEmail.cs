@@ -33,6 +33,7 @@ namespace CfdiService.Services
             message.Subject = subject;
             message.From = new System.Net.Mail.MailAddress(_emailFromAddress);
             message.Body = body;
+            message.IsBodyHtml = true;
             using (System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient(_emailSmtpAddress, _emailSmtpPort))
             {
                 smtp.EnableSsl = true;

@@ -11,6 +11,7 @@ using System.Web.Http.Description;
 using CfdiService;
 using CfdiService.Model;
 using CfdiService.Shapes;
+using System.IO;
 
 namespace CfdiService.Controllers
 {

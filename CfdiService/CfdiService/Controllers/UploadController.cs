@@ -132,7 +132,9 @@ namespace CfdiService.Controllers
                 SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
-                    SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                    //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                    string res = "";
+                    SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                 }
             }
             catch(Exception ex) {
@@ -297,7 +299,9 @@ namespace CfdiService.Controllers
                     SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                     if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                     {
-                        SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                        //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                     }
                 }
                 catch (Exception ex)

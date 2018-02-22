@@ -67,8 +67,11 @@ namespace CfdiService.Controllers
                 
                 db.SaveChanges();
 
-                SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}", 
-                    httpDomain, employeeForReset.EmployeeId, code.Vcode));
+                //SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}", 
+                //    httpDomain, employeeForReset.EmployeeId, code.Vcode));
+                string res = "";
+                SendSMS.SendSMSQuiubo(String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}",
+                    httpDomain, employeeForReset.EmployeeId, code.Vcode), string.Format("+52{0}", employeeForReset.CellPhoneNumber), out res);
                 log.Info("Reset password request for user: " + employeeForReset.EmployeeId);
                 return Ok();
             }

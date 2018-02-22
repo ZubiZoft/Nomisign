@@ -311,16 +311,96 @@ namespace CfdiService.Controllers
                         db.EmployeeSecurityCodes.Add(codes);
                     }
                     db.SaveChanges();
-                     
+
+                    string customsizedmail = @"<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <title>TemplatesNomisign</title>
+  <base href=""/"">
+
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
+</head>
+<body bgcolor=""#efefef"" style=""color: #7e7e7e"">
+<table width=""100%"">
+  <tr>
+    <th width=""15%""></th>
+    <th width=""70%"" bgcolor=""#ffffff"">
+      <br>
+      <img width=""50%"" src=""http://18.216.139.244/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <br>
+      <br>
+      <br>
+      <h1>Bienvenido a Nomisign&copy;</h1>
+      <br>
+      <p>
+        Para completar tu registro, por favor da click en el siguiente botón e ingresa el siguiente codigo de seguridad #-SECCODE-# :
+      </p>
+      <br>
+      <div>
+        <table width=""100%"" cellpadding=""15px"">
+          <tr>
+            <th width=""30%""></th>
+            <th width=""40%"" bgcolor=""#2cbbc3"">
+              <a href=""http://18.216.139.244/nomisign/account/#-ID-#"" target=""_blank"">
+                Registro
+              </a>
+            </th>
+            <th width=""30%""></th>
+          </tr>
+        </table>
+      </div>
+      <br>
+      <p>O copia y pega la siguiente liga en cualquier navegador:</p>
+      <p>http://18.216.139.244/nomisign/account/#-ID-#</p>
+      <br>
+      <br>
+    </th>
+    <th width=""15%""></th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>
+      <small>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac
+        neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique,
+        tortor mauris molestie elit, et lacinia ipsum quam nec dui. Quisque nec mauris sit amet elit iaculis pretium sit
+        amet quis magna. Aenean velit odio, elementum in tempus ut, vehicula eu diam. Pellentesque rhoncus aliquam
+        mattis.
+        Ut vulputate eros sed felis sodales nec vulputate justo hendrerit. Vivamus varius pretium ligula, a aliquam odio
+        euismod sit amet. Quisque laoreet sem sit amet orci ullamcorper at ultricies metus viverra. Pellentesque arcu
+        mauris, malesuada quis ornare accumsan, blandit sed diam.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac
+        neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique,
+        tortor mauris molestie elit, et lacinia ipsum quam nec dui. Quisque nec mauris sit amet elit iaculis pretium sit
+        amet quis magna. Aenean velit odio, elementum in tempus ut, vehicula eu diam. Pellentesque rhoncus aliquam
+        mattis.
+        Ut vulputate eros sed felis sodales nec vulputate justo hendrerit. Vivamus varius pretium ligula, a aliquam odio
+        euismod sit amet. Quisque laoreet sem sit amet orci ullamcorper at ultricies metus viverra. Pellentesque arcu
+        mauris, malesuada quis ornare accumsan, blandit sed diam.
+      </small>
+    </th>
+    <th></th>
+  </tr>
+</table>
+</body>
+</html>
+";
+                    customsizedmail = customsizedmail.Replace("#-SECCODE-#", codes.Vcode);
+                    customsizedmail = customsizedmail.Replace("#-ID-#", employee.EmployeeId.ToString());
                     string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
                     string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, codes.Vcode);
                     if (null != employee.CellPhoneNumber)
                     {
-                        SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);
-                        SendSMS.SendSMSMsg(employee.CellPhoneNumber, String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId));
+                        //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);
+                        //SendSMS.SendSMSMsg(employee.CellPhoneNumber, String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId));
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", employee.CellPhoneNumber), out res);
+                        string res2 = "";
+                        SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
                     }
 
-                    SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, msgBodySpanish);
+                    SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, customsizedmail);
                 }
             }
             catch (Exception ex)
@@ -413,7 +493,9 @@ namespace CfdiService.Controllers
 
                 if (null != employee.CellPhoneNumber)
                 {
-                    SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
+                    //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
+                    string res = "";
+                    SendSMS.SendSMSQuiubo(msgBodySpanish, string.Format("+52{0}", employee.CellPhoneNumber), out res);
                 }
 
                 
@@ -435,7 +517,12 @@ namespace CfdiService.Controllers
             {
                 try
                 {
-                    SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
+                    //SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
+                    log.Info("EmployeeShape celphone : " + employeeShape.CellPhoneNumber);
+                    log.Info("verifyPhoneNumberSMSMessage : " + Strings.verifyPhoneNumberSMSMessage);
+                    string res = "";
+                    SendSMS.SendSMSQuiubo(Strings.verifyPhoneNumberSMSMessage, string.Format("+52{0}", employeeShape.CellPhoneNumber), out res);
+                    log.Info("res : " + res);
                     return Ok("Success");
                 }
                 catch(Exception ex)

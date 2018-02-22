@@ -126,7 +126,9 @@ namespace CfdiService.Controllers
 
                 if (null != emp.CellPhoneNumber)
                 {
-                    SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
+                    //SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
+                    string res = "";
+                    SendSMS.SendSMSQuiubo(msgBodySpanish, string.Format("+52{0}", emp.CellPhoneNumber), out res);
                 }
                 if (null != emp.EmailAddress)
                 {
@@ -238,7 +240,9 @@ namespace CfdiService.Controllers
                     if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
                     {
                         string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
-                        SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                        //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
                     }
                 }
                 catch (Exception ex)
@@ -263,7 +267,9 @@ namespace CfdiService.Controllers
                     if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
                     {
                         string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
-                        SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                        //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
                         SendEmail.SendEmailMessage(doc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                     }
                 }
