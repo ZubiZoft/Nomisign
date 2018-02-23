@@ -174,7 +174,7 @@ namespace CfdiService.Controllers
                             // hide password 
                             emp.PasswordHash = string.Empty;
                             var eShape = EmployeeShape.FromDataModel(emp, Request);
-                            eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                            //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
                             return Ok(eShape);
                         }
                     }
@@ -195,7 +195,7 @@ namespace CfdiService.Controllers
                         // hide password 
                         emp.PasswordHash = string.Empty;
                         var eShape = EmployeeShape.FromDataModel(emp, Request);
-                        eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                        //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
                         return Ok(eShape);
                     }
                 }
@@ -211,11 +211,8 @@ namespace CfdiService.Controllers
         {
             try
             {
-                if (LooksForAUnSignedContract(employeeShape.CellPhoneNumber))
-                {
-                    return Ok("ContractToSign");
-                }
-                return Ok("NoContractToSIgn");
+                int result = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                return Ok(result);
             }
             catch(Exception e)
             {
@@ -327,7 +324,7 @@ namespace CfdiService.Controllers
             return false;
         }
 
-        private bool LooksForAUnSignedContract(string account)
+        private int LooksForAUnSignedContract(string account)
         {
             var employeeAcc = db.FindEmployeeByAccount(account);
 
@@ -349,12 +346,12 @@ namespace CfdiService.Controllers
                     }
                     else
                     {
-                        return true;
+                        return unsignedDocs[0].DocumentId;
                     }
                 }
             }
 
-            return false;
+            return -1;
         }
     }
 }

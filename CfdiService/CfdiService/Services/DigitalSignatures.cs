@@ -55,25 +55,27 @@ namespace CfdiService.Services
                     textBuilderemp.AppendText(titleemp);
                     //Hash Code 1P
                     string hash = originalPdfDocument.FileHash;
-                    Aspose.Pdf.Text.TextFragment titlehash = new Aspose.Pdf.Text.TextFragment(string.Format("HASH: {0}", hash.Substring(0, 42)));
-                    titlehash.Position = new Position(100, 710);
-                    titlehash.TextState.FontSize = 8;
-                    titlehash.TextState.Font = FontRepository.FindFont("Arial");
-                    titlehash.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
-                    TextBuilder textBuilderhash = new TextBuilder(document.Pages[document.Pages.Count]);
-                    textBuilderhash.AppendText(titlehash);
-                    //Hash Code 2P
-                    if (hash.Length > 42)
+                    if (!string.IsNullOrEmpty(hash))
                     {
-                        Aspose.Pdf.Text.TextFragment titlehash2 = new Aspose.Pdf.Text.TextFragment(hash.Substring(42));
-                        titlehash2.Position = new Position(100, 700);
-                        titlehash2.TextState.FontSize = 8;
-                        titlehash2.TextState.Font = FontRepository.FindFont("Arial");
-                        titlehash2.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
-                        TextBuilder textBuilderhash2 = new TextBuilder(document.Pages[document.Pages.Count]);
-                        textBuilderhash2.AppendText(titlehash2);
+                        Aspose.Pdf.Text.TextFragment titlehash = new Aspose.Pdf.Text.TextFragment(string.Format("HASH: {0}", hash.Substring(0, 42)));
+                        titlehash.Position = new Position(100, 710);
+                        titlehash.TextState.FontSize = 8;
+                        titlehash.TextState.Font = FontRepository.FindFont("Arial");
+                        titlehash.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                        TextBuilder textBuilderhash = new TextBuilder(document.Pages[document.Pages.Count]);
+                        textBuilderhash.AppendText(titlehash);
+                        //Hash Code 2P
+                        if (hash.Length > 42)
+                        {
+                            Aspose.Pdf.Text.TextFragment titlehash2 = new Aspose.Pdf.Text.TextFragment(hash.Substring(42));
+                            titlehash2.Position = new Position(100, 700);
+                            titlehash2.TextState.FontSize = 8;
+                            titlehash2.TextState.Font = FontRepository.FindFont("Arial");
+                            titlehash2.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                            TextBuilder textBuilderhash2 = new TextBuilder(document.Pages[document.Pages.Count]);
+                            textBuilderhash2.AppendText(titlehash2);
+                        }
                     }
-
                     document.Save(temppath);
                 }
                 using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(temppath))

@@ -321,7 +321,8 @@ namespace CfdiService.Controllers
 
   <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
 </head>
-<body bgcolor=""#efefef"" style=""color: #7e7e7e"">
+<body bgcolor=""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+<font face=""verdana"">
 <table width=""100%"">
   <tr>
     <th width=""15%""></th>
@@ -361,7 +362,8 @@ namespace CfdiService.Controllers
   <tr>
     <th></th>
     <th>
-      <small>
+      <font size=""1"">
+        <code>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac
         neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique,
         tortor mauris molestie elit, et lacinia ipsum quam nec dui. Quisque nec mauris sit amet elit iaculis pretium sit
@@ -378,11 +380,13 @@ namespace CfdiService.Controllers
         Ut vulputate eros sed felis sodales nec vulputate justo hendrerit. Vivamus varius pretium ligula, a aliquam odio
         euismod sit amet. Quisque laoreet sem sit amet orci ullamcorper at ultricies metus viverra. Pellentesque arcu
         mauris, malesuada quis ornare accumsan, blandit sed diam.
-      </small>
+        </code>
+      </font>
     </th>
     <th></th>
   </tr>
 </table>
+</font>
 </body>
 </html>
 ";
