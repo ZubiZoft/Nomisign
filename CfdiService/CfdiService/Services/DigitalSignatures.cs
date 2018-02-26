@@ -28,8 +28,11 @@ namespace CfdiService.Services
                 log.Info("Path original: " + originalPdfDocumentPath);
                 log.Info("Path signed: " + signedpath);
                 log.Info("Path temp: " + temppath);
+                var docCount = 0;
                 using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(originalPdfDocumentPath))
                 {
+                    docCount = document.Pages.Count;
+
                     //Draw Rectangle
                     Aspose.Pdf.Drawing.Graph canvas = new Aspose.Pdf.Drawing.Graph(100, 400);
                     document.Pages[document.Pages.Count].Paragraphs.Add(canvas);
@@ -96,7 +99,7 @@ namespace CfdiService.Services
 
                     document.Save(temppath);
                 }
-                using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(temppath))
+                /*using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(temppath))
                 {
                     using (PdfFileSignature signature = new PdfFileSignature(document))
                     {
@@ -104,7 +107,7 @@ namespace CfdiService.Services
                         pkcs.Location = "Mexico";
                         pkcs.Reason = "Approved by: " + originalPdfDocument.Employee.FullName;
                         pkcs.ShowProperties = false;
-                        DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
+                        DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.AnnotationModification);
                         System.Drawing.Rectangle rect = new System.Drawing.Rectangle(90, 620, 230, 150);
                         log.Info("document.Pages.Count : " + document.Pages.Count);
                         // Create any of the three signature types
@@ -112,9 +115,28 @@ namespace CfdiService.Services
                         // Save output PDF file
                         signature.Save(signedpath);
                         // Create backup of si gned copy to location 2 - no database record needed
-                        NomiFileAccess.BackupFileToLocation2(originalPdfDocument.CompanyId, originalPdfDocumentPath);
+                        NomiFileAccess.BackupFileToLocation2(originalPdfDocument.CompanyId, signedpath);
                     }
-                }
+                }*/
+                PdfFileSignature pdfSign = new PdfFileSignature();
+                pdfSign.BindPdf(temppath);
+                // Create a rectangle for signature location
+                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(90, 620, 230, 150);
+                // Set signature appearance
+                //pdfSign.SignatureAppearance = dataDir + "aspose-logo.jpg";
+                // Create any of the three signature types
+                PKCS7 pkcs = new PKCS7(_rootDiskPath + @"\" + _pfxFileName, _pfxFilePassword);
+                pkcs.Location = "Mexico";
+                pkcs.Reason = "Approved by: " + originalPdfDocument.Employee.FullName;
+                pkcs.ShowProperties = false;
+
+                pdfSign.Sign(docCount, "Signature Reason", "Contact", "Location", true, rect, pkcs);
+                // Save output PDF file
+                pdfSign.Save(signedpath);
+
+                // Create backup of si gned copy to location 2 - no database record needed
+                NomiFileAccess.BackupFileToLocation2(originalPdfDocument.CompanyId, signedpath);
+
                 File.Delete(originalPdfDocumentPath);
                 File.Delete(temppath);
                 return signedpath;

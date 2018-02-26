@@ -388,14 +388,24 @@ namespace CfdiService.Controllers
                 }
             }
             document.SignStatus = (SignStatus)documentShape.SignStatus;
+            log.Info("Employee Concern : " + documentShape.EmployeeConcern);
+            if (documentShape.SignStatus == 3)
+            {
+                log.Info("Employee Concern : " + documentShape.EmployeeConcern);
+                document.EmployeeConcern = documentShape.EmployeeConcern;
+            }
             log.Info(document.PathToFile);
             db.SaveChanges();
-            if (document.AlwaysShow == 0)
+            if (document.AlwaysShow == 0 && document.SignStatus == SignStatus.Firmado)
             {
-                document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document));
+                try
+                {
+                    document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document));
+                    log.Info(document.Nom151);
+                }
+                catch (Exception ex) { log.Info(ex.ToString()); }
             }
             db.SaveChanges();
-            log.Info(document.Nom151);
             DocumentShape.ToDataModel(documentShape, document);
             return Ok(documentShape);
         }

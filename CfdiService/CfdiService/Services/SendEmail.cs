@@ -26,10 +26,10 @@ namespace CfdiService.Services
             System.Net.Mail.MailMessage message = new System.Net.Mail.MailMessage();
             message.To.Add(toAddress);
             // for testing only!!!
-            if (_alwaysAddTed)
+            /*if (_alwaysAddTed)
             {
                 message.To.Add("ted@ogrean.com");
-            }
+            }*/
             message.Subject = subject;
             message.From = new System.Net.Mail.MailAddress(_emailFromAddress);
             message.Body = body;

@@ -20,21 +20,7 @@ namespace CfdiService.Services
         private static readonly string _quiubasAuthToken = System.Configuration.ConfigurationManager.AppSettings["quiubasAuthToken"];
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static void SendSMSMsg(string cellPhoneNumber, string smsBody)
-        {
-            //const string accountSid = _accountSID; // "AC7d4cbd0f3db4469d6987ea846fb5b234";
-            //const string authToken = "a8407e9400297d0197feb63fc40380d0";
-            TwilioClient.Init(_accountSID, _accountAuthToken);
-
-
-            var to = new PhoneNumber("+" + cellPhoneNumber);
-            var message = MessageResource.Create(to,
-                                                 from: new PhoneNumber("+" + _fromPhoneNumber),
-                                                 body: smsBody);
-
-            Console.WriteLine(message.Sid);
-        }
-
+       
         public static bool SendSMSQuiubo(string msg, string number, out string res)
         {
             using (var client = new WebClient())

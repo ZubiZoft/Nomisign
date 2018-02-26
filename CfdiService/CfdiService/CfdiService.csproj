@@ -48,11 +48,12 @@
     <Reference Include="Aspose.Pdf">
       <HintPath>Libraries\Aspose.Pdf.dll</HintPath>
     </Reference>
-    <Reference Include="BouncyCastle.Crypto">
-      <HintPath>..\..\..\NOM151Test\NOM151Test\NOM151Test\bin\Debug\BouncyCastle.Crypto.dll</HintPath>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
     <Reference Include="DocuSign">
-      <HintPath>..\..\..\NOM151Test\NOM151Test\NOM151Test\bin\Debug\DocuSign.dll</HintPath>
+      <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\DocuSign.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
@@ -89,7 +90,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NOM151">
-      <HintPath>..\..\..\NOM151Test\NOM151Test\NOM151Test\bin\Debug\NOM151.dll</HintPath>
+      <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\NOM151.dll</HintPath>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

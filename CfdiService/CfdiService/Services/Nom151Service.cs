@@ -13,7 +13,7 @@ namespace CfdiService.Services
     public class Nom151Service
     {
         private static readonly string _pfxFileName = @"C:\inetpub\wwwroot\nomiadmin\nomisign.pfx";
-        private static readonly string _pfxFilePassword = System.Configuration.ConfigurationManager.AppSettings["pfxFilePassword"];
+        private static readonly string _pfxFilePassword = "N0M1secure750";
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public static string CreateNom151(string pdfPath)
