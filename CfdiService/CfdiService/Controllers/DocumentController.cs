@@ -18,6 +18,7 @@ namespace CfdiService.Controllers
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
+        protected readonly string tempZipPath = System.Configuration.ConfigurationManager.AppSettings["tempZipFolder"];
         private ModelDbContext db = new ModelDbContext();
 
 
@@ -289,16 +290,17 @@ namespace CfdiService.Controllers
         [Route("documents/download/")]
         public HttpResponseMessage DownloadDocumentsAsZip([FromBody] List<int> cid)
         {
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
             log.Info(1);
             var docListResult = db.Documents.Where(x => cid.Contains(x.DocumentId)).ToList();
-            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
             log.Info(1.1);
+            var tempZip = Path.Combine(tempZipPath, System.Guid.NewGuid() + ".zip");
             try
             {
                 log.Info(2);
-                using (var ms = new MemoryStream())
+                using (var fs = new FileStream(tempZip, FileMode.Create, FileAccess.Write))
                 {
-                    using (var archive = new ZipArchive(ms, ZipArchiveMode.Create))
+                    using (var archive = new ZipArchive(fs, ZipArchiveMode.Create))
                     {
                         log.Info(2.1);
                         int i = 0;
@@ -309,18 +311,31 @@ namespace CfdiService.Controllers
                             // var fName = Path.Combine(NomiFileAccess.GetFilePath(d), d.PathToFile + ".pdf");
                             var fName = NomiFileAccess.GetFilePath(d);
                             log.Info(fName);
-                            var entry = archive.CreateEntry(fName);
+                            archive.CreateEntryFromFile(fName, i.ToString() + ".pdf");
+                            if (d.Nom151 != null)
+                            {
+                                var entryNom = archive.CreateEntry(i.ToString() + ".txt");
+                                using (var writer = new StreamWriter(entryNom.Open()))
+                                {
+                                    writer.WriteLine(d.Nom151);
+                                }
+                            }
+                            i++;
                         }
-                        i++;
-                        response.Content = new StreamContent(ms);
-                        response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-                        response.Content.Headers.ContentDisposition.FileName = "Nominas.zip";
-                        response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-                        log.Info(3);
-                        return response;
+
                     }
                 }
                 log.Info(4);
+                var dataBytes = File.ReadAllBytes(tempZip);
+                File.Delete(tempZip);
+                var dataStream = new MemoryStream(dataBytes);
+
+                response.Content = new StreamContent(dataStream);
+                response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                response.Content.Headers.ContentDisposition.FileName = "Nominas.zip";
+                response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                log.Info(3);
+                return response;
             }
             catch (Exception ex)
             {
@@ -332,6 +347,7 @@ namespace CfdiService.Controllers
             }
             log.Info(5);
             return response;
+
         }
 
         // GET: api/companyusers/5
