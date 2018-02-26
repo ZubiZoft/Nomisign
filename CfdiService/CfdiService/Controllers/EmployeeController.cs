@@ -335,7 +335,8 @@ namespace CfdiService.Controllers
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        Para completar tu registro, por favor da click en el siguiente botón e ingresa el siguiente codigo de seguridad #-SECCODE-# :
+        Su Patrón #-COMPANY-#, ha contratado a Nomisign para que usted pueda firmar sus nóminas, por favor de click en el siguiente botón y cree su cuenta. 
+        Su código de seguridad es <strong>#-SECCODE-#</strong>
       </p>
       <br>
       <div>
@@ -352,7 +353,7 @@ namespace CfdiService.Controllers
         </table>
       </div>
       <br>
-      <p>O copia y pega la siguiente liga en cualquier navegador:</p>
+      <p>O copie y pege la siguiente liga en cualquier navegador:</p>
       <p>http://18.216.139.244/nomisign/account/#-ID-#</p>
       <br>
       <br>
@@ -392,6 +393,7 @@ namespace CfdiService.Controllers
 ";
                     customsizedmail = customsizedmail.Replace("#-SECCODE-#", codes.Vcode);
                     customsizedmail = customsizedmail.Replace("#-ID-#", employee.EmployeeId.ToString());
+                    customsizedmail = customsizedmail.Replace("#-COMPANY-#", employee.Company.CompanyName);
                     string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
                     string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, codes.Vcode);
                     if (null != employee.CellPhoneNumber)

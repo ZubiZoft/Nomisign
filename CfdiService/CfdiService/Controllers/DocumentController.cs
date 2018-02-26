@@ -7,6 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Net.Http;
+using System.Net;
+using System.IO.Compression;
 
 namespace CfdiService.Controllers
 {
@@ -40,6 +43,7 @@ namespace CfdiService.Controllers
             return Ok(result);
         }
         */
+
 
         // GET: api/employees
         [HttpGet]
@@ -281,6 +285,55 @@ namespace CfdiService.Controllers
             return Ok("Success");
         }
 
+        [HttpPost]
+        [Route("documents/download/")]
+        public HttpResponseMessage DownloadDocumentsAsZip([FromBody] List<int> cid)
+        {
+            log.Info(1);
+            var docListResult = db.Documents.Where(x => cid.Contains(x.DocumentId)).ToList();
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
+            log.Info(1.1);
+            try
+            {
+                log.Info(2);
+                using (var ms = new MemoryStream())
+                {
+                    using (var archive = new ZipArchive(ms, ZipArchiveMode.Create))
+                    {
+                        log.Info(2.1);
+                        int i = 0;
+                        foreach (var d in docListResult)
+                        {
+                            log.Info("*");
+                            var batch = db.Batches.Find(d.BatchId);
+                            // var fName = Path.Combine(NomiFileAccess.GetFilePath(d), d.PathToFile + ".pdf");
+                            var fName = NomiFileAccess.GetFilePath(d);
+                            log.Info(fName);
+                            var entry = archive.CreateEntry(fName);
+                        }
+                        i++;
+                        response.Content = new StreamContent(ms);
+                        response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                        response.Content.Headers.ContentDisposition.FileName = "Nominas.zip";
+                        response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                        log.Info(3);
+                        return response;
+                    }
+                }
+                log.Info(4);
+            }
+            catch (Exception ex)
+            {
+                log.Info(ex);
+                log.Info(ex.Message);
+                log.Info(ex.StackTrace);
+                log.Info(ex.Source);
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
+            log.Info(5);
+            return response;
+        }
+
         // GET: api/companyusers/5
         [HttpGet]
         [Route("documents/{eid}/{id}")]
@@ -334,8 +387,16 @@ namespace CfdiService.Controllers
                     document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
                 }
             }
-            DocumentShape.ToDataModel(documentShape, document);
+            document.SignStatus = (SignStatus)documentShape.SignStatus;
+            log.Info(document.PathToFile);
             db.SaveChanges();
+            if (document.AlwaysShow == 0)
+            {
+                document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document));
+            }
+            db.SaveChanges();
+            log.Info(document.Nom151);
+            DocumentShape.ToDataModel(documentShape, document);
             return Ok(documentShape);
         }
 

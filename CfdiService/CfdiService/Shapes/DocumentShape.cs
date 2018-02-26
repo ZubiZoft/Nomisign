@@ -24,6 +24,7 @@ namespace CfdiService.Shapes
         public Nullable<int> BatchId { get; set; }
         public decimal PayAmount { get; set; }
         public int AlwaysShow { get; set; }
+        public string NomCert { get; set; }
 
         public class LinksClass
         {
@@ -50,6 +51,7 @@ namespace CfdiService.Shapes
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
                 SignStatusText =  document.SignStatus == Model.SignStatus.SinFirma ?  "Sin Firma": document.SignStatus.ToString(), // this Sin Firma needs addressed and not hard coded
                 SignStatus = (int)document.SignStatus,
+                NomCert = document.Nom151,
                 Links = new LinksClass()
             };
 

@@ -254,12 +254,12 @@ namespace CfdiService.Controllers
                     log.Error("Error adding document: batch not found: " + BatchId);
                     return BadRequest();
                 }
-                if (batch.ItemCount == batch.ActualItemCount)
+                /*if (batch.ItemCount == batch.ActualItemCount)
                 {
                     log.Error("Error adding document: canceling batch due to item count: " + BatchId);
                     CancelBatch(batch);
                     return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
-                }
+                }*/
                 Document newDoc = new Model.Document
                 {
                     Batch = batch,
@@ -295,12 +295,13 @@ namespace CfdiService.Controllers
                 {
                     // Send SMS alerting employee of new docs
                     // send notifications
-                    string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
-                    SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
+                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                    SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
                     if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                     {
                         //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
                         string res = "";
+                        var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
                         SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                     }
                 }

@@ -76,6 +76,24 @@ namespace CfdiService.Services
                             textBuilderhash2.AppendText(titlehash2);
                         }
                     }
+                    //Last login
+                    Aspose.Pdf.Text.TextFragment lastLogEmp = new Aspose.Pdf.Text.TextFragment(string.Format("FECHA DE INICIO DE SESIÓN: {0}", originalPdfDocument.Employee.LastLoginDate.ToString("dd/MM/yyyy HH:mm:ss fff")));
+                    lastLogEmp.Position = new Position(100, 680);
+                    lastLogEmp.TextState.FontSize = 8;
+                    lastLogEmp.TextState.Font = FontRepository.FindFont("Arial");
+                    lastLogEmp.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                    TextBuilder textBuilderlastLog = new TextBuilder(document.Pages[document.Pages.Count]);
+                    textBuilderlastLog.AppendText(lastLogEmp);
+
+                    //Timestamp
+                    Aspose.Pdf.Text.TextFragment timestamp = new Aspose.Pdf.Text.TextFragment(string.Format("FECHA DE FIRMA: {0}", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss fff")));
+                    timestamp.Position = new Position(100, 660);
+                    timestamp.TextState.FontSize = 8;
+                    timestamp.TextState.Font = FontRepository.FindFont("Arial");
+                    timestamp.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                    TextBuilder textBuilderTimestamp = new TextBuilder(document.Pages[document.Pages.Count]);
+                    textBuilderTimestamp.AppendText(timestamp);
+
                     document.Save(temppath);
                 }
                 using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(temppath))

@@ -26,5 +26,6 @@ namespace CfdiService.Model
         public string EmployeeConcern { get; set; } 
         public int AlwaysShow { get; set; } // 0 = no, 1 = yes
         public decimal PayAmount { get; set; }
+        public string Nom151 { get; set; }
     }
 }

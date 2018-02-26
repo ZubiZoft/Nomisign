@@ -103,6 +103,25 @@ namespace CfdiService.Controllers
             return Ok();
         }
 
+        // GET: api/companies/5
+        [HttpGet]
+        [Route("cleardemo")]
+        public IHttpActionResult ClearDemo()
+        {
+            var objCtx = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)db).ObjectContext;
+            /*truncate table Documents;
+            truncate table EmployeesCode;
+            truncate table EmployeeSecurityQuestions;
+            delete from dbo.Batches;
+            delete from Employees*/
+            objCtx.ExecuteStoreCommand("truncate table Documents");
+            objCtx.ExecuteStoreCommand("truncate table EmployeesCode");
+            objCtx.ExecuteStoreCommand("truncate table EmployeeSecurityQuestions");
+            objCtx.ExecuteStoreCommand("delete from dbo.Batches");
+            objCtx.ExecuteStoreCommand("delete from Employees");
+            return Ok("Success");
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
