@@ -133,6 +133,7 @@ namespace CfdiService.Services
                 pdfSign.Sign(docCount, "Signature Reason", "Contact", "Location", true, rect, pkcs);
                 // Save output PDF file
                 pdfSign.Save(signedpath);
+                pdfSign.Dispose();
 
                 // Create backup of si gned copy to location 2 - no database record needed
                 NomiFileAccess.BackupFileToLocation2(originalPdfDocument.CompanyId, signedpath);

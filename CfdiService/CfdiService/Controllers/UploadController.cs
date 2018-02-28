@@ -128,7 +128,7 @@ namespace CfdiService.Controllers
             try {
                 // Send SMS alerting employee of new docs
                 // send notifications
-                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain);
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy") ,httpDomain);
                 SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
@@ -295,13 +295,13 @@ namespace CfdiService.Controllers
                 {
                     // Send SMS alerting employee of new docs
                     // send notifications
-                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                     SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
                     if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                     {
                         //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
                         string res = "";
-                        var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                        var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                         SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                     }
                 }

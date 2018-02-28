@@ -23,21 +23,22 @@ namespace CfdiService
 
         // Spanish SMS and email message
         public static readonly string newEmployeeWelcomeMessge = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite este link http://{0}/nomisign/account/{1} para crear su contraseña. Código de seguridad: {2}";
-        public static readonly string newEmployeeWelcomeMessgeMobile = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite el siguiente link para crear su contraseña. Código de seguridad: {0}";
-        public static readonly string newEmployeeWelcomeMessgeMobileLink = "http://{0}/nomisign/account/{1}";
+        public static readonly string newEmployeeWelcomeMessgeMobile = "La empresa {1} utiliza los servicios de la plataforma NomiSign® para que tenga la facilidad de firmar electrónicamente sus recibos de nómina. Tu código de seguridad es {0}";
+        public static readonly string newEmployeeWelcomeMessgeMobileLink = "De click en este enlace para crear su contraseña. http://{0}/nomisign/account/{1}";
 
         public static readonly string newEmployeeWelcomeMessgeEmailSubject = "Bienvenido a Nomisign";
 
         //public static readonly string verifyPhoneNumberSMSMessage = "Este mensaje es para comprobar el numero del celular. Por favor compruebe que su CRUP está correcto";
 
         public static readonly string verifyPhoneNumberSMSMessage = "Este mensaje es para comprobar el numero del celular para NOMISIGN.";
+        public static string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
 
         // Password
         // public static readonly string password = "Contraseña";
         // public static readonly string verifyPassword = "Verificación de Contraseña";
 
         // "Please visit nomisign site for review of new docs
-        public static readonly string visitSiteTosignDocumentSMS = @"Su Patrón {0}, ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revise y la acepte. http://18.216.139.244/nomisign/";
+        public static readonly string visitSiteTosignDocumentSMS = @"Su Patrón {0}, ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revise y la acepte. http://{2}/nomisign/";
         public static readonly string visitSiteTosignDocumentMessage = @"<!doctype html>
 <html lang=""en"">
 <head>
@@ -54,7 +55,7 @@ namespace CfdiService
     <th width = ""15%""></th>
     <th width = ""70%"" bgcolor=""#ffffff"">
       <br>
-      <img width = ""50%"" src=""http://18.216.139.244/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <img width = ""50%"" src=""http://{2}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
       <br>
       <br>
       <br>
@@ -71,7 +72,7 @@ namespace CfdiService
           <tr>
             <th width = ""30%""></th>
             <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""http://18.216.139.244/nomisign/"" target=""_blank"">
+              <a href = ""http://{2}/nomisign/"" target=""_blank"">
                 Nomisign
               </a>
             </th>
@@ -81,7 +82,7 @@ namespace CfdiService
       </div>
       <br>
       <p>O copia y pega la siguiente liga en cualquier navegador:</p>
-      <p>http://18.216.139.244/nomisign/</p>
+      <p>http://{2}/nomisign/</p>
       <br>
       <br>
     </th>

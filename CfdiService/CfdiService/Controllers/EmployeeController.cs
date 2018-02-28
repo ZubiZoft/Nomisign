@@ -1,6 +1,7 @@
 ﻿using CfdiService.Model;
 using CfdiService.Services;
 using CfdiService.Shapes;
+using CfdiService.Filters;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,8 @@ using System.Web.Http;
 namespace CfdiService.Controllers
 {
     [RoutePrefix("api")]
+    [Authorize] // Require authenticated requests.
+    
     public class EmployeeController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();
@@ -115,6 +118,7 @@ namespace CfdiService.Controllers
         // GET: api/employee/5
         [HttpGet]
         [Route("employee/{id}")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetEmployee(int id)
         {
             // not validating company ID here
@@ -312,7 +316,7 @@ namespace CfdiService.Controllers
                     }
                     db.SaveChanges();
 
-                    string customsizedmail = @"<!doctype html>
+                    string customsizedmail = string.Format(@"<!doctype html>
 <html lang=""en"">
 <head>
   <meta charset=""utf-8"">
@@ -328,15 +332,15 @@ namespace CfdiService.Controllers
     <th width=""15%""></th>
     <th width=""70%"" bgcolor=""#ffffff"">
       <br>
-      <img width=""50%"" src=""http://18.216.139.244/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <img width=""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
       <br>
       <br>
       <br>
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        Su Patrón #-COMPANY-#, ha contratado a Nomisign para que usted pueda firmar sus nóminas, por favor de click en el siguiente botón y cree su cuenta. 
-        Su código de seguridad es <strong>#-SECCODE-#</strong>
+        La empresa #-COMPANY-#, utiliza los servicios de la plataforma NomiSign® para que tenga la facilidad de firmar electrónicamente sus recibos de nómina. De click en este enlace para crear su contraseña. 
+        
       </p>
       <br>
       <div>
@@ -344,7 +348,7 @@ namespace CfdiService.Controllers
           <tr>
             <th width=""30%""></th>
             <th width=""40%"" bgcolor=""#2cbbc3"">
-              <a href=""http://18.216.139.244/nomisign/account/#-ID-#"" target=""_blank"">
+              <a href=""http://{0}/nomisign/account/#-ID-#"" target=""_blank"">
                 Registro
               </a>
             </th>
@@ -353,8 +357,12 @@ namespace CfdiService.Controllers
         </table>
       </div>
       <br>
+        <p>
+        Tu código de seguridad es <strong>#-SECCODE-#</strong>
+        </p>
+      <br>
       <p>O copie y pege la siguiente liga en cualquier navegador:</p>
-      <p>http://18.216.139.244/nomisign/account/#-ID-#</p>
+      <p>http://{0}/nomisign/account/#-ID-#</p>
       <br>
       <br>
     </th>
@@ -375,12 +383,12 @@ namespace CfdiService.Controllers
 </font>
 </body>
 </html>
-";
+", httpDomain);
                     customsizedmail = customsizedmail.Replace("#-SECCODE-#", codes.Vcode);
                     customsizedmail = customsizedmail.Replace("#-ID-#", employee.EmployeeId.ToString());
                     customsizedmail = customsizedmail.Replace("#-COMPANY-#", employee.Company.CompanyName);
                     string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
-                    string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, codes.Vcode);
+                    string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, codes.Vcode, employee.Company.CompanyName);
                     if (null != employee.CellPhoneNumber)
                     {
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);

@@ -30,6 +30,11 @@ namespace CfdiService.Model
         public DateTime LastLoginDate { get; set; }
         public DateTime CreatedDate { get; set; } 
         public EmployeeStatusType EmployeeStatus { get; set; }
+
+        public string SessionToken { get; set; }
+
+        public DateTime? TokenTimeout { get; set; }
+
         // error in data type here
         public int FailedLoginCount { get; set; }
     }

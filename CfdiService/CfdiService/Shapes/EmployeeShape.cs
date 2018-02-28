@@ -61,6 +61,37 @@ namespace CfdiService.Shapes
             return employeeShape;
         }
 
+        public static EmployeeShape FromDataModel(Employee employee)
+        {
+            var employeeShape = new EmployeeShape
+            {
+                EmployeeId = employee.EmployeeId,
+                //UserId = employee.UserId,
+                CompanyId = employee.CompanyId,
+                FirstName = employee.FirstName,
+                LastName1 = employee.LastName1,
+                LastName2 = employee.LastName2,
+                FullName = !string.IsNullOrEmpty(employee.FullName) ? employee.FullName : (String.Format("{0} {1} {2}", employee.FirstName, employee.LastName1, employee.LastName2)),
+                CURP = employee.CURP,
+                RFC = employee.RFC,
+                EmailAddress = employee.EmailAddress,
+                PasswordHash = String.Empty, // employee.PasswordHash.  no need to ever let this out
+                CellPhoneNumber = employee.CellPhoneNumber,
+                LastLogin = employee.LastLoginDate.ToShortDateString(),
+                CreatedByUserId = employee.CreatedByUserId,
+                EmployeeStatus = employee.EmployeeStatus,
+                HasContractToSign = false,
+                Links = new LinksClass()
+            };
+
+            // if this is not a DB op, created by user is null, so check
+            if (null != employee.CreatedByUser)
+            {
+                employeeShape.CreatedByUserName = employee.CreatedByUser.DisplayName;
+            }
+            return employeeShape;
+        }
+
         public static Employee ToDataModel(EmployeeShape employeeShape, Employee employee = null)
         {
             if (employee == null)

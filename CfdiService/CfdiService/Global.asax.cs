@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Http;
 using System.Web.Security;
 using System.Web.SessionState;
 
@@ -16,6 +17,7 @@ namespace CfdiService
             License lic = new License();
             lic.SetLicense("Aspose.Pdf.lic");
             log.Error("Aspose Lic Set");
+            WebApiConfig.Register(GlobalConfiguration.Configuration);
         }
 
         protected void Session_Start(object sender, EventArgs e)

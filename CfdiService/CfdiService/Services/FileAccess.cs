@@ -158,12 +158,15 @@ namespace CfdiService.Services
                 var xmlfullFilePath = string.Format(@"{0}\{1}", Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory)), document.PathToFile + ".xml");
                 using (Stream streampdf = GenerateStreamFromString(base64String))
                 {
-                    Aspose.Pdf.Document pdfDocument = new Aspose.Pdf.Document(streampdf, string.Format("{0}.{1}", originalPdfDocumentPath + document.PathToFile, "pdf"));
-                    FileSpecification fileSpecification = new FileSpecification(xmlfullFilePath);
-                    pdfDocument.EmbeddedFiles.Add(fileSpecification);
-                    pdfDocument.Pages.Add();
-                    pdfDocument.Save(originalPdfDocumentPath);
-                    NomiFileAccess.BackupFileToLocation2(document.CompanyId, originalPdfDocumentPath);
+                    using (Aspose.Pdf.Document pdfDocument = new Aspose.Pdf.Document(streampdf, string.Format("{0}.{1}", originalPdfDocumentPath + document.PathToFile, "pdf")))
+                    {
+                        FileSpecification fileSpecification = new FileSpecification(xmlfullFilePath);
+                        pdfDocument.EmbeddedFiles.Add(fileSpecification);
+                        pdfDocument.Pages.Add();
+                        pdfDocument.Save(originalPdfDocumentPath);
+                        NomiFileAccess.BackupFileToLocation2(document.CompanyId, originalPdfDocumentPath);
+                    }
+                        
                     /*using (Aspose.Pdf.Document newdoc = new Aspose.Pdf.Document(originalPdfDocumentPath))
                     {
                         verifyCompanyCache1(document.CompanyId);
@@ -224,6 +227,7 @@ namespace CfdiService.Services
                 // 2. system working directory
                 // 3. company id
                 // 4. batch Id
+                
                 var fullFilePath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory));
 
                 // make sure path exists, if not this will create it
@@ -250,6 +254,10 @@ namespace CfdiService.Services
                 // 2. system working directory
                 // 3. company id
                 // 4. batch Id
+                log.Info("RootFile : " + RootFilePath);
+                log.Info("RootSystemPath : " + RootSystemPath);
+                log.Info("companyPaths1[document.CompanyId] : " + companyPaths1[companyId]);
+                log.Info("document.Batch.WorkDirectory : " + workingDirectory);
                 var fullFileDestPath = Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[companyId], workingDirectory));
                 var fileSourceDocumentPath = Path.Combine(RootFilePath, RootSystemPath, companyPaths1[companyId]);
 
@@ -264,6 +272,8 @@ namespace CfdiService.Services
             catch (Exception ex)
             {
                 log.Error("Error copying file to disk: ", ex);
+                log.Error(ex.StackTrace);
+                log.Error(ex.Source);
                 return string.Empty;
             }
         }

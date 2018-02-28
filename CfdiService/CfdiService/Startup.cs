@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CfdiService.Filters;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Owin;
 using System;
@@ -46,6 +47,8 @@ namespace CfdiService
     {
         public static void Register(HttpConfiguration config)
         {
+            config.SuppressHostPrincipal();
+            config.Filters.Add(new IdentityBasicAuthentication());
             config.Routes.MapHttpRoute(
                 name: "AllCompanies",
                 routeTemplate: "companies",

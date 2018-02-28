@@ -163,6 +163,8 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Authentication\EmployeeIdentity.cs" />
+    <Compile Include="Authentication\EmployeePrincipal.cs" />
     <Compile Include="Controllers\ClientController.cs" />
     <Compile Include="Controllers\ClientUserController.cs" />
     <Compile Include="Controllers\CompaniesController.cs" />
@@ -174,6 +176,9 @@
     <Compile Include="Controllers\CompanyUserController.cs" />
     <Compile Include="Controllers\SystemSettingsController.cs" />
     <Compile Include="Controllers\UploadController.cs" />
+    <Compile Include="Filters\AddChallengeOnUnauthorizedResult.cs" />
+    <Compile Include="Filters\AuthenticationFailureResult.cs" />
+    <Compile Include="Filters\IdentityBasicAuthentication.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
