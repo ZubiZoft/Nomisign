@@ -201,6 +201,7 @@
     <Compile Include="Services\Nom151Service.cs" />
     <Compile Include="Services\SendEmail.cs" />
     <Compile Include="Services\SendSMS.cs" />
+    <Compile Include="Services\TokenGenerator.cs" />
     <Compile Include="Shapes\BatchResult.cs" />
     <Compile Include="Shapes\ClientShape.cs" />
     <Compile Include="Shapes\ClientUserShape.cs" />

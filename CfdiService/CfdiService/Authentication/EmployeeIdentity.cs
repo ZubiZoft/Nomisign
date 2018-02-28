@@ -19,7 +19,7 @@ namespace CfdiService.Authentication
         {
             this.employeeShape = employeeShape;
             IsAuthenticated = true;
-            Name = this.employeeShape.EmployeeId.ToString();
+            Name = "Employee";
         }
     }
 }

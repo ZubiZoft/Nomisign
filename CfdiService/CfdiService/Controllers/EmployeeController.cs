@@ -14,7 +14,6 @@ namespace CfdiService.Controllers
 {
     [RoutePrefix("api")]
     [Authorize] // Require authenticated requests.
-    
     public class EmployeeController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();

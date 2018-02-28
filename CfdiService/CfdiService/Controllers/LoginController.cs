@@ -170,6 +170,8 @@ namespace CfdiService.Controllers
                             emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                         {
                             emp.LastLoginDate = DateTime.Now;
+                            emp.TokenTimeout = DateTime.Now;
+                            emp.SessionToken = TokenGenerator.GetToken();
                             db.SaveChanges();
                             // hide password 
                             emp.PasswordHash = string.Empty;
@@ -191,6 +193,8 @@ namespace CfdiService.Controllers
                         emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                     {
                         emp.LastLoginDate = DateTime.Now;
+                        emp.TokenTimeout = DateTime.Now;
+                        emp.SessionToken = TokenGenerator.GetToken();
                         db.SaveChanges();
                         // hide password 
                         emp.PasswordHash = string.Empty;

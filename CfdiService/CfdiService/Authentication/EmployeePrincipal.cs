@@ -12,7 +12,7 @@ namespace CfdiService.Authentication
 
         public bool IsInRole(string role)
         {
-            throw new NotImplementedException();
+            return (new string[] { "Employee", "Admin", "User", "ClientUser" }).Contains(role);
         }
     }
 }
