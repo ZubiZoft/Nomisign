@@ -23,8 +23,7 @@ namespace CfdiService
 
         // Spanish SMS and email message
         public static readonly string newEmployeeWelcomeMessge = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite este link http://{0}/nomisign/account/{1} para crear su contraseña. Código de seguridad: {2}";
-        public static readonly string newEmployeeWelcomeMessgeMobile = "La empresa {1} utiliza los servicios de la plataforma NomiSign® para que tenga la facilidad de firmar electrónicamente sus recibos de nómina. Tu código de seguridad es {0}";
-        public static readonly string newEmployeeWelcomeMessgeMobileLink = "De click en este enlace para crear su contraseña. http://{0}/nomisign/account/{1}";
+        public static readonly string newEmployeeWelcomeMessgeMobile = "La empresa {1} utiliza los servicios de la plataforma NomiSign para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear tu contraseña. http://{0}/nomisign/account/{1} . Tu código de seguridad es {0}.";
 
         public static readonly string newEmployeeWelcomeMessgeEmailSubject = "Bienvenido a Nomisign";
 
@@ -38,7 +37,7 @@ namespace CfdiService
         // public static readonly string verifyPassword = "Verificación de Contraseña";
 
         // "Please visit nomisign site for review of new docs
-        public static readonly string visitSiteTosignDocumentSMS = @"Su Patrón {0}, ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revise y la acepte. http://{2}/nomisign/";
+        public static readonly string visitSiteTosignDocumentSMS = @"La empresa {0} ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revise y la acepte. http://{2}/nomisign/";
         public static readonly string visitSiteTosignDocumentMessage = @"<!doctype html>
 <html lang=""en"">
 <head>
@@ -62,7 +61,7 @@ namespace CfdiService
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        Su Patrón {0}, ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revise y la acepte. 
+        La empresa {0}, ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revises y la aceptes.
         <br>
         Visite a Nomisign para revisar y firmar sus documentos haciendo click en el siguiente botón.
       </p>

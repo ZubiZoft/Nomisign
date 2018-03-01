@@ -338,7 +338,7 @@ namespace CfdiService.Controllers
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        La empresa #-COMPANY-#, utiliza los servicios de la plataforma NomiSign® para que tenga la facilidad de firmar electrónicamente sus recibos de nómina. De click en este enlace para crear su contraseña. 
+        La empresa #-COMPANY-# utiliza los servicios de la plataforma NomiSign® para que tenga la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear su contraseña. 
         
       </p>
       <br>
@@ -360,7 +360,7 @@ namespace CfdiService.Controllers
         Tu código de seguridad es <strong>#-SECCODE-#</strong>
         </p>
       <br>
-      <p>O copie y pege la siguiente liga en cualquier navegador:</p>
+      <p>O copia y pega la siguiente liga en cualquier navegador:</p>
       <p>http://{0}/nomisign/account/#-ID-#</p>
       <br>
       <br>
@@ -395,7 +395,7 @@ namespace CfdiService.Controllers
                         string res = "";
                         SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", employee.CellPhoneNumber), out res);
                         string res2 = "";
-                        SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
+                        //SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
                     }
 
                     SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, customsizedmail);
