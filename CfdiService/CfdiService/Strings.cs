@@ -23,7 +23,7 @@ namespace CfdiService
 
         // Spanish SMS and email message
         public static readonly string newEmployeeWelcomeMessge = "Bienvenido a Nomisign, la aplicación para revisar y firmar sus nominas. Visite este link http://{0}/nomisign/account/{1} para crear su contraseña. Código de seguridad: {2}";
-        public static readonly string newEmployeeWelcomeMessgeMobile = "La empresa {1} utiliza los servicios de la plataforma NomiSign para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear tu contraseña. http://{0}/nomisign/account/{1} . Tu código de seguridad es {0}.";
+        public static readonly string newEmployeeWelcomeMessgeMobile = "La empresa {0} utiliza los servicios de la plataforma NomiSign para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear tu contraseña. http://{1}/nomisign/account/{2} . Tu código de seguridad es {3}.";
 
         public static readonly string newEmployeeWelcomeMessgeEmailSubject = "Bienvenido a Nomisign";
 
@@ -37,7 +37,7 @@ namespace CfdiService
         // public static readonly string verifyPassword = "Verificación de Contraseña";
 
         // "Please visit nomisign site for review of new docs
-        public static readonly string visitSiteTosignDocumentSMS = @"La empresa {0} ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revise y la acepte. http://{2}/nomisign/";
+        public static readonly string visitSiteTosignDocumentSMS = @"La empresa {0} ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revises y la aceptes. http://{2}/nomisign/";
         public static readonly string visitSiteTosignDocumentMessage = @"<!doctype html>
 <html lang=""en"">
 <head>
@@ -54,14 +54,14 @@ namespace CfdiService
     <th width = ""15%""></th>
     <th width = ""70%"" bgcolor=""#ffffff"">
       <br>
-      <img width = ""50%"" src=""http://{2}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <img width = ""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
       <br>
       <br>
       <br>
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        La empresa {0}, ha colocado una nueva Nómina para el período terminado {1} en Nomisign para que la revises y la aceptes.
+        La empresa {1}, ha colocado una nueva Nómina para el período terminado {2} en Nomisign para que la revises y la aceptes.
         <br>
         Visite a Nomisign para revisar y firmar sus documentos haciendo click en el siguiente botón.
       </p>
@@ -71,7 +71,7 @@ namespace CfdiService
           <tr>
             <th width = ""30%""></th>
             <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""http://{2}/nomisign/"" target=""_blank"">
+              <a href = ""http://{0}/nomisign/"" target=""_blank"">
                 Nomisign
               </a>
             </th>
@@ -81,7 +81,7 @@ namespace CfdiService
       </div>
       <br>
       <p>O copia y pega la siguiente liga en cualquier navegador:</p>
-      <p>http://{2}/nomisign/</p>
+      <p>http://{0}/nomisign/</p>
       <br>
       <br>
     </th>

@@ -21,6 +21,7 @@ namespace CfdiService.Shapes
         public string CompanyName { get; set; }
         public string RFC { get; set; }
         public string CURP { get; set; }
+        public string SessionToken { get; set; }
         public class LinksClass
         {
             public string SelfUri { get; set; }
@@ -42,6 +43,7 @@ namespace CfdiService.Shapes
                 LastLoginDate = employee.LastLoginDate,
                 CURP = employee.CURP,
                 RFC = employee.RFC,
+                SessionToken = employee.SessionToken,
                 CompanyName = companyName,
                 Links = new LinksClass()
             };

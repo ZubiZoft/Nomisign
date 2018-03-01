@@ -29,6 +29,7 @@ namespace CfdiService.Shapes
         public EmployeeStatusType EmployeeStatus { get; set; }
         public string SecurityCode { get; set; }
         public bool HasContractToSign { get; set; }
+        public string SessionToken { get; set; }
         public static EmployeeShape FromDataModel(Employee employee, HttpRequestMessage request)
         {
             var employeeShape = new EmployeeShape
@@ -48,6 +49,7 @@ namespace CfdiService.Shapes
                 LastLogin = employee.LastLoginDate.ToShortDateString(),
                 CreatedByUserId = employee.CreatedByUserId,
                 EmployeeStatus = employee.EmployeeStatus,
+                SessionToken = employee.SessionToken,
                 HasContractToSign = false,
                 Links = new LinksClass()
             };

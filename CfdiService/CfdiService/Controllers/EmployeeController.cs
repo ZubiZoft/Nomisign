@@ -13,7 +13,7 @@ using System.Web.Http;
 namespace CfdiService.Controllers
 {
     [RoutePrefix("api")]
-    [Authorize] // Require authenticated requests.
+    //[Authorize] // Require authenticated requests.
     public class EmployeeController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();
@@ -117,7 +117,7 @@ namespace CfdiService.Controllers
         // GET: api/employee/5
         [HttpGet]
         [Route("employee/{id}")]
-        [IdentityBasicAuthentication]
+        //[IdentityBasicAuthentication]
         public IHttpActionResult GetEmployee(int id)
         {
             // not validating company ID here
@@ -142,19 +142,30 @@ namespace CfdiService.Controllers
         [Route("employees/passwordsession/{id}")]
         public IHttpActionResult UpdateEmployeePasswordSession(int id, EmployeeShape employeeShape)
         {
+            log.Info(string.Format("Method PasswordSession - EmployeeShape id: {0}", employeeShape.EmployeeId));
+            log.Info(string.Format("Method PasswordSession - EmployeeShape name: {0}", employeeShape.FullName));
+            log.Info(string.Format("Method PasswordSession - EmployeeShape email: {0}", employeeShape.EmailAddress));
+            log.Info(string.Format("Method PasswordSession - EmployeeShape password: {0}", employeeShape.PasswordHash));
             if (!ModelState.IsValid)
             {
+                log.Info("1");
                 return BadRequest(ModelState);
             }
             if (id != employeeShape.EmployeeId)
             {
+                log.Info("2");
                 return BadRequest();
             }
             Employee employee = db.Employees.Find(id);
             if (employee == null)
             {
+                log.Info("3");
                 return NotFound();
             }
+            log.Info(string.Format("Method PasswordSession - Employee id: {0}", employeeShape.EmployeeId));
+            log.Info(string.Format("Method PasswordSession - Employee name: {0}", employeeShape.FullName));
+            log.Info(string.Format("Method PasswordSession - Employee email: {0}", employeeShape.EmailAddress));
+            log.Info(string.Format("Method PasswordSession - Employee password: {0}", employeeShape.PasswordHash));
             // transform to data model
             EmployeeShape.ToDataModel(employeeShape, employee);
 
@@ -165,25 +176,31 @@ namespace CfdiService.Controllers
             // TODO: add time expiration to vcode
             if (employee.EmployeeStatus != EmployeeStatusType.Active && employeeShape.SecurityCode != codes.Vcode)
             {
+                log.Info("4");
                 return BadRequest();
             }
             else
             {
+                log.Info("5");
                 // password is not set on initial employee creation
                 if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
                 {
+                    log.Info("5.1");
                     employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
                     var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
                     foreach (var e in emps)
                     {
+                        log.Info("5.2");
                         e.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
                     }
                     db.SaveChanges();
+                    log.Info("5.3");
                 }
                 codes.Vcode = string.Empty;
+                log.Info("5.4");
                 //db.SaveChanges(); redundant
             }
-
+            log.Info("6");
             db.SaveChanges();
             return Ok(employeeShape);
         }
@@ -387,7 +404,7 @@ namespace CfdiService.Controllers
                     customsizedmail = customsizedmail.Replace("#-ID-#", employee.EmployeeId.ToString());
                     customsizedmail = customsizedmail.Replace("#-COMPANY-#", employee.Company.CompanyName);
                     string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
-                    string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, codes.Vcode, employee.Company.CompanyName);
+                    string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, employee.Company.CompanyName, httpDomain, employee.EmployeeId, codes.Vcode);
                     if (null != employee.CellPhoneNumber)
                     {
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);

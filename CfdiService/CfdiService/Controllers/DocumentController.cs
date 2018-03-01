@@ -123,22 +123,30 @@ namespace CfdiService.Controllers
         [Route("SendNotificationsToUnsignedDocuments/")]
         public IHttpActionResult SendNotificationsToUnsignedDocuments([FromBody] List<int> dids)
         {
+            log.Info("SendNotificationsToUnsignedDocuments");
             foreach (int a in dids)
             {
+                log.Info(string.Format("Document Id : {0}", a.ToString()));
                 Document doc = db.Documents.Where(x => x.DocumentId == a).First();
+                log.Info(string.Format("1"));
                 Employee emp = db.Employees.Where(x => x.EmployeeId == doc.EmployeeId).First();
-                string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain);
-
+                log.Info(string.Format("2"));
+                string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyy"));
+                string msgBodySpanishMobile = String.Format(Strings.visitSiteTosignDocumentSMS, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyy"), httpDomain);
+                log.Info(string.Format("3"));
                 if (null != emp.CellPhoneNumber)
                 {
+                    log.Info(string.Format("4"));
                     //SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
                     string res = "";
-                    SendSMS.SendSMSQuiubo(msgBodySpanish, string.Format("+52{0}", emp.CellPhoneNumber), out res);
+                    SendSMS.SendSMSQuiubo(msgBodySpanishMobile, string.Format("+52{0}", emp.CellPhoneNumber), out res);
                 }
                 if (null != emp.EmailAddress)
                 {
+                    log.Info(string.Format("5"));
                     SendEmail.SendEmailMessage(emp.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, msgBodySpanish);
                 }
+                log.Info(string.Format("6"));
             }
             return Ok("Success");
         }
