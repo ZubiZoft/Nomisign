@@ -13,7 +13,6 @@ using System.Web.Http;
 namespace CfdiService.Controllers
 {
     [RoutePrefix("api")]
-    //[Authorize] // Require authenticated requests.
     public class EmployeeController : ApiController
     {
         private ModelDbContext db = new ModelDbContext();
@@ -47,8 +46,8 @@ namespace CfdiService.Controllers
         public IHttpActionResult GetCompanyNewEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
-            var employeeResult = db.Employees.Where(x => x.CompanyId == cid 
-                    && (x.EmailAddress == null || x.EmailAddress.Equals("")) 
+            var employeeResult = db.Employees.Where(x => x.CompanyId == cid
+                    && (x.EmailAddress == null || x.EmailAddress.Equals(""))
                     && (x.CellPhoneNumber == null || x.CellPhoneNumber.Equals(""))).ToList();
             var company = db.Companies.Find(cid);
             if (company == null)
@@ -88,7 +87,8 @@ namespace CfdiService.Controllers
                 {
                     result.Add(EmployeeListShape.FromDataModel(db.Employees.Find(empId.EmployeeId), Request, company.CompanyName));
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 log.Error(ex);
                 log.Error(ex.Message);
@@ -117,8 +117,31 @@ namespace CfdiService.Controllers
         // GET: api/employee/5
         [HttpGet]
         [Route("employee/{id}")]
-        //[IdentityBasicAuthentication]
         public IHttpActionResult GetEmployee(int id)
+        {
+            // not validating company ID here
+            Employee employee = db.Employees.Find(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            var employeeShape = EmployeeShape.FromDataModel(employee, Request);
+
+            // hack till i figure out EF
+            var createdByUser = db.Users.Find(employee.CreatedByUserId);
+            if (createdByUser != null)
+            {
+                employeeShape.CreatedByUserName = createdByUser.DisplayName;
+            }
+            return Ok(employeeShape);
+        }
+
+        [HttpGet]
+        [Route("employeeexist/{id}")]
+        [Authorize(Roles = "EMPLOYEE")]
+        [OverrideAuthorization]
+        public IHttpActionResult GetEmployeeExist(int id)
         {
             // not validating company ID here
             Employee employee = db.Employees.Find(id);
@@ -142,30 +165,19 @@ namespace CfdiService.Controllers
         [Route("employees/passwordsession/{id}")]
         public IHttpActionResult UpdateEmployeePasswordSession(int id, EmployeeShape employeeShape)
         {
-            log.Info(string.Format("Method PasswordSession - EmployeeShape id: {0}", employeeShape.EmployeeId));
-            log.Info(string.Format("Method PasswordSession - EmployeeShape name: {0}", employeeShape.FullName));
-            log.Info(string.Format("Method PasswordSession - EmployeeShape email: {0}", employeeShape.EmailAddress));
-            log.Info(string.Format("Method PasswordSession - EmployeeShape password: {0}", employeeShape.PasswordHash));
             if (!ModelState.IsValid)
             {
-                log.Info("1");
                 return BadRequest(ModelState);
             }
             if (id != employeeShape.EmployeeId)
             {
-                log.Info("2");
                 return BadRequest();
             }
             Employee employee = db.Employees.Find(id);
             if (employee == null)
             {
-                log.Info("3");
                 return NotFound();
             }
-            log.Info(string.Format("Method PasswordSession - Employee id: {0}", employeeShape.EmployeeId));
-            log.Info(string.Format("Method PasswordSession - Employee name: {0}", employeeShape.FullName));
-            log.Info(string.Format("Method PasswordSession - Employee email: {0}", employeeShape.EmailAddress));
-            log.Info(string.Format("Method PasswordSession - Employee password: {0}", employeeShape.PasswordHash));
             // transform to data model
             EmployeeShape.ToDataModel(employeeShape, employee);
 
@@ -176,31 +188,23 @@ namespace CfdiService.Controllers
             // TODO: add time expiration to vcode
             if (employee.EmployeeStatus != EmployeeStatusType.Active && employeeShape.SecurityCode != codes.Vcode)
             {
-                log.Info("4");
                 return BadRequest();
             }
             else
             {
-                log.Info("5");
                 // password is not set on initial employee creation
                 if (!String.IsNullOrEmpty(employeeShape.PasswordHash))
                 {
-                    log.Info("5.1");
                     employee.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
                     var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
                     foreach (var e in emps)
                     {
-                        log.Info("5.2");
                         e.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
                     }
                     db.SaveChanges();
-                    log.Info("5.3");
                 }
                 codes.Vcode = string.Empty;
-                log.Info("5.4");
-                //db.SaveChanges(); redundant
             }
-            log.Info("6");
             db.SaveChanges();
             return Ok(employeeShape);
         }
@@ -355,7 +359,7 @@ namespace CfdiService.Controllers
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        La empresa #-COMPANY-# utiliza los servicios de la plataforma NomiSign® para que tenga la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear su contraseña. 
+        La empresa #-COMPANY-# utiliza los servicios de la plataforma NomiSign® para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear tu contraseña. 
         
       </p>
       <br>
@@ -447,16 +451,16 @@ namespace CfdiService.Controllers
             db.SaveChanges();
 
             // add company agreement doc
-            if(null == employee.Company)
+            if (null == employee.Company)
             {
                 Company company = db.Companies.Find(employee.CompanyId);
-                if(null != company)
+                if (null != company)
                 {
                     employee.Company = company;
                 }
             }
-            
-            if(employee.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument)
+
+            if (employee.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument)
             {
                 // need a batch first
                 Batch batch = new Batch()
@@ -476,7 +480,7 @@ namespace CfdiService.Controllers
                    batch.WorkDirectory,  //file name to write
                    employee.Company.NewEmployeeDocument.Trim()); // trim only needed due to DB scheme issue
 
-                if (!String.IsNullOrEmpty(fileName)) 
+                if (!String.IsNullOrEmpty(fileName))
                 {
                     // TODO: Write file to DB after copied to disk
                     Document document = new Document()
@@ -513,7 +517,7 @@ namespace CfdiService.Controllers
                     SendSMS.SendSMSQuiubo(msgBodySpanish, string.Format("+52{0}", employee.CellPhoneNumber), out res);
                 }
 
-                
+
             }
             catch (Exception ex)
             {
@@ -540,20 +544,21 @@ namespace CfdiService.Controllers
                     log.Info("res : " + res);
                     return Ok("Success");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber, ex);
                     return Ok("Cell Phone not verified");
                 }
             }
-            else {
+            else
+            {
                 log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber);
                 return BadRequest("Cell Phone Number empty");
             }
         }
         // DELETE: api/companyusers/5
         [HttpDelete]
-        [Route("employees/{id}") ]
+        [Route("employees/{id}")]
         public IHttpActionResult DeleteEmployee(int id)
         {
             Employee employee = db.Employees.Find(id);
