@@ -1,9 +1,11 @@
 ﻿using CfdiService.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace CfdiService.Controllers
 {
@@ -17,6 +19,7 @@ namespace CfdiService.Controllers
         [Route("systemsettings")]
         public IHttpActionResult GetSettings()
         {
+            Debug.WriteLine("Hellow !!");
             var result = new List<SystemSettings>();
             foreach (var c in db.Settings)
             {

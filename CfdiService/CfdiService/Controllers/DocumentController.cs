@@ -131,8 +131,8 @@ namespace CfdiService.Controllers
                 log.Info(string.Format("1"));
                 Employee emp = db.Employees.Where(x => x.EmployeeId == doc.EmployeeId).First();
                 log.Info(string.Format("2"));
-                string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyy"));
-                string msgBodySpanishMobile = String.Format(Strings.visitSiteTosignDocumentSMS, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyy"), httpDomain);
+                string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
+                string msgBodySpanishMobile = String.Format(Strings.visitSiteTosignDocumentSMS, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                 log.Info(string.Format("3"));
                 if (null != emp.CellPhoneNumber)
                 {
@@ -252,7 +252,9 @@ namespace CfdiService.Controllers
                 {
                     if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
                     {
-                        string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
+                        //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                        string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
+                        //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
                         //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
                         string res = "";
                         SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);

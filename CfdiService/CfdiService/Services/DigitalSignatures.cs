@@ -34,14 +34,14 @@ namespace CfdiService.Services
                     docCount = document.Pages.Count;
 
                     //Draw Rectangle
-                    Aspose.Pdf.Drawing.Graph canvas = new Aspose.Pdf.Drawing.Graph(100, 400);
+                    Aspose.Pdf.Drawing.Graph canvas = new Aspose.Pdf.Drawing.Graph(250, 450);
                     document.Pages[document.Pages.Count].Paragraphs.Add(canvas);
-                    Aspose.Pdf.Drawing.Rectangle rectt = new Aspose.Pdf.Drawing.Rectangle(0, 250, 230, 150);
+                    Aspose.Pdf.Drawing.Rectangle rectt = new Aspose.Pdf.Drawing.Rectangle(0, 250, 380, 200);
                     rectt.GraphInfo.Color = Aspose.Pdf.Color.Black;
                     rectt.GraphInfo.DashPhase = 5;
                     canvas.Shapes.Add(rectt);
                     //Company Authorization Text
-                    Aspose.Pdf.Text.TextFragment title = new Aspose.Pdf.Text.TextFragment("AUTORIZADO POR: NOMISIGN S.A. DE C.V.");
+                    Aspose.Pdf.Text.TextFragment title = new Aspose.Pdf.Text.TextFragment("FIRMA EXPEDIDA POR: NOMISIGN SA DE CV");
                     title.Position = new Position(100, 750);
                     title.TextState.FontSize = 8;
                     title.TextState.Font = FontRepository.FindFont("Arial");
@@ -49,39 +49,59 @@ namespace CfdiService.Services
                     TextBuilder textBuilder = new TextBuilder(document.Pages[document.Pages.Count]);
                     textBuilder.AppendText(title);
                     //Employee Auotrization Name
-                    Aspose.Pdf.Text.TextFragment titleemp = new Aspose.Pdf.Text.TextFragment(string.Format("FIRMADO POR: {0}", originalPdfDocument.Employee.FullName));
-                    titleemp.Position = new Position(100, 730);
+                    Aspose.Pdf.Text.TextFragment companyTitle = new Aspose.Pdf.Text.TextFragment(string.Format("PARA: {0}", originalPdfDocument.Company.CompanyName));
+                    companyTitle.Position = new Position(100, 730);
+                    companyTitle.TextState.FontSize = 8;
+                    companyTitle.TextState.Font = FontRepository.FindFont("Arial");
+                    companyTitle.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                    TextBuilder textBuilderCompany = new TextBuilder(document.Pages[document.Pages.Count]);
+                    textBuilderCompany.AppendText(companyTitle);
+                    //Employee Auotrization Name
+                    Aspose.Pdf.Text.TextFragment titleemp = new Aspose.Pdf.Text.TextFragment("FIRMA DE ACEPTACIÓN POR: ");
+                    titleemp.Position = new Position(100, 710);
                     titleemp.TextState.FontSize = 8;
                     titleemp.TextState.Font = FontRepository.FindFont("Arial");
                     titleemp.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
                     TextBuilder textBuilderemp = new TextBuilder(document.Pages[document.Pages.Count]);
                     textBuilderemp.AppendText(titleemp);
+
+                    Aspose.Pdf.Text.TextFragment titleempName = new Aspose.Pdf.Text.TextFragment(string.Format("{0}  {1}  {2}", 
+                        originalPdfDocument.Employee.FirstName,
+                        originalPdfDocument.Employee.LastName1,
+                        originalPdfDocument.Employee.LastName2));
+                    titleempName.Position = new Position(100, 680);
+                    titleempName.TextState.FontSize = 16;
+                    titleempName.TextState.Font = FontRepository.FindFont("Vladimir Script");
+                    titleempName.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                    TextBuilder textBuilderempName = new TextBuilder(document.Pages[document.Pages.Count]);
+                    textBuilderempName.AppendText(titleempName);
+
                     //Hash Code 1P
                     string hash = originalPdfDocument.FileHash;
                     if (!string.IsNullOrEmpty(hash))
                     {
-                        Aspose.Pdf.Text.TextFragment titlehash = new Aspose.Pdf.Text.TextFragment(string.Format("HASH: {0}", hash.Substring(0, 42)));
-                        titlehash.Position = new Position(100, 710);
+                        Aspose.Pdf.Text.TextFragment titlehash = new Aspose.Pdf.Text.TextFragment(string.Format("HASH: {0}", hash));
+                        titlehash.Position = new Position(100, 660);
                         titlehash.TextState.FontSize = 8;
                         titlehash.TextState.Font = FontRepository.FindFont("Arial");
                         titlehash.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
                         TextBuilder textBuilderhash = new TextBuilder(document.Pages[document.Pages.Count]);
                         textBuilderhash.AppendText(titlehash);
                         //Hash Code 2P
-                        if (hash.Length > 42)
+                        /*if (hash.Length > 42)
                         {
                             Aspose.Pdf.Text.TextFragment titlehash2 = new Aspose.Pdf.Text.TextFragment(hash.Substring(42));
-                            titlehash2.Position = new Position(100, 700);
+                            titlehash2.Position = new Position(100, 690);
                             titlehash2.TextState.FontSize = 8;
                             titlehash2.TextState.Font = FontRepository.FindFont("Arial");
                             titlehash2.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
                             TextBuilder textBuilderhash2 = new TextBuilder(document.Pages[document.Pages.Count]);
                             textBuilderhash2.AppendText(titlehash2);
-                        }
+                        }*/
                     }
                     //Last login
-                    Aspose.Pdf.Text.TextFragment lastLogEmp = new Aspose.Pdf.Text.TextFragment(string.Format("FECHA DE INICIO DE SESIÓN: {0}", originalPdfDocument.Employee.LastLoginDate.ToString("dd/MM/yyyy HH:mm:ss fff")));
-                    lastLogEmp.Position = new Position(100, 680);
+                    Aspose.Pdf.Text.TextFragment lastLogEmp = new Aspose.Pdf.Text.TextFragment(string.Format("TOKEN DE SESIÓN: {0}", originalPdfDocument.Employee.SessionToken));
+                    lastLogEmp.Position = new Position(100, 640);
                     lastLogEmp.TextState.FontSize = 8;
                     lastLogEmp.TextState.Font = FontRepository.FindFont("Arial");
                     lastLogEmp.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
@@ -89,13 +109,22 @@ namespace CfdiService.Services
                     textBuilderlastLog.AppendText(lastLogEmp);
 
                     //Timestamp
-                    Aspose.Pdf.Text.TextFragment timestamp = new Aspose.Pdf.Text.TextFragment(string.Format("FECHA DE FIRMA: {0}", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss fff")));
-                    timestamp.Position = new Position(100, 660);
+                    Aspose.Pdf.Text.TextFragment timestamp = new Aspose.Pdf.Text.TextFragment(string.Format("FECHA DE INICIO DE SESIÓN: {0}", originalPdfDocument.Employee.LastLoginDate.ToString("dd/MM/yyyy HH:mm:ss fff")));
+                    timestamp.Position = new Position(100, 620);
                     timestamp.TextState.FontSize = 8;
                     timestamp.TextState.Font = FontRepository.FindFont("Arial");
                     timestamp.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
                     TextBuilder textBuilderTimestamp = new TextBuilder(document.Pages[document.Pages.Count]);
                     textBuilderTimestamp.AppendText(timestamp);
+
+                    //TOKEN
+                    Aspose.Pdf.Text.TextFragment token = new Aspose.Pdf.Text.TextFragment(string.Format("FECHA DE FIRMA DEL RECIBO: {0}", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss fff")));
+                    token.Position = new Position(100, 600);
+                    token.TextState.FontSize = 8;
+                    token.TextState.Font = FontRepository.FindFont("Arial");
+                    token.TextState.FontStyle = Aspose.Pdf.Text.FontStyles.Regular;
+                    TextBuilder textBuilderToken = new TextBuilder(document.Pages[document.Pages.Count]);
+                    textBuilderToken.AppendText(token);
 
                     document.Save(temppath);
                 }
@@ -121,7 +150,7 @@ namespace CfdiService.Services
                 PdfFileSignature pdfSign = new PdfFileSignature();
                 pdfSign.BindPdf(temppath);
                 // Create a rectangle for signature location
-                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(90, 620, 230, 150);
+                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(90, 660, 380, 200);
                 // Set signature appearance
                 //pdfSign.SignatureAppearance = dataDir + "aspose-logo.jpg";
                 // Create any of the three signature types

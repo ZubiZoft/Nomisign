@@ -149,6 +149,7 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
+    <Content Include="DocumentHandler.ashx" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -181,6 +182,9 @@
     <Compile Include="Filters\IdentityBasicAuthentication.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="DocumentHandler.ashx.cs">
+      <DependentUpon>DocumentHandler.ashx</DependentUpon>
     </Compile>
     <Compile Include="ModelDbContext.cs" />
     <Compile Include="Model\Batch.cs" />
