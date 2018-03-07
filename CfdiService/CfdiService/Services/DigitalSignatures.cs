@@ -93,8 +93,10 @@ namespace CfdiService.Services
                     TextBuilder textBuilderempName = new TextBuilder(document.Pages[document.Pages.Count]);
                     textBuilderempName.AppendText(titleempName);
                     //DateTime Now
-                    string today = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-                    string todayt = DateTime.Now.ToString("ddMMyyyyHHmmssfff");
+                    var timezone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time (Mexico)");
+                    var dateTime = TimeZoneInfo.ConvertTime(DateTime.Now, timezone);
+                    string today = dateTime.ToString("dd/MM/yyyy HH:mm:ss");
+                    string todayt = dateTime.ToString("ddMMyyyyHHmmssfff");
                     //Hash Code 1P
                     string hash = originalPdfDocument.FileHash;
                     if (!string.IsNullOrEmpty(hash))

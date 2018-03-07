@@ -362,7 +362,7 @@ namespace CfdiService.Controllers
 
         // GET: api/companyusers/5
         [HttpGet]
-        [Route("documents/{eid}/{id}")]
+        [Route("documentsEmployee/{id}")]
         public IHttpActionResult GetDocument(int id)
         {
             Document document = null;

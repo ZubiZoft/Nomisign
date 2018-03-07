@@ -210,6 +210,96 @@ namespace CfdiService.Controllers
         }
 
         [HttpPost]
+        [Route("logintest")]
+        public IHttpActionResult DoEmployeeLoginTest(EmployeeShape employeeShape)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var employeeByPhone = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            if (employeeByPhone.Count < 1)
+            {
+                log.Info("Login by Email");
+                var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.CellPhoneNumber,
+                StringComparison.InvariantCultureIgnoreCase)).ToList();
+                if (employeeByEmail.Count < 1)
+                {
+                    log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
+                    return BadRequest("Invalid Login Data");
+                }
+                else
+                {
+                    // no null passwords allowed
+                    foreach (var emp in employeeByEmail)
+                    {
+                        var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
+                        if (null != emp.PasswordHash &&
+                            emp.EmployeeStatus == EmployeeStatusType.Active &&
+                            emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix) &&
+                            emp.FailedLoginCount <= 3)
+                        {
+                            emp.LastLoginDate = DateTime.Now;
+                            emp.TokenTimeout = DateTime.Now;
+                            emp.SessionToken = TokenGenerator.GetToken();
+                            db.SaveChanges();
+                            // hide password 
+                            emp.PasswordHash = string.Empty;
+                            var eShape = EmployeeShape.FromDataModel(emp, Request);
+                            //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                            return Ok(eShape);
+                        }
+                        else
+                        {
+                            int counter = emp.FailedLoginCount;
+                            emp.FailedLoginCount = counter++;
+                            log.Info(string.Format("Login attempts {0} for user: {1}", employeeShape.CellPhoneNumber, counter));
+                            db.SaveChanges();
+                            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + " Password: " + employeeShape.PasswordHash);
+                            return BadRequest("Invalid Login");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                log.Info("Login by Cellphone");
+                // no null passwords allowed
+                foreach (var emp in employeeByPhone)
+                {
+                    var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
+                    if (null != emp.PasswordHash &&
+                        emp.EmployeeStatus == EmployeeStatusType.Active &&
+                        emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix) &&
+                        emp.FailedLoginCount <= 3)
+                    {
+                        emp.LastLoginDate = DateTime.Now;
+                        emp.TokenTimeout = DateTime.Now;
+                        emp.SessionToken = TokenGenerator.GetToken();
+                        db.SaveChanges();
+                        // hide password 
+                        emp.PasswordHash = string.Empty;
+                        var eShape = EmployeeShape.FromDataModel(emp, Request);
+                        //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                        return Ok(eShape);
+                    }
+                    else
+                    {
+                        int counter = emp.FailedLoginCount;
+                        emp.FailedLoginCount = counter++;
+                        log.Info(string.Format("Login attempts {0} for user: {1}", employeeShape.CellPhoneNumber, counter));
+                        db.SaveChanges();
+                        log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + " Password: " + employeeShape.PasswordHash);
+                        return BadRequest("Invalid Login");
+                    }
+                }
+            }
+
+            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + employeeShape.PasswordHash);
+            return BadRequest("Invalid Login");
+        }
+
+        [HttpPost]
         [Route("contracts")]
         public IHttpActionResult HasContractToSign(EmployeeShape employeeShape)
         {
