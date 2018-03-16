@@ -1,4 +1,5 @@
-﻿using CfdiService.Model;
+﻿using CfdiService.Filters;
+using CfdiService.Model;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace CfdiService.Controllers
 
         [HttpGet]
         [Route("client/documents/{clientId}")]
+        [Authorize(Roles = "CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetClientDocuments(int clientId)
         {
             var result = new List<DocumentListShape>();
@@ -26,6 +29,21 @@ namespace CfdiService.Controllers
             foreach (Document doc in docListResult)
             {
                 result.Add(DocumentListShape.FromDataModel(doc, Request));
+            }
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("clients")]
+        [Authorize(Roles = "CLIENT")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult GetAllClients()
+        {
+            var result = new List<string>();
+            var clients = db.Clients.ToList();
+            foreach (var c in clients)
+            {
+                result.Add(c.ClientCompanyRFC);
             }
             return Ok(result);
         }

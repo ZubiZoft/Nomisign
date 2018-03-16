@@ -10,6 +10,7 @@ using System.Web.Http;
 using System.Net.Http;
 using System.Net;
 using System.IO.Compression;
+using CfdiService.Filters;
 
 namespace CfdiService.Controllers
 {
@@ -49,6 +50,8 @@ namespace CfdiService.Controllers
         // GET: api/employees
         [HttpGet]
         [Route("documents/{eid}")]
+        [Authorize(Roles = "ADMIN,EMPLOYEE")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetDocuments(int eid)
         {
             var result = new List<DocumentListShape>();
@@ -77,6 +80,8 @@ namespace CfdiService.Controllers
         // GET: api/companydocs
         [HttpGet]
         [Route("documentsByCompany/{cid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetDocumentsByCompany(int cid)
         {
             var result = new List<DocumentListShape>();
@@ -97,6 +102,8 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("documentsByCompanyDateRange/{cid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetDocumentsByCompanyDateRange(int cid, DateRangeRequest range)
         {
             var result = new List<DocumentListShape>();
@@ -121,6 +128,8 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("SendNotificationsToUnsignedDocuments/")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult SendNotificationsToUnsignedDocuments([FromBody] List<int> dids)
         {
             log.Info("SendNotificationsToUnsignedDocuments");
@@ -154,6 +163,8 @@ namespace CfdiService.Controllers
         // GET: api/companydocs
         [HttpGet]
         [Route("documents/rejected/{cid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetRejectedCompanyDocuments(int cid)
         {
             var result = new List<DocumentListShape>();
@@ -175,6 +186,8 @@ namespace CfdiService.Controllers
         // GET: api/companydocs
         [HttpGet]
         [Route("documents/unsigned/{cid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetUnsignedCompanyDocuments(int cid)
         {
             var result = new List<DocumentListShape>();
@@ -195,6 +208,8 @@ namespace CfdiService.Controllers
         // GET: api/companydocs
         [HttpGet]
         [Route("documents/employeesigned/{eid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetSignedEmployeeDocuments(int eid)
         {
             var result = new List<DocumentListShape>();
@@ -215,6 +230,8 @@ namespace CfdiService.Controllers
         // POST: api/companydocs
         [HttpPost]
         [Route("documents/rejected")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult SendDocumentsToUnsignedStatus([FromBody] List<int> dids)
         {
             if (dids == null)
@@ -242,6 +259,8 @@ namespace CfdiService.Controllers
         // GET: api/companydocs
         [HttpGet]
         [Route("documents/unsigned/notify/{cid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult NotifyUnsignedCompanyDocuments(int cid)
         {
             //var result = new List<DocumentListShape>();
@@ -271,6 +290,8 @@ namespace CfdiService.Controllers
         // POST: api/companydocs
         [HttpPost]
         [Route("documents/unsigned/notify")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult NotifyUnsignedDocuments([FromBody] List<int> cid)
         {
             //var result = new List<DocumentListShape>();
@@ -298,6 +319,8 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("documents/download/")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public HttpResponseMessage DownloadDocumentsAsZip([FromBody] List<int> cid)
         {
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
@@ -345,7 +368,6 @@ namespace CfdiService.Controllers
                 response.Content.Headers.ContentDisposition.FileName = "Nominas.zip";
                 response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
                 log.Info(3);
-                return response;
             }
             catch (Exception ex)
             {
@@ -363,6 +385,8 @@ namespace CfdiService.Controllers
         // GET: api/companyusers/5
         [HttpGet]
         [Route("documentsEmployee/{id}")]
+        [Authorize(Roles = "ADMIN,EMPLOYEE,CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetDocument(int id)
         {
             Document document = null;
@@ -386,6 +410,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("documents/{id}")]
+        [Authorize(Roles = "EMPLOYEE,ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateDocument(int id, DocumentShape documentShape)
         {
             if (!ModelState.IsValid)
@@ -439,6 +465,8 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("documents")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddDocument(DocumentShape documentShape)
         {
             if (!ModelState.IsValid)
@@ -455,6 +483,8 @@ namespace CfdiService.Controllers
         // DELETE: api/companyusers/5
         [HttpDelete]
         [Route("documents/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult DeleteDocument(int id)
         {
             Document document = db.Documents.Find(id);

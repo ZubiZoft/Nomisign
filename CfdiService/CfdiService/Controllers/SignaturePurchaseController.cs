@@ -1,4 +1,5 @@
-﻿using CfdiService.Model;
+﻿using CfdiService.Filters;
+using CfdiService.Model;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace CfdiService.Controllers
         //Get:
         [HttpGet]
         [Route("signaturepurchases")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyPurchases(int cid)
         {
            SignaturePurchase SigPurchase = db.SignaturePurchases.Find(cid);
@@ -33,6 +36,8 @@ namespace CfdiService.Controllers
         // GET: api/signaturepurchases
         [HttpGet]
         [Route("signaturepurchases")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetPurchases()
         {
             var result = new List<SignaturePurchaseListShape>();
@@ -46,6 +51,8 @@ namespace CfdiService.Controllers
         // GET: api/signaturepurchases/5
         [HttpGet]
         [Route("signaturepurchases/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetSignaturePurchase(int id)
         {
             SignaturePurchase purchase = db.SignaturePurchases.Find(id);
@@ -58,6 +65,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("signaturepurchases/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateEmployee(int id, SignaturePurchaseShape purchaseShape)
         {
             if (!ModelState.IsValid)
@@ -82,6 +91,8 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("signaturepurchases")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddPurchase(SignaturePurchaseShape purchaseShape)
         {
             if (!ModelState.IsValid)
@@ -97,6 +108,8 @@ namespace CfdiService.Controllers
         // DELETE: api/companyusers/5
         [HttpDelete]
         [Route("signaturepurchases/{id}") ]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult DeleteEmployee(int id)
         {
             SignaturePurchase purchase = db.SignaturePurchases.Find(id);

@@ -23,6 +23,8 @@ namespace CfdiService.Controllers
         // GET: api/employees
         [HttpGet]
         [Route("employees/{cid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
@@ -44,6 +46,8 @@ namespace CfdiService.Controllers
         // GET: api/employees
         [HttpGet]
         [Route("employees/{cid}/new")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyNewEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
@@ -65,6 +69,8 @@ namespace CfdiService.Controllers
         // GET: api/employees
         [HttpGet]
         [Route("employees/{cid}/inactive")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyDisableEmployees(int cid)
         {
             var result = new List<EmployeeListShape>();
@@ -102,6 +108,8 @@ namespace CfdiService.Controllers
         // GET: api/companyusers/5
         [HttpGet]
         [Route("employees/{cid}/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyEmployee(int id)
         {
             // not validating company ID here
@@ -118,6 +126,8 @@ namespace CfdiService.Controllers
         // GET: api/employee/5
         [HttpGet]
         [Route("employee/{id}")]
+        [Authorize(Roles = "EMPLOYEE,ADMIN,CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetEmployee(int id)
         {
             // not validating company ID here
@@ -140,8 +150,6 @@ namespace CfdiService.Controllers
 
         [HttpGet]
         [Route("employeeexist/{id}")]
-        [Authorize(Roles = "EMPLOYEE")]
-        [OverrideAuthorization]
         public IHttpActionResult GetEmployeeExist(int id)
         {
             // not validating company ID here
@@ -164,6 +172,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("employees/passwordsession/{id}")]
+        [Authorize(Roles = "EMPLOYEE")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateEmployeePasswordSession(int id, EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
@@ -249,6 +259,7 @@ namespace CfdiService.Controllers
                     foreach (var e in emps)
                     {
                         e.PasswordHash = EncryptionService.Sha256_hash(employeeShape.PasswordHash, codes.Prefix);
+                        e.EmployeeStatus = EmployeeStatusType.Active;
                     }
                     employee.FirstName = employeeShape.FirstName;
                     employee.LastName1 = employeeShape.LastName1;
@@ -265,6 +276,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("employees/phone/{id}")]
+        [Authorize(Roles = "EMPLOYEE")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateEmployeePhone(int id, EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
@@ -295,6 +308,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("employees/{id}")]
+        [Authorize(Roles = "ADMIN,CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateEmployee(int id, EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
@@ -436,6 +451,8 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("employees")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddEmployee(EmployeeShape employeeShape)
         {
             if (!ModelState.IsValid)
@@ -531,6 +548,8 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("employee/verifycell")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult VerifyEmployeePhoneNumber(EmployeeShape employeeShape)
         {
             if (null != employeeShape.CellPhoneNumber)
@@ -560,6 +579,8 @@ namespace CfdiService.Controllers
         // DELETE: api/companyusers/5
         [HttpDelete]
         [Route("employees/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult DeleteEmployee(int id)
         {
             Employee employee = db.Employees.Find(id);
@@ -568,6 +589,23 @@ namespace CfdiService.Controllers
                 return NotFound();
             }
             db.Employees.Remove(employee);
+            db.SaveChanges();
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("employeesInactive/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult InactiveEmployee(int id)
+        {
+            Employee employee = db.Employees.Find(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            db.Entry(employee).State = System.Data.Entity.EntityState.Modified;
+            employee.EmployeeStatus = EmployeeStatusType.NotLongerEmployed;
             db.SaveChanges();
             return Ok();
         }

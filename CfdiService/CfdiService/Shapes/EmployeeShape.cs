@@ -46,7 +46,8 @@ namespace CfdiService.Shapes
                 EmailAddress = employee.EmailAddress,
                 PasswordHash = String.Empty, // employee.PasswordHash.  no need to ever let this out
                 CellPhoneNumber = employee.CellPhoneNumber,
-                LastLogin = employee.LastLoginDate.ToShortDateString(),
+                LastLogin = employee.LastLoginDate < employee.CreatedDate ? 
+                        employee.CreatedDate.ToShortDateString() : employee.LastLoginDate.ToShortDateString(),
                 CreatedByUserId = employee.CreatedByUserId,
                 EmployeeStatus = employee.EmployeeStatus,
                 SessionToken = employee.SessionToken,
@@ -107,13 +108,20 @@ namespace CfdiService.Shapes
             employee.FirstName = employeeShape.FirstName;
             employee.LastName1 = employeeShape.LastName1;
             employee.LastName2 = employeeShape.LastName2;
-            employee.FullName = string.IsNullOrEmpty(employeeShape.FullName) ? string.Format("{0} {1} {2}", employeeShape.FirstName, employeeShape.LastName1, employeeShape.LastName2) : employeeShape.FullName;
+            employee.FullName = string.IsNullOrEmpty(employeeShape.FullName) ? 
+                    string.Format("{0} {1} {2}", employeeShape.FirstName, employeeShape.LastName1, employeeShape.LastName2) : 
+                    employeeShape.FullName;
             employee.CURP = employeeShape.CURP;
             employee.RFC = employeeShape.RFC;
             employee.EmailAddress = employeeShape.EmailAddress;
             employee.CellPhoneNumber = employeeShape.CellPhoneNumber;
             employee.CreatedByUserId = employeeShape.CreatedByUserId;
             employee.EmployeeStatus = employeeShape.EmployeeStatus;
+            if (employee.EmployeeStatus == EmployeeStatusType.PasswordFailureLocked)
+            {
+                employee.FailedLoginCount = 0;
+                employee.SessionToken = "";
+            }
             return employee;
         }
 

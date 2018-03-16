@@ -1,4 +1,5 @@
-﻿using CfdiService.Model;
+﻿using CfdiService.Filters;
+using CfdiService.Model;
 using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ namespace CfdiService.Controllers
         // GET: api/companyusers
         [HttpGet]
         [Route("companyusers/{cid}/{utid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyUsers(int cid, int utid)
         {
             var result = new List<UserListShape>();
@@ -45,6 +48,8 @@ namespace CfdiService.Controllers
         // GET: api/companyusers/5
         [HttpGet]
         [Route("companyuser/{cid}/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyUser(int cid, int id)
         {
             // not validating cid here
@@ -66,6 +71,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("companyusers/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateCompanyUser(int id, UserShape userShape)
         {
             if (!ModelState.IsValid)
@@ -90,6 +97,8 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("companyusers")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddCompanyUser(UserShape userShape)
         {
             if (!ModelState.IsValid)
@@ -113,6 +122,8 @@ namespace CfdiService.Controllers
         // DELETE: api/companyusers/5
         [HttpDelete]
         [Route("companyusers/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult DeleteCompanyUser(int id)
         {
             User user = db.Users.Find(id);

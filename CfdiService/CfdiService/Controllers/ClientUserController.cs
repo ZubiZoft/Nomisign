@@ -1,4 +1,5 @@
-﻿using CfdiService.Model;
+﻿using CfdiService.Filters;
+using CfdiService.Model;
 using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
@@ -17,6 +18,8 @@ namespace CfdiService.Controllers
         // GET: api/employee/5
         [HttpGet]
         [Route("clientuser/{id}")]
+        [Authorize(Roles = "CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetClientUser(int id)
         {
             // not validating company ID here
@@ -32,6 +35,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("clientuser/password/{id}")]
+        [Authorize(Roles = "CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateClientUserPassword(int id, ClientUserShape cUserShape)
         {
             if (!ModelState.IsValid)
