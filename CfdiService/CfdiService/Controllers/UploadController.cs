@@ -150,6 +150,80 @@ namespace CfdiService.Controllers
             return Ok(new BatchResult(batch.BatchId, BatchResultCode.Ok, batch.ItemCount));
         }
 
+        [HttpPost]
+        [Route("addfileexe/{batchid}")]
+        public IHttpActionResult AddFileExe(int batchid, [FromBody] CfdiService.Shapes.FileUpload upload)
+        {
+            Batch batch = db.Batches.Find(batchid);
+            Company company = db.Companies.Find(batch.CompanyId);
+            if (batch == null)
+            {
+                log.Error("Error adding document: batch not found: " + batchid);
+                return BadRequest();
+            }
+            if (batch.ItemCount == batch.ActualItemCount)
+            {
+                log.Error("Error adding document: canceling batch due to item count: " + batchid);
+                CancelBatch(batch);
+                return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
+            }
+            Document newDoc = new Model.Document
+            {
+                Batch = batch,
+                UploadTime = DateTime.Now,
+                SignStatus = SignStatus.SinFirma,
+                PathToFile = Guid.NewGuid().ToString()
+            };
+
+            try
+            {
+                // this only applies to XML vis bulk uploader
+                if (!string.IsNullOrEmpty(upload.XMLContent))
+                {
+                    EvaluateBulkUpload(upload, batch, newDoc, company);
+                }
+                else // this only applies to admin app uploads where no xml is supplied
+                {
+                    EvaluateAdminUpload(upload, batch, newDoc);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error adding document: verification failed", ex);
+                // log exception
+                return BadRequest();
+            }
+
+            SaveContent(upload, newDoc);
+
+            // send notifications - if fail, log but dont return error code.
+            try
+            {
+                // Send SMS alerting employee of new docs
+                // send notifications
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
+                if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                {
+                    //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                    string res = "";
+                    SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("warning adding document: one or both notifications failed to send", ex);
+            }
+            finally
+            { // commit to DB
+                db.Documents.Add(newDoc);
+                batch.ActualItemCount++;
+                db.SaveChanges();
+            }
+
+            return Ok(new BatchResult(batch.BatchId, BatchResultCode.Ok, batch.ItemCount));
+        }
+
         [HttpGet]
         [Route("closebatch/{batchid}")]
         public IHttpActionResult CloseBatch(int batchid)
