@@ -14,19 +14,22 @@ using System.Globalization;
 using System.Data.SqlTypes;
 using System.Security.Cryptography;
 using CfdiService.Services;
+using CfdiService.Filters;
 
 namespace CfdiService.Controllers
 {
     [RoutePrefix("api/upload")]
     public class UploadController : ApiController
     {
-        
+
         private ModelDbContext db = new ModelDbContext();
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         [HttpPost]
         [Route("openbatch/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult OpenBatch(int id, [FromBody] OpenBatch batchInfo)
         {
             Company company = db.Companies.Find(id);
@@ -80,6 +83,8 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("addfile/{batchid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddFile(int batchid, [FromBody] CfdiService.Shapes.FileUpload upload)
         {
             Batch batch = db.Batches.Find(batchid);
@@ -125,10 +130,11 @@ namespace CfdiService.Controllers
             SaveContent(upload, newDoc);
 
             // send notifications - if fail, log but dont return error code.
-            try {
+            try
+            {
                 // Send SMS alerting employee of new docs
                 // send notifications
-                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy") ,httpDomain);
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                 SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
@@ -137,7 +143,8 @@ namespace CfdiService.Controllers
                     SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                 }
             }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 log.Error("warning adding document: one or both notifications failed to send", ex);
             }
             finally
@@ -226,6 +233,8 @@ namespace CfdiService.Controllers
 
         [HttpGet]
         [Route("closebatch/{batchid}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult CloseBatch(int batchid)
         {
             Batch batch = db.Batches.Find(batchid);
@@ -249,6 +258,8 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("addcompanyfile/{companyId}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddCompanyAgreementFile(string companyId, [FromBody] CfdiService.Shapes.FileUpload batchInfo)
         {
             Company company = db.Companies.FirstOrDefault(e => e.CompanyId.ToString() == companyId);
@@ -264,7 +275,7 @@ namespace CfdiService.Controllers
                 NomiFileAccess.WriteCompanyAgreementFile(company, batchInfo);
                 // write filename to DB
                 company.NewEmployeeDocument = batchInfo.FileName;
-                company.NewEmployeeGetDoc = NewEmployeeGetDocType.AddDocument; 
+                company.NewEmployeeGetDoc = NewEmployeeGetDocType.AddDocument;
                 db.SaveChanges();
             }
             catch (Exception dbex)
@@ -292,6 +303,8 @@ namespace CfdiService.Controllers
         }
         [HttpPost]
         [Route("uploadfilesfront/{companyId}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UploadFilesFront(int companyId, [FromBody] List<FileUpload> flist)
         {
             Company company = db.Companies.Find(companyId);
@@ -317,11 +330,41 @@ namespace CfdiService.Controllers
                 log.Info("XMLContent: " + filetemp.XMLContent + "\n");
                 log.Info("Filehash: " + filetemp.FileHash + "\n");
 
+                if (string.IsNullOrEmpty(filetemp.XMLContent))
+                {
+                    continue;
+                }
+                byte[] content = Encoding.UTF8.GetBytes(filetemp.XMLContent);
+                XElement root;
+                using (MemoryStream ms = new MemoryStream(content))
+                    root = XElement.Load(ms);
+
+                XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
+                XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+
+                XElement complementoelem = null;
+                ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
+                XElement nominaSubcontracion = null;
+                DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
+                XAttribute clientRfc = null;
+                AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+
+                if (clientRfc != null)
+                {
+                    Client client = db.FindClientByRfc(clientRfc.Value);
+                    if (client == null)
+                        continue;
+                }
+                else
+                {
+                    continue;
+                }
+
                 //Checking for duplicate Receipt XML Hash
                 //if (CheckifReceiptAlreadyExists(filetemp))
-                    //continue;
-                
-                if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)){ continue; }
+                //continue;
+
+                if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
                 Batch batch = db.Batches.Find(BatchId);
                 if (batch == null)
                 {
@@ -364,13 +407,20 @@ namespace CfdiService.Controllers
 
                 SaveContent(filetemp, newDoc);
 
+                db.Documents.Add(newDoc);
+                batch.ActualItemCount++;
+                db.SaveChanges();
+
+                var empDoc = db.Employees.Find(newDoc.EmployeeId);
+                log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
+
                 // send notifications - if fail, log but dont return error code.
                 try
                 {
                     // Send SMS alerting employee of new docs
                     // send notifications
-                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                    SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
+                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                    SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
                     if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                     {
                         //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
@@ -382,12 +432,9 @@ namespace CfdiService.Controllers
                 catch (Exception ex)
                 {
                     log.Error("warning adding document: one or both notifications failed to send", ex);
-                }
-                finally
-                { // commit to DB
-                    db.Documents.Add(newDoc);
-                    batch.ActualItemCount++;
-                    db.SaveChanges();
+                    log.Error(ex.Message);
+                    log.Error(ex.Source);
+                    log.Error(ex.StackTrace);
                 }
             }
             return Ok();
@@ -544,12 +591,20 @@ namespace CfdiService.Controllers
             if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
                 throw new ApplicationException("Invalid XML format");
 
+            if (clientRfc != null)
+            {
+                Client client = db.FindClientByRfc(clientRfc.Value);
+                if (client != null)
+                    doc.ClientCompanyId = client.ClientCompanyID;
+            }
+
             Employee emp = db.FindEmployeeByCURPCompany(company.CompanyId, (string)receptorCurp);
             if (emp == null)
             {
                 // create employee setting full name
                 // employee status is provisional (to be completed at a later time)
                 // throw new ApplicationException("Cannot find employee RFC with ID: " + receptorRfc);
+                log.Info("Created By: " + User.Identity.GetName());
                 emp = new Employee
                 {
                     RFC = (string)receptorRfc,
@@ -558,10 +613,26 @@ namespace CfdiService.Controllers
                     CreatedDate = DateTime.Now,
                     LastLoginDate = SqlDateTime.MinValue.Value,
                     EmployeeStatus = EmployeeStatusType.Unverified,
-                    CreatedByUserId = 1, // what to put here?
+                    CreatedByUserId = int.Parse(User.Identity.GetName()),
                     CellPhoneNumber = ""
                 };
                 emp.Company = batch.Company;
+
+                try
+                {
+                    var splittedName = FullNameSplitterFromRFCService.SplitName((string)receptorRfc, (string)receptorfullName);
+                    if (splittedName != null)
+                    {
+                        emp.FirstName = splittedName[0];
+                        emp.LastName1 = splittedName[1];
+                        emp.LastName2 = splittedName[2];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Info("Error splitting the Full Name", ex);
+                }
+
                 db.Employees.Add(emp);
 
                 // add company default doc
@@ -584,7 +655,8 @@ namespace CfdiService.Controllers
                             PathToFile = fileName,
                             PayperiodDate = DateTime.Now,
                             SignStatus = SignStatus.SinFirma,
-                            UploadTime = DateTime.Now
+                            UploadTime = DateTime.Now,
+                            ClientCompanyId = doc.ClientCompanyId
                         };
                         db.Documents.Add(document);
                     }
@@ -697,7 +769,7 @@ namespace CfdiService.Controllers
         private void SaveContent(FileUpload upload, Document doc)
         {
             // Admin screen upload does not include Xml
-            if (!string.IsNullOrEmpty(upload.XMLContent)){ NomiFileAccess.WriteFile(doc, upload.XMLContent, Strings.XML_EXT); }
+            if (!string.IsNullOrEmpty(upload.XMLContent)) { NomiFileAccess.WriteFile(doc, upload.XMLContent, Strings.XML_EXT); }
             //NomiFileAccess.WriteEncodedFile(doc, upload.PDFContent, Strings.PDF_EXT);
             var company = db.Companies.Find(doc.CompanyId);
             NomiFileAccess.WriteEncodedFileAttachedXML(doc, upload.PDFContent, Strings.PDF_EXT, upload.XMLContent, company);

@@ -1,4 +1,5 @@
-﻿using CfdiService.Model;
+﻿using CfdiService.Filters;
+using CfdiService.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("securityquestions/{id}")]
+        [Authorize(Roles = "EMPLOYEE,CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateEmployeeSecurityQuestions(int id, EmployeeSecurityQuestions newSecurityQuestions)
         {
             if (!ModelState.IsValid)
@@ -62,6 +65,8 @@ namespace CfdiService.Controllers
         // POST: api/companyusers
         [HttpPost]
         [Route("securityquestions")]
+        [Authorize(Roles = "EMPLOYEE,CLIENT")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddSecurityQuestons(EmployeeSecurityQuestions securityQuestions)
         {
             if (!ModelState.IsValid)

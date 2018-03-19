@@ -104,6 +104,72 @@ namespace CfdiService
 </html>
 ";
 
+        public static readonly string restYourAccountMessage = @"<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset = ""utf-8"">
+  <title>TemplatesNomisign</title>
+  <base href=""/"">
+
+  <meta name = ""viewport"" content=""width=device-width, initial-scale=1"">
+</head>
+<body bgcolor = ""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+<font face=""verdana"">
+<table width = ""100%"">
+  <tr>
+    <th width = ""15%""></th>
+    <th width = ""70%"" bgcolor=""#ffffff"">
+      <br>
+      <img width = ""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <br>
+      <br>
+      <br>
+      <h1>Bienvenido a Nomisign&copy;</h1>
+      <br>
+      <p>
+        Tu cuenta ha sido reiniciada.
+        <br>
+        Visite Nomisign para reiniciar tu contraseña haciendo click en el siguiente botón.  Tu código de seguridad es: {2}
+      </p>
+      <br>
+      <div>
+        <table width = ""100%"" cellpadding=""15px"">
+          <tr>
+            <th width = ""30%""></th>
+            <th width = ""40%"" bgcolor=""#2cbbc3"">
+              <a href = ""http://{0}/nomisign/account/{1}"" target=""_blank"">
+                Nomisign
+              </a>
+            </th>
+            <th width = ""30%""></th>
+          </tr>
+        </table>
+      </div>
+      <br>
+      <p>O copia y pega la siguiente liga en cualquier navegador:</p>
+      <p>http://{0}/nomisign/account/{1}</p>
+      <br>
+      <br>
+    </th>
+    <th width = ""15%""></th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>
+      <font size = ""1"">
+        <code>
+        
+        </code>
+      </font>
+    </th>
+    <th></th>
+  </tr>
+</table>
+</font>
+</body>
+</html>
+";
+
         // ""review your new docs""
         public static readonly string visitSiteTosignDocumentMessageEmailSubject = "Revisar y firmar su documento";
 

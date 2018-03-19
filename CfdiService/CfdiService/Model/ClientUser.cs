@@ -23,5 +23,7 @@ namespace CfdiService.Model
         public int CreatedByUserId { get; set; }
         public ClientUserAdminType ClientUserType { get; set; }
         public DateTime DateUserCreated { get; set; }
+        public string SessionToken { get; set; }
+        public DateTime? TokenTimeout { get; set; }
     }
 }

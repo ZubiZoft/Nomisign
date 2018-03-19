@@ -23,6 +23,8 @@ namespace CfdiService.Model
         public bool ForcePasswordReset { get; set; }
         public int  CreatedByUserId { get; set; }
         public UserAdminType UserType { get; set; }
-        public DateTime DateUserCreated { get; set; } 
+        public DateTime DateUserCreated { get; set; }
+        public string SessionToken { get; set; }
+        public DateTime? TokenTimeout { get; set; }
     }
 }

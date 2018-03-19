@@ -12,6 +12,7 @@ using CfdiService;
 using CfdiService.Model;
 using CfdiService.Shapes;
 using System.IO;
+using CfdiService.Filters;
 
 namespace CfdiService.Controllers
 {
@@ -23,6 +24,8 @@ namespace CfdiService.Controllers
         // GET: api/companies
         [HttpGet]
         [Route("companies")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanies()
         {
             var result = new List<CompanyListShape>();
@@ -36,6 +39,8 @@ namespace CfdiService.Controllers
         // GET: api/companies/5
         [HttpGet]
         [Route("companies/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult GetCompany(int id)
         {
             Company company = db.Companies.Find(id);
@@ -48,6 +53,8 @@ namespace CfdiService.Controllers
 
         [HttpPut]
         [Route("companies/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult UpdateCompany(int id, CompanyShape companyShape)
         {
             if (!ModelState.IsValid)
@@ -72,6 +79,8 @@ namespace CfdiService.Controllers
         // POST: api/Companies
         [HttpPost]
         [Route("companies")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult AddCompany(CompanyShape companyShape)
         {
             if (!ModelState.IsValid)
@@ -91,6 +100,8 @@ namespace CfdiService.Controllers
         // DELETE: api/Companies/5
         [HttpDelete]
         [Route("companies/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult DeleteCompany(int id)
         {
             Company company = db.Companies.Find(id);
@@ -106,6 +117,8 @@ namespace CfdiService.Controllers
         // GET: api/companies/5
         [HttpGet]
         [Route("cleardemo")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult ClearDemo()
         {
             var objCtx = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)db).ObjectContext;

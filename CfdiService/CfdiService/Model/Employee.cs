@@ -4,7 +4,16 @@ using System;
 
 namespace CfdiService.Model
 {
-    public enum EmployeeStatusType { Invalid = 0, Unverified = 1, Active = 2, PasswordFailureLocked = 3, PasswordResetLocked = 4, PasswordAwaitingLocked = 5 }
+    public enum EmployeeStatusType
+    {
+        Invalid = 0,
+        Unverified = 1,
+        Active = 2,
+        PasswordFailureLocked = 3,
+        PasswordResetLocked = 4,
+        PasswordAwaitingLocked = 5,
+        NotLongerEmployed = 6
+    }
 
     public class Employee
     {
@@ -30,11 +39,8 @@ namespace CfdiService.Model
         public DateTime LastLoginDate { get; set; }
         public DateTime CreatedDate { get; set; } 
         public EmployeeStatusType EmployeeStatus { get; set; }
-
         public string SessionToken { get; set; }
-
         public DateTime? TokenTimeout { get; set; }
-
         // error in data type here
         public int FailedLoginCount { get; set; }
     }

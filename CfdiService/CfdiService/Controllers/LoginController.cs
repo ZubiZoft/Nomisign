@@ -1,4 +1,5 @@
-﻿using CfdiService.Model;
+﻿using CfdiService.Filters;
+using CfdiService.Model;
 using CfdiService.Services;
 using CfdiService.Shapes;
 using System;
@@ -38,23 +39,36 @@ namespace CfdiService.Controllers
         [Route("login/reset")]
         public IHttpActionResult DoEmployeeLoginReset(EmployeeShape employeeShape)
         {
-            var employeeByCell = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            if(employeeByCell.Count == 1)
+            var employeeByCell = db.Employees.Where(e =>
+                    e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber) ||
+                    e.EmailAddress.Equals(employeeShape.CellPhoneNumber)
+                ).ToList();
+            if (employeeByCell.Count > 0)
             {
                 // lock employee account
-                var employeeForReset = employeeByCell[0];
-                employeeForReset.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
-                //db.SaveChanges();
+                foreach (var employeeForReset in employeeByCell)
+                {
+                    employeeForReset.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
+                    employeeForReset.FailedLoginCount = 0;
+                    //db.SaveChanges();
 
-                // generate code
-                EmployeesCode code = db.EmployeeSecurityCodes.Find(employeeForReset.EmployeeId);
-                if(null == code)
+                    // generate code
+
+                    db.SaveChanges();
+
+                    //SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}", 
+                    //    httpDomain, employeeForReset.EmployeeId, code.Vcode));
+                    log.Info("Reset password request for user: " + employeeForReset.EmployeeId);
+                }
+                var employee1 = employeeByCell[0];
+                EmployeesCode code = db.EmployeeSecurityCodes.Find(employee1.EmployeeId);
+                if (null == code)
                 {
                     code = new EmployeesCode()
                     {
                         Vcode = EncryptionService.GenerateSecurityCode(),
                         GeneratedDate = DateTime.Now,
-                        EmployeeId = employeeForReset.EmployeeId,
+                        EmployeeId = employee1.EmployeeId,
                         Prefix = Guid.NewGuid().ToString()
                     };
                     db.EmployeeSecurityCodes.Add(code);
@@ -64,15 +78,18 @@ namespace CfdiService.Controllers
                     code.Vcode = EncryptionService.GenerateSecurityCode();
                     code.GeneratedDate = DateTime.Now;
                 }
-                
-                db.SaveChanges();
-
-                //SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}", 
-                //    httpDomain, employeeForReset.EmployeeId, code.Vcode));
-                string res = "";
-                SendSMS.SendSMSQuiubo(String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}",
-                    httpDomain, employeeForReset.EmployeeId, code.Vcode), string.Format("+52{0}", employeeForReset.CellPhoneNumber), out res);
-                log.Info("Reset password request for user: " + employeeForReset.EmployeeId);
+                string res = null;
+                try
+                {
+                    SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
+                            httpDomain, employee1.EmployeeId, code.Vcode), string.Format("+52{0}", employee1.CellPhoneNumber), out res);
+                }
+                catch { }
+                try
+                {
+                    SendEmail.SendEmailMessage(employee1.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employee1.EmployeeId, code.Vcode));
+                }
+                catch { }
                 return Ok();
             }
             else
@@ -80,7 +97,7 @@ namespace CfdiService.Controllers
                 log.Info("Invalid password request for user: " + employeeShape.EmailAddress);
                 return BadRequest("Invalid Login Data");
             }
-            
+
         }
 
         [HttpPost]
@@ -157,7 +174,23 @@ namespace CfdiService.Controllers
                 if (employeeByEmail.Count < 1)
                 {
                     log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
-                    return BadRequest("Invalid Login Data");
+                    var emps = db.Employees.Where(e =>
+                            e.EmailAddress.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase) ||
+                            e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)
+                        ).Distinct().ToList();
+                    log.Info("Records: " + emps.Count().ToString());
+                    foreach (var e in emps)
+                    {
+                        e.FailedLoginCount = e.FailedLoginCount + 1;
+                        if (e.FailedLoginCount >= 3)
+                        {
+                            e.EmployeeStatus = EmployeeStatusType.PasswordFailureLocked;
+                        }
+                        db.Entry(e).State = System.Data.Entity.EntityState.Modified;
+                        db.SaveChanges();
+                    }
+
+                    return BadRequest("Invalid Login");
                 }
                 else
                 {
@@ -166,18 +199,26 @@ namespace CfdiService.Controllers
                     {
                         var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
                         if (null != emp.PasswordHash &&
-                            emp.EmployeeStatus == EmployeeStatusType.Active &&
+                            (emp.EmployeeStatus == EmployeeStatusType.Active || emp.EmployeeStatus == EmployeeStatusType.PasswordFailureLocked) &&
                             emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                         {
-                            emp.LastLoginDate = DateTime.Now;
-                            emp.TokenTimeout = DateTime.Now;
-                            emp.SessionToken = TokenGenerator.GetToken();
-                            db.SaveChanges();
-                            // hide password 
-                            emp.PasswordHash = string.Empty;
-                            var eShape = EmployeeShape.FromDataModel(emp, Request);
-                            //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
-                            return Ok(eShape);
+                            if (emp.FailedLoginCount < 3)
+                            {
+                                emp.LastLoginDate = DateTime.Now;
+                                emp.TokenTimeout = DateTime.Now;
+                                emp.SessionToken = TokenGenerator.GetToken();
+                                emp.FailedLoginCount = 0;
+                                db.SaveChanges();
+                                // hide password 
+                                emp.PasswordHash = string.Empty;
+                                var eShape = EmployeeShape.FromDataModel(emp, Request);
+                                //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                                return Ok(eShape);
+                            }
+                            else
+                            {
+                                return Conflict();
+                            }
                         }
                     }
                 }
@@ -189,59 +230,15 @@ namespace CfdiService.Controllers
                 {
                     var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
                     if (null != emp.PasswordHash &&
-                        emp.EmployeeStatus == EmployeeStatusType.Active &&
+                        (emp.EmployeeStatus == EmployeeStatusType.Active || emp.EmployeeStatus == EmployeeStatusType.PasswordFailureLocked) &&
                         emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix))
                     {
-                        emp.LastLoginDate = DateTime.Now;
-                        emp.TokenTimeout = DateTime.Now;
-                        emp.SessionToken = TokenGenerator.GetToken();
-                        db.SaveChanges();
-                        // hide password 
-                        emp.PasswordHash = string.Empty;
-                        var eShape = EmployeeShape.FromDataModel(emp, Request);
-                        //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
-                        return Ok(eShape);
-                    }
-                }
-            }
-
-            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + employeeShape.PasswordHash);
-            return BadRequest("Invalid Login");
-        }
-
-        [HttpPost]
-        [Route("logintest")]
-        public IHttpActionResult DoEmployeeLoginTest(EmployeeShape employeeShape)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var employeeByPhone = db.Employees.Where(e => e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            if (employeeByPhone.Count < 1)
-            {
-                log.Info("Login by Email");
-                var employeeByEmail = db.Employees.Where(e => e.EmailAddress.Equals(employeeShape.CellPhoneNumber,
-                StringComparison.InvariantCultureIgnoreCase)).ToList();
-                if (employeeByEmail.Count < 1)
-                {
-                    log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
-                    return BadRequest("Invalid Login Data");
-                }
-                else
-                {
-                    // no null passwords allowed
-                    foreach (var emp in employeeByEmail)
-                    {
-                        var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
-                        if (null != emp.PasswordHash &&
-                            emp.EmployeeStatus == EmployeeStatusType.Active &&
-                            emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix) &&
-                            emp.FailedLoginCount <= 3)
+                        if (emp.FailedLoginCount < 3)
                         {
                             emp.LastLoginDate = DateTime.Now;
                             emp.TokenTimeout = DateTime.Now;
                             emp.SessionToken = TokenGenerator.GetToken();
+                            emp.FailedLoginCount = 0;
                             db.SaveChanges();
                             // hide password 
                             emp.PasswordHash = string.Empty;
@@ -251,56 +248,42 @@ namespace CfdiService.Controllers
                         }
                         else
                         {
-                            int counter = emp.FailedLoginCount;
-                            emp.FailedLoginCount = counter++;
-                            log.Info(string.Format("Login attempts {0} for user: {1}", employeeShape.CellPhoneNumber, counter));
-                            db.SaveChanges();
-                            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + " Password: " + employeeShape.PasswordHash);
-                            return BadRequest("Invalid Login");
+                            return Conflict();
                         }
                     }
                 }
             }
-            else
+
+            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber);
+            try
             {
-                log.Info("Login by Cellphone");
-                // no null passwords allowed
-                foreach (var emp in employeeByPhone)
+                var empss = db.Employees.Where(e =>
+                        e.EmailAddress.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase) ||
+                        e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber, StringComparison.InvariantCultureIgnoreCase)
+                    ).Distinct().ToList();
+                log.Info("Records: " + empss.Count().ToString());
+                foreach (var e in empss)
                 {
-                    var code = db.EmployeeSecurityCodes.FirstOrDefault(e => e.EmployeeId == emp.EmployeeId);
-                    if (null != emp.PasswordHash &&
-                        emp.EmployeeStatus == EmployeeStatusType.Active &&
-                        emp.PasswordHash == EncryptionService.Sha256_hash(employeeShape.PasswordHash, code.Prefix) &&
-                        emp.FailedLoginCount <= 3)
+                    e.FailedLoginCount = e.FailedLoginCount + 1;
+                    if (e.FailedLoginCount >= 3)
                     {
-                        emp.LastLoginDate = DateTime.Now;
-                        emp.TokenTimeout = DateTime.Now;
-                        emp.SessionToken = TokenGenerator.GetToken();
-                        db.SaveChanges();
-                        // hide password 
-                        emp.PasswordHash = string.Empty;
-                        var eShape = EmployeeShape.FromDataModel(emp, Request);
-                        //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
-                        return Ok(eShape);
+                        e.EmployeeStatus = EmployeeStatusType.PasswordFailureLocked;
                     }
-                    else
-                    {
-                        int counter = emp.FailedLoginCount;
-                        emp.FailedLoginCount = counter++;
-                        log.Info(string.Format("Login attempts {0} for user: {1}", employeeShape.CellPhoneNumber, counter));
-                        db.SaveChanges();
-                        log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + " Password: " + employeeShape.PasswordHash);
-                        return BadRequest("Invalid Login");
-                    }
+                    db.Entry(e).State = System.Data.Entity.EntityState.Modified;
+                    db.SaveChanges();
                 }
             }
-
-            log.Info("Invalid login request for user: " + employeeShape.CellPhoneNumber + "password: " + employeeShape.PasswordHash);
+            catch (Exception ex)
+            {
+                log.Info(ex);
+            }
             return BadRequest("Invalid Login");
         }
 
         [HttpPost]
         [Route("contracts")]
+        [Authorize(Roles = "EMPLOYEE")]
+        [IdentityBasicAuthentication]
         public IHttpActionResult HasContractToSign(EmployeeShape employeeShape)
         {
             try
@@ -308,7 +291,7 @@ namespace CfdiService.Controllers
                 int result = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
                 return Ok(result);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Info(e);
                 log.Info(e.StackTrace);
@@ -330,7 +313,7 @@ namespace CfdiService.Controllers
             if (allowDefaultAdmin)
             {
                 User defaultAdminUser = new Model.User();
-                if(VerifyDefaultAdminAccount(userShape, defaultAdminUser))
+                if (VerifyDefaultAdminAccount(userShape, defaultAdminUser))
                 {
                     return Ok(defaultAdminUser);
                 }
@@ -348,11 +331,13 @@ namespace CfdiService.Controllers
                 user = userByEmail[0];
             }
 
-            if(null != user.PasswordHash && 
-                user.UserStatus == UserStatusType.Active && 
+            if (null != user.PasswordHash &&
+                user.UserStatus == UserStatusType.Active &&
                 user.PasswordHash == EncryptionService.Sha256_hash(userShape.PasswordHash, string.Empty))
             {
                 user.LastLogin = DateTime.Now;
+                user.TokenTimeout = DateTime.Now;
+                user.SessionToken = TokenGenerator.GetToken();
                 db.SaveChanges();
                 // return DB user.  Not shape because need user stats as a int
                 // Dont return password 
@@ -390,6 +375,8 @@ namespace CfdiService.Controllers
                 clientUser.PasswordHash == EncryptionService.Sha256_hash(clientUserShape.PasswordHash, string.Empty))
             {
                 clientUser.LastLogin = DateTime.Now;
+                clientUser.TokenTimeout = DateTime.Now;
+                clientUser.SessionToken = TokenGenerator.GetToken();
                 db.SaveChanges();
                 // return DB user.  Not shape because need user stats as a int
                 // Dont return password 
@@ -403,7 +390,7 @@ namespace CfdiService.Controllers
 
         private bool VerifyDefaultAdminAccount(UserShape shape, User adminUser)
         {
-            if(shape.EmailAddress == "admin" && shape.PasswordHash == "password123")
+            if (shape.EmailAddress == "admin" && shape.PasswordHash == "password123")
             {
                 adminUser.UserStatus = UserStatusType.Active;
                 adminUser.UserType = UserAdminType.GlobalAdmin;
