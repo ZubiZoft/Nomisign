@@ -12,9 +12,10 @@ namespace CfdiService.Shapes
         public int SignaturePurchaseId { set; get; }
         public int CompanyId { set; get; }
         public int LicensesPurchased { get; set; }
+        public int SMSPurchased { get; set; }
         public Decimal Price { get; set; }
-        public DateTime PurchaseDate { get; set; }
-        public DateTime PaidDate { get; set; }
+        public String PurchaseDate { get; set; }
+        public String PaidDate { get; set; }
 
         public static SignaturePurchaseShape FromDataModel(SignaturePurchase signaturePurchase, HttpRequestMessage request)
         {
@@ -23,9 +24,10 @@ namespace CfdiService.Shapes
                 SignaturePurchaseId = signaturePurchase.SignaturePurchaseId,
                 CompanyId = signaturePurchase.CompanyId,
                 LicensesPurchased = signaturePurchase.LicensesPurchased,
+                SMSPurchased = signaturePurchase.SMSPurchased.Value,
                 Price = signaturePurchase.Price,
-                PurchaseDate = signaturePurchase.PurchaseDate,
-                PaidDate = signaturePurchase.PaidDate,
+                PurchaseDate = signaturePurchase.PurchaseDate.ToString("dd/MM/yyyy HH:mm:ss"),
+                PaidDate = signaturePurchase.PaidDate.ToString("dd/MM/yyyy HH:mm:ss"),
                 Links = new LinksClass()
             };
 
@@ -42,8 +44,8 @@ namespace CfdiService.Shapes
             signaturePurchase.LicensesPurchased = signaturePurchaseShape.LicensesPurchased;
             signaturePurchase.CompanyId = signaturePurchaseShape.CompanyId;
             signaturePurchase.Price = signaturePurchaseShape.Price;
-            signaturePurchase.PurchaseDate = signaturePurchaseShape.PurchaseDate;
-            signaturePurchase.PaidDate = signaturePurchaseShape.PaidDate;
+            signaturePurchase.PurchaseDate = DateTime.Now;
+            signaturePurchase.PaidDate = DateTime.Now;
 
             return signaturePurchase;
         }

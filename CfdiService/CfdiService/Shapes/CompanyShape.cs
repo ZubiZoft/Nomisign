@@ -23,7 +23,9 @@ namespace CfdiService.Shapes
         public string BillingEmailAddress { get; set; }
         //public string CorporateEmailDomain { get; set; }
         public long TotalSignaturesPurchased { get; set; }
+        public long TotalSMSPurchased { get; set; }
         public long SignatureBalance { get; set; }
+        public long SMSBalance { get; set; }
         public int AccountStatus { get; set; }
         public bool NewEmployeeGetDoc { get; set; }
         public string NewEmployeeDocument { get; set; }
@@ -54,6 +56,8 @@ namespace CfdiService.Shapes
                 BillingEmailAddress = company.BillingEmailAddress,
                 TotalSignaturesPurchased = company.TotalSignaturesPurchased,
                 SignatureBalance = company.SignatureBalance,
+                TotalSMSPurchased = company.TotalSMSPurchased.Value,
+                SMSBalance = company.SMSBalance.Value,
                 AccountStatus = (int)company.AccountStatus,
                 NewEmployeeGetDoc = company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument,
                 NewEmployeeDocument = company.NewEmployeeDocument

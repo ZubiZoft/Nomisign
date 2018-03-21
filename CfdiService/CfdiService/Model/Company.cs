@@ -36,6 +36,8 @@ namespace CfdiService.Model
         //public string CorporateEmailDomain { get; set; }
         public long TotalSignaturesPurchased { get; set; }
         public long SignatureBalance { get; set; }
+        public long? TotalSMSPurchased { get; set; }
+        public long? SMSBalance { get; set; }
         public AccountStatusType AccountStatus { get; set; }
         public string ApiKey { get; set; }
         public virtual ICollection<SignaturePurchase> Purchases { get; set; }

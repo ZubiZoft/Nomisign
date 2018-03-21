@@ -13,5 +13,6 @@ namespace CfdiService.Model
         public Decimal Price { get; set; }
         public DateTime PurchaseDate { get; set; } 
         public DateTime PaidDate { get; set; }
+        public int? SMSPurchased { get; set; }
     }
 }

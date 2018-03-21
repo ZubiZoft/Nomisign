@@ -89,7 +89,7 @@ namespace CfdiService.Controllers
             }
             Company company = CompanyShape.ToDataModel(companyShape);
             company.PayPeriod = PayPeriodType.Monthly;
-            company.BillingEmailAddress = "billing@somewhere.com";
+            company.BillingEmailAddress = companyShape.BillingEmailAddress;
             company.ApiKey = Guid.NewGuid().ToString();
             company.AccountStatus = AccountStatusType.Active;
             db.Companies.Add(company);

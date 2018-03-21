@@ -50,42 +50,21 @@ namespace CfdiService.Controllers
 
         // GET: api/signaturepurchases/5
         [HttpGet]
-        [Route("signaturepurchases/{id}")]
+        [Route("signaturepurchases/{cid}")]
         [Authorize(Roles = "ADMIN")]
         [IdentityBasicAuthentication]
-        public IHttpActionResult GetSignaturePurchase(int id)
+        public IHttpActionResult GetSignaturePurchase(int cid)
         {
-            SignaturePurchase purchase = db.SignaturePurchases.Find(id);
-            if (purchase == null)
-            {
-                return NotFound();
-            }
-            return Ok(SignaturePurchaseShape.FromDataModel(purchase, Request));
-        }
+            List<SignaturePurchase> purchase = db.SignaturePurchases.Where(x => x.CompanyId == cid).ToList();
 
-        [HttpPut]
-        [Route("signaturepurchases/{id}")]
-        [Authorize(Roles = "ADMIN")]
-        [IdentityBasicAuthentication]
-        public IHttpActionResult UpdateEmployee(int id, SignaturePurchaseShape purchaseShape)
-        {
-            if (!ModelState.IsValid)
+            var pShape = new List<SignaturePurchaseShape>();
+
+            foreach (var p in purchase)
             {
-                return BadRequest(ModelState);
-            }
-            if (id != purchaseShape.SignaturePurchaseId)
-            {
-                return BadRequest();
-            }
-            SignaturePurchase purchase = db.SignaturePurchases.Find(id);
-            if (purchase == null)
-            {
-                return NotFound();
+                pShape.Add(SignaturePurchaseShape.FromDataModel(p, Request));
             }
 
-            SignaturePurchaseShape.ToDataModel(purchaseShape, purchase);
-            db.SaveChanges();
-            return Ok(purchaseShape);
+            return Ok(pShape);
         }
 
         // POST: api/companyusers

@@ -35,58 +35,58 @@ namespace CfdiService.Filters
         public async Task AuthenticateAsync(HttpAuthenticationContext context, CancellationToken cancellationToken)
         {
             // 1. Look for credentials in the request.
-            log.Info("1.0");
+            //log.Info("1.0");
             HttpRequestMessage request = context.Request;
             AuthenticationHeaderValue authorization = request.Headers.Authorization;
             var vals = request.Headers.GetValues("ClientType");
             if (request.Method == HttpMethod.Options)
             {
-                log.Info("1.1");
+                //log.Info("1.1");
                 return;
             }
             // 2. If there are no credentials, do nothing.
-            log.Info("2.0");
+            //log.Info("2.0");
             if (authorization == null)
             {
-                log.Info("2.1");
+                //log.Info("2.1");
                 context.ErrorResult = new LoginFailureResult("Missign Token", request);
                 return;
             }
 
             // 3. If there are credentials but the filter does not recognize the 
             //    authentication scheme, do nothing.
-            log.Info("3.0");
+            //log.Info("3.0");
             if (authorization.Scheme != "Basic")
             {
-                log.Info("3.1");
+                //log.Info("3.1");
                 context.ErrorResult = new LoginFailureResult("Unsupported Scheme", request);
                 return;
             }
             // 4. If there are credentials that the filter understands, try to validate them.
             // 5. If the credentials are bad, set the error result.
-            log.Info("4.0");
+            //log.Info("4.0");
             if (String.IsNullOrEmpty(authorization.Parameter))
             {
-                log.Info("4.1");
+                //log.Info("4.1");
                 context.ErrorResult = new LoginFailureResult("Missing credentials", request);
                 return;
             }
             string token = authorization.Parameter;
-            log.Info(token);
+            //log.Info(token);
             IPrincipal principal = LoginAuthorizeUser(token, vals.FirstOrDefault());
-            log.Info("5.0");
+            //log.Info("5.0");
             if (principal == null)
             {
-                log.Info("5.2");
+                //log.Info("5.2");
                 context.ErrorResult = new LoginFailureResult("Invalid token", request);
             }
             // 6. If the credentials are valid, set principal.
             else
             {
-                log.Info("5.3");
+                //log.Info("5.3");
                 context.Principal = principal;
             }
-            log.Info("6.0");
+            //log.Info("6.0");
         }
 
         public IPrincipal LoginAuthorizeUser(string token, string clientType)
@@ -143,6 +143,21 @@ namespace CfdiService.Filters
                         {
                             new Claim(ClaimTypes.Name, client.ClientUserID.ToString()),
                             new Claim(ClaimTypes.Role, "CLIENT")
+                        };
+
+                            ClaimsIdentity identity = new ClaimsIdentity(claims, "Basic");
+
+                            return new ClaimsPrincipal(new[] { identity });
+                        }
+                        break;
+                    case "uploader":
+                        Company uploader = db.Companies.Where(c => c.ApiKey.Equals(token)).FirstOrDefault();
+                        if (uploader != null)
+                        {
+                            List<Claim> claims = new List<Claim>()
+                        {
+                            new Claim(ClaimTypes.Name, uploader.CompanyId.ToString()),
+                            new Claim(ClaimTypes.Role, "UPLOADER")
                         };
 
                             ClaimsIdentity identity = new ClaimsIdentity(claims, "Basic");
