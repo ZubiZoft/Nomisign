@@ -16,12 +16,18 @@ namespace CfdiService.Upload
             string CfdiServiceKey = ConfigurationManager.AppSettings["CfdiServiceKey"];
             string CompanyId = ConfigurationManager.AppSettings["CompanyId"];
 
+            Console.WriteLine(string.Format("Started Upload Prcess for Company Id {0}", CompanyId));
+            LogErrorMessage(string.Format("Started Upload Prcess for Company Id {0}", CompanyId));
+
+            //Environment.Exit(0);
+
             string uploadDirectory = Environment.CurrentDirectory;
             if (args.Length >= 3 && args[1] == "-d")
                 uploadDirectory = args[2];
             else if (args.Length > 1)
             {
                 Console.WriteLine("CfdiUpload: usage: CfdiUpload [-d upload_directory]");
+                LogErrorMessage("CfdiUpload: usage: CfdiUpload [-d upload_directory]");
                 Environment.Exit(1);
             }
             CfdiUpload uploader = new CfdiUpload(uploadDirectory, CfdiServiceUrl, CompanyId, CfdiServiceKey);
@@ -30,17 +36,22 @@ namespace CfdiService.Upload
             try
             {
                 Console.WriteLine("Cfdi Uploader v1.0");
+                LogErrorMessage(string.Format("Cfdi Uploader v1.0"));
                 Console.WriteLine("Uploading from directory: " + uploadDirectory);
+                LogErrorMessage(string.Format("Uploading from directory:  {0}", uploadDirectory));
                 uploader.Upload();
             }
             catch (Exception ex)
             {
                 string inner = ex.InnerException != null ? $" ({ex.InnerException.Message})" : "";
                 Console.WriteLine($"Error: {ex.Message}{inner}");
+                LogErrorMessage(string.Format("Error Inner:  {0}", ex.InnerException.Message));
+                LogErrorMessage(string.Format("Error Exception:  {0}", ex.StackTrace));
             }
             uploader.CloseBatch();
 
             Console.WriteLine("Upload Completed");
+            LogErrorMessage(string.Format("Upload Completed"));
             Console.ReadLine();
             Environment.Exit(0);
         }
@@ -67,6 +78,7 @@ namespace CfdiService.Upload
         public void Upload()
         {
             List<string> uploadFiles = GetUploadFiles();
+            List<FileUpload> files = new List<FileUpload>();
             CreateBatch(uploadFiles.Count);
             foreach (string fn in uploadFiles)
             {
@@ -81,12 +93,20 @@ namespace CfdiService.Upload
                     FileName = fn,
                     FileHash = ComputeFileHash(xmlContent)
                 };
-                BatchResult br = cfdiService.UploadFile(BatchId, fileUpload);
-                if (br.ResultCode == BatchResultCode.Ok)
-                    File.Move(fn, fn + ".tx");
-                else
-                    throw new CfdiUploadException(br.ResultCode);
+
+                files.Add(fileUpload);
+
+                //if (br.ResultCode == BatchResultCode.Ok)
+                //    File.Move(fn, fn + ".tx");
+                //else
+                //    throw new CfdiUploadException(br.ResultCode);
             }
+
+            LogErrorMessage(string.Format("Files to upload:  {0}", files.Count));
+
+            string br = "";
+            if (files.Count > 0)
+                br = cfdiService.UploadFiles(CompanyId, files);
         }
 
         private List<string> GetUploadFiles()
@@ -113,12 +133,20 @@ namespace CfdiService.Upload
                 if (ValidCfdiXML(fn))
                 {
                     if (ValidateHasPDF(fn))
+                    {
                         uploadFiles.Add(fn);
+                    }
                     else
+                    {
                         Console.WriteLine($"{fn} does not have a matching PDF file.");
+                        LogErrorMessage(string.Format($"{fn} does not have a matching PDF file."));
+                    }
                 }
                 else
+                {
                     Console.WriteLine($"{fn} is not a valid Cfdi XML file.");
+                    LogErrorMessage(string.Format($"{fn} is not a valid Cfdi XML file."));
+                }
                 
             }
             return uploadFiles;            
@@ -172,6 +200,28 @@ namespace CfdiService.Upload
                 stringBuilder.AppendFormat("{0:x2}", b);
 
             return stringBuilder.ToString();
+        }
+
+        public static void LogErrorMessage(string message)
+        {
+            string filename = string.Format("logfile-{0}.log", DateTime.Now.ToString("dd-MM-yyyy"));
+            if (!File.Exists(Path.Combine(Environment.CurrentDirectory, filename))) //No File? Create
+            {
+                Stream stream = File.Create(Path.Combine(Environment.CurrentDirectory, filename));
+                stream.Close();
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Environment.CurrentDirectory, filename), true))
+                {
+                    file.WriteLine(string.Format("[{0}] - {1}", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"), message));
+                }
+            }
+            else
+            {
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Environment.CurrentDirectory, filename), true))
+                {
+                    file.WriteLine(string.Format("[{0}] - {1}", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"), message));
+                }
+            }
+
         }
     }
 }
