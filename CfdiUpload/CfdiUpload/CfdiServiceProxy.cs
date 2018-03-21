@@ -1,10 +1,12 @@
 ﻿
 using CfdiService.Shapes;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Web.Http;
 
 namespace CfdiService.Upload
 {
@@ -65,6 +67,27 @@ namespace CfdiService.Upload
             if (response.IsSuccessStatusCode)
             {
                 Task<BatchResult> resultTask = response.Content.ReadAsAsync<BatchResult>();
+                resultTask.Wait();
+                result = resultTask.Result;
+            }
+            else
+                throw new CfdiUploadException($"AddFile request to cfdiService failed with result code: {response.StatusCode} ({(int)response.StatusCode})");
+
+            return result;
+        }
+
+        public string UploadFiles(string companyid, List<FileUpload> upload)
+        {
+            string result = null;
+            Task<HttpResponseMessage> openTask = client.PostAsJsonAsync($"api/upload/uploadfilesfront/{companyid}", upload);
+
+            try { openTask.Wait(); }
+            catch (Exception) { throw openTask.Exception.InnerException; }
+
+            HttpResponseMessage response = openTask.Result;
+            if (response.IsSuccessStatusCode)
+            {
+                Task<string> resultTask = response.Content.ReadAsAsync<string>();
                 resultTask.Wait();
                 result = resultTask.Result;
             }

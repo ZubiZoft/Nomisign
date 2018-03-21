@@ -100,6 +100,7 @@
     <Compile Include="CfdiServiceProxy.cs" />
     <Compile Include="CfdiUpload.cs" />
     <Compile Include="CfdiUploadException.cs" />
+    <Compile Include="LogUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
