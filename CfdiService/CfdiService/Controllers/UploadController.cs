@@ -28,19 +28,67 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("openbatch/{id}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,UPLOADER")]
         [IdentityBasicAuthentication]
         public IHttpActionResult OpenBatch(int id, [FromBody] OpenBatch batchInfo)
         {
-            Company company = db.Companies.Find(id);
+            Company company = db.Companies.Where(c => c.ApiKey.Equals(batchInfo.ApiKey)).FirstOrDefault();
+            log.Error("Batcinfo APIkey: " + batchInfo.ApiKey);
+            log.Error("Company APIkey: " + id);
             if (company == null)
             {
                 log.Error("Error adding document: company not found: " + id);
                 return BadRequest();
             }
-            if (company.ApiKey != batchInfo.ApiKey)
+            if (company.AccountStatus != AccountStatusType.Active)
             {
-                log.Error("Error adding document: invalid Api Key: " + batchInfo.ApiKey);
+                return Ok(new BatchResult(0, BatchResultCode.AccountStatus));
+            }
+            if (company.SignatureBalance < batchInfo.FileCount)
+            {
+                return Ok(new BatchResult(0, BatchResultCode.LicenseBalance));
+            }
+
+            // look to see if there is an open batch by this company and abort it if so
+
+            //string filePath1;
+            //string filePath2;
+            //string currVol1;
+            //string currVol2;
+            //GetVolumePaths(out currVol1, out filePath1, out currVol2, out filePath2, company.CompanyId.ToString());
+            //CanWriteTo(filePath1);
+            //CanWriteTo(filePath2);
+
+            Batch batch = new Batch
+            {
+                Company = company,
+                CompanyId = company.CompanyId,
+                BatchOpenTime = DateTime.Now,
+                BatchCloseTime = SqlDateTime.MinValue.Value,
+                ItemCount = batchInfo.FileCount,
+                WorkDirectory = Guid.NewGuid().ToString(),
+                ActualItemCount = 0,
+                BatchStatus = BatchStatus.Open,
+                ApiKey = company.ApiKey,
+            };
+
+            company.SignatureBalance -= batchInfo.FileCount;
+            db.Batches.Add(batch);
+            db.SaveChanges();
+            return Ok(new BatchResult(batch.BatchId, BatchResultCode.Ok));
+        }
+
+        [HttpPost]
+        [Route("openbatch2/{id}")]
+        
+        public IHttpActionResult OpenBatch2(int id, [FromBody] OpenBatch batchInfo)
+        {
+            Company company = db.Companies.Where(c => c.ApiKey.Equals(batchInfo.ApiKey)).FirstOrDefault();
+            log.Error("Batcinfo APIkey: " + batchInfo.ApiKey);
+            log.Error("Company APIkey: " + id);
+            if (company == null)
+            {
+                log.Error("Error adding document: company not found: " + id);
                 return BadRequest();
             }
             if (company.AccountStatus != AccountStatusType.Active)
@@ -303,7 +351,7 @@ namespace CfdiService.Controllers
         }
         [HttpPost]
         [Route("uploadfilesfront/{companyId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,UPLOADER")]
         [IdentityBasicAuthentication]
         public IHttpActionResult UploadFilesFront(int companyId, [FromBody] List<FileUpload> flist)
         {

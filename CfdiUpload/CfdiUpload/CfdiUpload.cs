@@ -32,7 +32,9 @@ namespace CfdiService.Upload
             }
             CfdiUpload uploader = new CfdiUpload(uploadDirectory, CfdiServiceUrl, CompanyId, CfdiServiceKey);
             uploader.CompanyRfc = ConfigurationManager.AppSettings["CompanyRfc"]; ;
-
+            uploader.CompanyApiKey = ConfigurationManager.AppSettings["CfdiServiceKey"]; 
+            Console.WriteLine(string.Format("uploader.CompanyApiKey : {0}", uploader.CompanyApiKey));
+            LogErrorMessage(string.Format("uploader.CompanyApiKey : {0}", uploader.CompanyApiKey));
             try
             {
                 Console.WriteLine("Cfdi Uploader v1.0");
@@ -157,7 +159,8 @@ namespace CfdiService.Upload
             OpenBatch batch = new OpenBatch
             {
                 CompanyRfc = CompanyRfc,
-                ApiKey = CompanyApiKey,
+                //ApiKey = CompanyApiKey,
+                ApiKey = ConfigurationManager.AppSettings["CfdiServiceKey"],
                 FileCount = fileCount
             };
 

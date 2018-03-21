@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Configuration;
+using System.IO;
 
 namespace CfdiService.Upload
 {
@@ -15,6 +17,7 @@ namespace CfdiService.Upload
         string svcUrl;
         HttpClient client;
         string companyId;
+        string CfdiServiceKey = ConfigurationManager.AppSettings["CfdiServiceKey"];
 
         public CfdiServiceProxy(string svcUrl, string companyId)
         {
@@ -23,12 +26,28 @@ namespace CfdiService.Upload
             client = new HttpClient();
             client.BaseAddress = new Uri(svcUrl);
             client.DefaultRequestHeaders.Accept.Clear();
+            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", CfdiServiceKey);
+            //client.DefaultRequestHeaders.Add("ClientType", "uploader");
+            client.DefaultRequestHeaders.Add("ClientType", "uploader");
+            client.DefaultRequestHeaders.Add("Authorization", "Basic " + CfdiServiceKey);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         public BatchResult OpenBatch(OpenBatch batch)
         {
             BatchResult result = null;
+
+            //HttpResponseMessage response = await client.PostAsJsonAsync($"api/upload/openbatch2/10", batch);
+            //if (response.IsSuccessStatusCode)
+            //{
+                // Get the URI of the created resource.
+                //LogErrorMessage("Success OK");
+            //}
+
+            //HttpResponseMessage result2 = await client.PostAsJsonAsync($"api/upload/openbatch2/10", batch);
+            //string resultContent = await result2.Content.ReadAsStringAsync();
+            //HttpResponseMessage response = client.PostAsJsonAsync($"api/upload/openbatch2/{companyId}", batch).Result;
+            //result =  response.Content.ReadAsAsync<BatchResult>().Result;
 
             Task<HttpResponseMessage> openTask = client.PostAsJsonAsync($"api/upload/openbatch/{companyId}", batch);
             try { openTask.Wait(); }
@@ -42,7 +61,7 @@ namespace CfdiService.Upload
                 result = resultTask.Result;
             }
             else
-                throw new CfdiUploadException($"OpenBatch request to cfdiService failed with result code: {response.StatusCode} ({(int)response.StatusCode})");
+            throw new CfdiUploadException($"OpenBatch request to cfdiService failed with result code: {response.StatusCode} ({(int)response.StatusCode})");
 
             return result;
         }
@@ -107,6 +126,28 @@ namespace CfdiService.Upload
             HttpResponseMessage response = reqTask.Result;
             if (!response.IsSuccessStatusCode)
                 throw new CfdiUploadException($"CloseBatch request to cfdiService failed with result code: {response.StatusCode} ({(int)response.StatusCode})");
+        }
+
+        public static void LogErrorMessage(string message)
+        {
+            string filename = string.Format("logfile-{0}.log", DateTime.Now.ToString("dd-MM-yyyy"));
+            if (!File.Exists(Path.Combine(Environment.CurrentDirectory, filename))) //No File? Create
+            {
+                Stream stream = File.Create(Path.Combine(Environment.CurrentDirectory, filename));
+                stream.Close();
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Environment.CurrentDirectory, filename), true))
+                {
+                    file.WriteLine(string.Format("[{0}] - {1}", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"), message));
+                }
+            }
+            else
+            {
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Environment.CurrentDirectory, filename), true))
+                {
+                    file.WriteLine(string.Format("[{0}] - {1}", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"), message));
+                }
+            }
+
         }
     }
 }
