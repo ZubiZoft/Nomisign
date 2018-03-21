@@ -1,9 +1,24 @@
 ﻿using CfdiService.Model;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
+using System.Security.Principal;
+using CfdiService.Services;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using CfdiService.Shapes;
+using System.Configuration;
+using System.IO;
+using System.Text;
+using System.Xml.Linq;
+using System.Globalization;
+using System.Data.SqlTypes;
+using System.Security.Cryptography;
+using CfdiService.Filters;
 
 namespace CfdiService
 {
@@ -94,6 +109,42 @@ namespace CfdiService
                     .ToList();
         }
 
+        public void CreateLog(OperationTypes type, string comments, int userId, UserTypes userType, int objectId = -1, 
+                ObjectTypes objectType = ObjectTypes.None)
+        {
+            var log = new Logs
+            {
+                Type = type,
+                Comments = comments,
+                Timestamp = DateTime.Now,
+                ExecutedBy = userId,
+                UserType = userType,
+                ObjectId = objectId,
+                ObjectType = objectType
+            };
+
+            Logs.Add(log);
+            this.SaveChanges();
+        }
+
+        public void CreateLog(OperationTypes type, string comments, IPrincipal user, int objectId = -1,
+                ObjectTypes objectType = ObjectTypes.None)
+        {
+            var log = new Logs
+            {
+                Type = type,
+                Comments = comments,
+                Timestamp = DateTime.Now,
+                ExecutedBy = int.Parse(user.Identity.GetName()),
+                UserType = Model.Logs.ConvertRoleToUserType(user.Identity.GetRole()),
+                ObjectId = objectId,
+                ObjectType = objectType
+            };
+
+            Logs.Add(log);
+            this.SaveChanges();
+        }
+
         virtual public DbSet<Batch> Batches { get; set; }
         virtual public DbSet<Company> Companies { get; set; }
         virtual public DbSet<Document> Documents { get; set; }
@@ -105,6 +156,7 @@ namespace CfdiService
         virtual public DbSet<EmployeesCode> EmployeeSecurityCodes { get; set; }
         virtual public DbSet<Client> Clients { get; set; }
         virtual public DbSet<ClientUser> ClientUsers { get; set; }
+        virtual public DbSet<Logs> Logs { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

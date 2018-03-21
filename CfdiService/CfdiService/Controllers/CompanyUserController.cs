@@ -91,6 +91,10 @@ namespace CfdiService.Controllers
 
             UserShape.ToDataModel(userShape, user);
             db.SaveChanges();
+
+            db.CreateLog(OperationTypes.UserCreated, string.Format("Actualización de usuario {0}", user.UserId),
+                    User, user.UserId, ObjectTypes.User);
+
             return Ok(userShape);
         }
 
@@ -116,6 +120,10 @@ namespace CfdiService.Controllers
             // user.CreatedByUserId = 1;
             db.Users.Add(user);
             db.SaveChanges();
+
+            db.CreateLog(OperationTypes.UserCreated, string.Format("Nuevo usuario creado {0}", user.UserId), 
+                    User, user.UserId, ObjectTypes.User);
+
             return Ok(UserShape.FromDataModel(user, Request));
         }
 

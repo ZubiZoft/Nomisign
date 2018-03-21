@@ -195,12 +195,14 @@
     <Compile Include="Model\Employee.cs" />
     <Compile Include="Model\EmployeesCode.cs" />
     <Compile Include="Model\EmployeeSecurityQuestions.cs" />
+    <Compile Include="Model\Logs.cs" />
     <Compile Include="Model\SignaturePurchase.cs" />
     <Compile Include="Model\SystemSettings.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\DigitalSignatures.cs" />
     <Compile Include="Services\EncryptionService.cs" />
+    <Compile Include="Services\Extensions.cs" />
     <Compile Include="Services\FileAccess.cs" />
     <Compile Include="Services\FullNameSplitterFromRFCService.cs" />
     <Compile Include="Services\Nom151Service.cs" />

@@ -94,5 +94,13 @@ namespace CfdiService.Shapes
 
             return claim?.Value ?? string.Empty;
         }
+
+        public static string GetRole(this IIdentity identity)
+        {
+            ClaimsIdentity claimsIdentity = identity as ClaimsIdentity;
+            Claim claim = claimsIdentity?.FindFirst(ClaimTypes.Role);
+
+            return claim?.Value ?? string.Empty;
+        }
     }
 }
