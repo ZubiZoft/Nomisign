@@ -281,7 +281,7 @@ namespace CfdiService.Controllers
 
         [HttpGet]
         [Route("closebatch/{batchid}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,UPLOADER")]
         [IdentityBasicAuthentication]
         public IHttpActionResult CloseBatch(int batchid)
         {
@@ -409,8 +409,8 @@ namespace CfdiService.Controllers
                 }
 
                 //Checking for duplicate Receipt XML Hash
-                //if (CheckifReceiptAlreadyExists(filetemp))
-                //continue;
+                if (CheckifReceiptAlreadyExists(filetemp))
+                    continue;
 
                 if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
                 Batch batch = db.Batches.Find(BatchId);
@@ -453,14 +453,26 @@ namespace CfdiService.Controllers
                     return BadRequest();
                 }
 
-                SaveContent(filetemp, newDoc);
+                Employee empDoc = null;
 
-                db.Documents.Add(newDoc);
-                batch.ActualItemCount++;
-                db.SaveChanges();
+                try
+                {
+                    SaveContent(filetemp, newDoc);
 
-                var empDoc = db.Employees.Find(newDoc.EmployeeId);
-                log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
+                    db.Documents.Add(newDoc);
+                    batch.ActualItemCount++;
+                    db.SaveChanges();
+
+                    empDoc = db.Employees.Find(newDoc.EmployeeId);
+                    log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
+                }
+                catch (Exception ex)
+                {
+                    log.Error("warning adding document: one or both notifications failed to send", ex);
+                    log.Error(ex.Message);
+                    log.Error(ex.Source);
+                    log.Error(ex.StackTrace);
+                }
 
                 // send notifications - if fail, log but dont return error code.
                 try

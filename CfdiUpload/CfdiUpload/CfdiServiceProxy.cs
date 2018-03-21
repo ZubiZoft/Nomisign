@@ -26,8 +26,6 @@ namespace CfdiService.Upload
             client = new HttpClient();
             client.BaseAddress = new Uri(svcUrl);
             client.DefaultRequestHeaders.Accept.Clear();
-            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", CfdiServiceKey);
-            //client.DefaultRequestHeaders.Add("ClientType", "uploader");
             client.DefaultRequestHeaders.Add("ClientType", "uploader");
             client.DefaultRequestHeaders.Add("Authorization", "Basic " + CfdiServiceKey);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -36,18 +34,6 @@ namespace CfdiService.Upload
         public BatchResult OpenBatch(OpenBatch batch)
         {
             BatchResult result = null;
-
-            //HttpResponseMessage response = await client.PostAsJsonAsync($"api/upload/openbatch2/10", batch);
-            //if (response.IsSuccessStatusCode)
-            //{
-                // Get the URI of the created resource.
-                //LogErrorMessage("Success OK");
-            //}
-
-            //HttpResponseMessage result2 = await client.PostAsJsonAsync($"api/upload/openbatch2/10", batch);
-            //string resultContent = await result2.Content.ReadAsStringAsync();
-            //HttpResponseMessage response = client.PostAsJsonAsync($"api/upload/openbatch2/{companyId}", batch).Result;
-            //result =  response.Content.ReadAsAsync<BatchResult>().Result;
 
             Task<HttpResponseMessage> openTask = client.PostAsJsonAsync($"api/upload/openbatch/{companyId}", batch);
             try { openTask.Wait(); }

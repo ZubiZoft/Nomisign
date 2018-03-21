@@ -202,7 +202,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\DigitalSignatures.cs" />
     <Compile Include="Services\EncryptionService.cs" />
-    <Compile Include="Services\Extensions.cs" />
     <Compile Include="Services\FileAccess.cs" />
     <Compile Include="Services\FullNameSplitterFromRFCService.cs" />
     <Compile Include="Services\Nom151Service.cs" />

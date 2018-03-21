@@ -5,6 +5,8 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Configuration;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace CfdiService.Upload
 { 
@@ -79,36 +81,43 @@ namespace CfdiService.Upload
 
         public void Upload()
         {
-            List<string> uploadFiles = GetUploadFiles();
-            List<FileUpload> files = new List<FileUpload>();
-            CreateBatch(uploadFiles.Count);
-            foreach (string fn in uploadFiles)
+            try
             {
-                string xmlContent = File.ReadAllText(fn);
-                Byte[] bytes = File.ReadAllBytes(Path.ChangeExtension(fn, "pdf"));
-                String pdfContent = Convert.ToBase64String(bytes);
-
-                var fileUpload = new FileUpload
+                List<string> uploadFiles = GetUploadFiles();
+                List<FileUpload> files = new List<FileUpload>();
+                CreateBatch(uploadFiles.Count);
+                foreach (string fn in uploadFiles)
                 {
-                    XMLContent = xmlContent,
-                    PDFContent = pdfContent,
-                    FileName = fn,
-                    FileHash = ComputeFileHash(xmlContent)
-                };
+                    string xmlContent = File.ReadAllText(fn);
+                    Byte[] bytes = File.ReadAllBytes(Path.ChangeExtension(fn, "pdf"));
+                    String pdfContent = Convert.ToBase64String(bytes);
 
-                files.Add(fileUpload);
+                    var fileUpload = new FileUpload
+                    {
+                        XMLContent = xmlContent,
+                        PDFContent = pdfContent,
+                        FileName = fn,
+                        FileHash = ComputeFileHash(xmlContent)
+                    };
 
-                //if (br.ResultCode == BatchResultCode.Ok)
-                //    File.Move(fn, fn + ".tx");
-                //else
-                //    throw new CfdiUploadException(br.ResultCode);
+                    if (ValidateValidRfc(fileUpload.XMLContent))
+                        files.Add(fileUpload);
+                    else
+                        LogErrorMessage(string.Format("File Is not going to be Uploaded:  {0}", fileUpload.XMLContent));
+
+                    //if (br.ResultCode == BatchResultCode.Ok)
+                    //    File.Move(fn, fn + ".tx");
+                    //else
+                    //    throw new CfdiUploadException(br.ResultCode);
+                }
+
+                LogErrorMessage(string.Format("Files to upload:  {0}", files.Count));
+
+                string br = "";
+                if (files.Count > 0)
+                    br = cfdiService.UploadFiles(CompanyId, files);
             }
-
-            LogErrorMessage(string.Format("Files to upload:  {0}", files.Count));
-
-            string br = "";
-            if (files.Count > 0)
-                br = cfdiService.UploadFiles(CompanyId, files);
+            catch (Exception ex) { LogErrorMessage(string.Format("Ex Stacktrace:  {0}", ex.StackTrace)); LogErrorMessage(string.Format("Ex Message:  {0}", ex.Message)); }
         }
 
         private List<string> GetUploadFiles()
@@ -152,6 +161,75 @@ namespace CfdiService.Upload
                 
             }
             return uploadFiles;            
+        }
+
+        public bool ValidateValidRfc(string contentxml)
+        {
+            string CompanyRFC = ConfigurationManager.AppSettings["CompanyRfc"];
+            XElement root;
+            byte[] content = Encoding.UTF8.GetBytes(contentxml);
+            using (MemoryStream ms = new MemoryStream(content))
+                root = XElement.Load(ms);
+
+            XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
+            XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+
+            //XElement elem = root.Element(cfdi + "Emisor");
+            XElement elem = null;
+            ElementCheckXMLTagValue(cfdi, "Emisor", root, ref elem);
+            XAttribute emisorRfc = null;
+            AttributeCheckXMLTagValue("rfc", elem, ref emisorRfc);
+
+            if (emisorRfc.Value.Equals(CompanyRFC))
+                return true;
+            else
+                return false;
+        }
+
+        public void ElementCheckXMLTagValue(XNamespace cfdi, string tag, XElement root, ref XElement elem2)
+        {
+            try { elem2 = root.Element(cfdi + tag); } catch { }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + FirstCharToUpper(tag)); } catch { } }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + FirstCharToLower(tag)); } catch { } }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + tag.ToLower()); } catch { } }
+            if (elem2 == null)
+            { try { elem2 = root.Element(cfdi + tag.ToUpper()); } catch { } }
+        }
+
+        public void AttributeCheckXMLTagValue(string tag, XElement elem, ref XAttribute element)
+        {
+            try { element = elem.Attribute(tag); } catch { }
+            if (element == null)
+            { try { element = elem.Attribute(FirstCharToUpper(tag)); } catch { } }
+            if (element == null)
+            { try { element = elem.Attribute(FirstCharToLower(tag)); } catch { } }
+            if (element == null)
+            { try { element = elem.Attribute(tag.ToLower()); } catch { } }
+            if (element == null)
+            { try { element = elem.Attribute(tag.ToUpper()); } catch { } }
+        }
+
+        public string FirstCharToLower(string input)
+        {
+            switch (input)
+            {
+                case null: return "";
+                case "": return "";
+                default: return input.First().ToString().ToLower() + input.Substring(1);
+            }
+        }
+
+        public static string FirstCharToUpper(string input)
+        {
+            switch (input)
+            {
+                case null: return "";
+                case "": return "";
+                default: return input.First().ToString().ToUpper() + input.Substring(1);
+            }
         }
 
         private void CreateBatch(int fileCount)
