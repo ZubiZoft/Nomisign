@@ -92,7 +92,7 @@ namespace CfdiService.Controllers
             UserShape.ToDataModel(userShape, user);
             db.SaveChanges();
 
-            db.CreateLog(OperationTypes.UserUpdated, string.Format("Actualización de usuario {0}", user.UserId),
+            db.CreateLog(OperationTypes.UserUpdated, string.Format("Usuario actualizado {0}", user.UserId),
                     User, user.UserId, ObjectTypes.User);
 
             return Ok(userShape);

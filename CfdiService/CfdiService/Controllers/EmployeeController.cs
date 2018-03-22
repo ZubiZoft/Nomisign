@@ -448,7 +448,7 @@ namespace CfdiService.Controllers
 
             db.SaveChanges();
 
-            db.CreateLog(OperationTypes.EmployeeUpdated, string.Format("Actualización de empleado {0}", id), 
+            db.CreateLog(OperationTypes.EmployeeUpdated, string.Format("Empleado actualizado {0}", id), 
                     User, id, ObjectTypes.Employee);
 
             return Ok(employeeShape);

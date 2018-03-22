@@ -257,6 +257,11 @@ namespace CfdiService.Controllers
                 SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
             }
             db.SaveChanges();
+
+            foreach (var d in docs)
+                db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Cambio de estatus a esperando firma {0}", 
+                    d.DocumentId), User, d.DocumentId, ObjectTypes.Document);
+
             return Ok("Success");
         }
 
@@ -468,8 +473,16 @@ namespace CfdiService.Controllers
                 }
                 catch (Exception ex) { log.Info(ex.ToString()); }
             }
-            db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Documento Actualizado {0}", document.DocumentId), User,
-                    document.DocumentId, ObjectTypes.Document);
+            if (document.SignStatus != SignStatus.Rechazado)
+            {
+                db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Documento actualizado {0}", document.DocumentId), User,
+                        document.DocumentId, ObjectTypes.Document);
+            }
+            else
+            {
+                db.CreateLog(OperationTypes.DocumentRejected, string.Format("Documento rechazado {0}", document.DocumentId), User,
+                        document.DocumentId, ObjectTypes.Document);
+            }
             db.SaveChanges();
             DocumentShape.ToDataModel(documentShape, document);
             return Ok(documentShape);
