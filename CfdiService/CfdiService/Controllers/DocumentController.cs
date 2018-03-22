@@ -251,6 +251,8 @@ namespace CfdiService.Controllers
             foreach (var d in docs)
             {
                 d.SignStatus = SignStatus.SinFirma;
+                string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, d.Employee.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"));
+                SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
             }
             db.SaveChanges();
             return Ok("Success");
