@@ -6,7 +6,7 @@ using System.Web;
 
 namespace CfdiService.Model
 {
-    public enum UserTypes { User = 1, Employee = 2, Client = 3, Uploader = 4 }
+    public enum UserTypes { User = 1, Employee = 2, Client = 3, Uploader = 4, System = 5 }
     public enum OperationTypes { UserCreated = 1, EmployeeCreated = 2, ClientUserCreated = 3, DocumentStored = 4, SignedBy = 5,
             UserUpdated = 6, EmployeeUpdated = 7, ClientUserUpdated = 8, DocumentUpdated = 9 }
     public enum ObjectTypes { None = 0, Batch = 1, Client = 2, ClientUser = 3, Company = 4, Document = 5, Employee = 6, EmployeeCode = 7,

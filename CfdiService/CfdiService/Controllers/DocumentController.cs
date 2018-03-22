@@ -438,6 +438,8 @@ namespace CfdiService.Controllers
                 {
                     document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
                 }
+                db.CreateLog(OperationTypes.SignedBy, string.Format("Documento Firmado {0}", document.DocumentId), User,
+                        document.DocumentId, ObjectTypes.Document);
             }
             document.SignStatus = (SignStatus)documentShape.SignStatus;
             log.Info("Employee Concern : " + documentShape.EmployeeConcern);
@@ -448,6 +450,7 @@ namespace CfdiService.Controllers
             }
             log.Info(document.PathToFile);
             db.SaveChanges();
+
             if (document.AlwaysShow == 0 && document.SignStatus == SignStatus.Firmado)
             {
                 try
@@ -457,6 +460,8 @@ namespace CfdiService.Controllers
                 }
                 catch (Exception ex) { log.Info(ex.ToString()); }
             }
+            db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Documento Actualizado {0}", document.DocumentId), User,
+                    document.DocumentId, ObjectTypes.Document);
             db.SaveChanges();
             DocumentShape.ToDataModel(documentShape, document);
             return Ok(documentShape);

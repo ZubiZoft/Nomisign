@@ -130,6 +130,7 @@ namespace CfdiService.Controllers
             objCtx.ExecuteStoreCommand("truncate table Documents");
             objCtx.ExecuteStoreCommand("truncate table EmployeesCode");
             objCtx.ExecuteStoreCommand("truncate table EmployeeSecurityQuestions");
+            objCtx.ExecuteStoreCommand("truncate table Logs");
             objCtx.ExecuteStoreCommand("delete from dbo.Batches");
             objCtx.ExecuteStoreCommand("delete from Employees");
             return Ok("Success");
