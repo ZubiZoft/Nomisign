@@ -136,10 +136,24 @@ namespace CfdiService.Controllers
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
                     //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
-                    string res = "";
-                    SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
-                    newDoc.Company.SMSBalance -= 1;
-                    db.SaveChanges();
+                    if (newDoc.Company.SMSBalance > 0)
+                    {
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                        newDoc.Company.SMSBalance -= 1;
+                        db.SaveChanges();
+                    }
+                    if (newDoc.Company.SMSBalance <= 10)
+                    {
+                        try
+                        {
+                            SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, newDoc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                        }
+                        catch { }
+                    }
                 }
             }
             catch (Exception ex)
@@ -356,9 +370,23 @@ namespace CfdiService.Controllers
                         var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                         if (newDoc.Company.SMSBalance > 0)
                         {
-                            SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
-                            newDoc.Company.SMSBalance -= 1;
-                            db.SaveChanges();
+                            if (newDoc.Company.SMSBalance > 0)
+                            {
+                                SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                                newDoc.Company.SMSBalance -= 1;
+                                db.SaveChanges();
+                            }
+                            if (newDoc.Company.SMSBalance <= 10)
+                            {
+                                try
+                                {
+                                    SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, newDoc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                                    SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                                    SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                                    SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                                }
+                                catch { }
+                            }
                         }
                         else
                         {

@@ -147,10 +147,24 @@ namespace CfdiService.Controllers
                 {
                     log.Info(string.Format("4"));
                     //SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
-                    string res = "";
-                    SendSMS.SendSMSQuiubo(msgBodySpanishMobile, string.Format("+52{0}", emp.CellPhoneNumber), out res);
-                    doc.Company.SMSBalance -= 1;
-                    db.SaveChanges();
+                    if (doc.Company.SMSBalance > 0)
+                    {
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(msgBodySpanishMobile, string.Format("+52{0}", emp.CellPhoneNumber), out res);
+                        doc.Company.SMSBalance -= 1;
+                        db.SaveChanges();
+                    }
+                    if (doc.Company.SMSBalance <= 10)
+                    {
+                        try
+                        {
+                            SendEmail.SendEmailMessage(doc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, doc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                        }
+                        catch { }
+                    }
                 }
                 if (null != emp.EmailAddress)
                 {
@@ -280,14 +294,28 @@ namespace CfdiService.Controllers
                 {
                     if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
                     {
-                        //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                        string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
-                        //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
-                        //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
-                        string res = "";
-                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
-                        doc.Company.SMSBalance -= 1;
-                        db.SaveChanges();
+                        if (doc.Company.SMSBalance > 0)
+                        {
+                            //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                            string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
+                            //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
+                            //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                            string res = "";
+                            SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
+                            doc.Company.SMSBalance -= 1;
+                            db.SaveChanges();
+                        }
+                        if (doc.Company.SMSBalance <= 10)
+                        {
+                            try
+                            {
+                                SendEmail.SendEmailMessage(doc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, doc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                            }
+                            catch { }
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -315,11 +343,25 @@ namespace CfdiService.Controllers
                     {
                         string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
                         //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
-                        string res = "";
-                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
+                        if (doc.Company.SMSBalance > 0)
+                        {
+                            string res = "";
+                            SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
+                            doc.Company.SMSBalance -= 1;
+                            db.SaveChanges();
+                        }
+                        if (doc.Company.SMSBalance <= 10)
+                        {
+                            try
+                            {
+                                SendEmail.SendEmailMessage(doc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, doc.Company), string.Format(Strings.smsQuantityWarning, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance));
+                            }
+                            catch { }
+                        }
                         SendEmail.SendEmailMessage(doc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
-                        doc.Company.SMSBalance -= 1;
-                        db.SaveChanges();
                     }
                 }
                 catch (Exception ex)
