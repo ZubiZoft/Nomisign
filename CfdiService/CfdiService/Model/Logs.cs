@@ -8,7 +8,7 @@ namespace CfdiService.Model
 {
     public enum UserTypes { User = 1, Employee = 2, Client = 3, Uploader = 4, System = 5 }
     public enum OperationTypes { UserCreated = 1, EmployeeCreated = 2, ClientUserCreated = 3, DocumentStored = 4, SignedBy = 5,
-            UserUpdated = 6, EmployeeUpdated = 7, ClientUserUpdated = 8, DocumentUpdated = 9 }
+            UserUpdated = 6, EmployeeUpdated = 7, ClientUserUpdated = 8, DocumentUpdated = 9, UserLogged = 10, EmployeeLogged = 11 }
     public enum ObjectTypes { None = 0, Batch = 1, Client = 2, ClientUser = 3, Company = 4, Document = 5, Employee = 6, EmployeeCode = 7,
         EmployeeSecurityQuestion = 8, SignaturePurchase = 9, User = 10 }
 

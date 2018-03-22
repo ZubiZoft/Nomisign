@@ -213,6 +213,10 @@ namespace CfdiService.Controllers
                                 emp.PasswordHash = string.Empty;
                                 var eShape = EmployeeShape.FromDataModel(emp, Request);
                                 //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+
+                                db.CreateLog(OperationTypes.EmployeeLogged, string.Format("Empleado logueado {0}", emp.EmployeeId), 
+                                        emp.EmployeeId, UserTypes.Employee);
+
                                 return Ok(eShape);
                             }
                             else
@@ -244,6 +248,10 @@ namespace CfdiService.Controllers
                             emp.PasswordHash = string.Empty;
                             var eShape = EmployeeShape.FromDataModel(emp, Request);
                             //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+
+                            db.CreateLog(OperationTypes.EmployeeLogged, string.Format("Empleado logueado {0}", emp.EmployeeId), 
+                                    emp.EmployeeId, UserTypes.Employee);
+
                             return Ok(eShape);
                         }
                         else
@@ -342,6 +350,10 @@ namespace CfdiService.Controllers
                 // return DB user.  Not shape because need user stats as a int
                 // Dont return password 
                 user.PasswordHash = string.Empty;
+
+                db.CreateLog(OperationTypes.UserLogged, string.Format("Usuario logueado {0}", user.UserId),
+                                    user.UserId, UserTypes.User);
+
                 return Ok(user);
             }
 
