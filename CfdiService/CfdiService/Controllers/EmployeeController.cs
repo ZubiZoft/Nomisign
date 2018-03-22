@@ -447,6 +447,7 @@ namespace CfdiService.Controllers
                                 SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                                 SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                                 SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
+                                SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                             }
                             catch { }
                         }
@@ -569,6 +570,7 @@ namespace CfdiService.Controllers
                             SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                             SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                             SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                         }
                         catch { }
                     }
@@ -613,6 +615,7 @@ namespace CfdiService.Controllers
                             SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                             SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                             SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
                         }
                         catch { }
                     }
