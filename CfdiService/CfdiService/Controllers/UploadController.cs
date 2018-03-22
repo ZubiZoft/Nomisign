@@ -138,6 +138,8 @@ namespace CfdiService.Controllers
                     //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
                     string res = "";
                     SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                    newDoc.Company.SMSBalance -= 1;
+                    db.SaveChanges();
                 }
             }
             catch (Exception ex)
@@ -352,7 +354,17 @@ namespace CfdiService.Controllers
                         //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
                         string res = "";
                         var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                        if (newDoc.Company.SMSBalance > 0)
+                        {
+                            SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                            newDoc.Company.SMSBalance -= 1;
+                            db.SaveChanges();
+                        }
+                        else
+                        {
+                            string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                            SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBodySMSWarning);
+                        }
                     }
                 }
                 catch (Exception ex)

@@ -431,6 +431,8 @@ namespace CfdiService.Controllers
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId));
                         string res = "";
                         SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", employee.CellPhoneNumber), out res);
+                        employee.Company.SMSBalance -= 1;
+                        db.SaveChanges();
                         string res2 = "";
                         //SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
                     }
@@ -560,11 +562,14 @@ namespace CfdiService.Controllers
             {
                 try
                 {
+                    Employee employee = EmployeeShape.ToDataModel(employeeShape);
                     //SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
                     log.Info("EmployeeShape celphone : " + employeeShape.CellPhoneNumber);
                     log.Info("verifyPhoneNumberSMSMessage : " + Strings.verifyPhoneNumberSMSMessage);
                     string res = "";
                     SendSMS.SendSMSQuiubo(Strings.verifyPhoneNumberSMSMessage, string.Format("+52{0}", employeeShape.CellPhoneNumber), out res);
+                    employee.Company.SMSBalance -= 1;
+                    db.SaveChanges();
                     log.Info("res : " + res);
                     return Ok("Success");
                 }

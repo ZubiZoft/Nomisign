@@ -149,6 +149,8 @@ namespace CfdiService.Controllers
                     //SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
                     string res = "";
                     SendSMS.SendSMSQuiubo(msgBodySpanishMobile, string.Format("+52{0}", emp.CellPhoneNumber), out res);
+                    doc.Company.SMSBalance -= 1;
+                    db.SaveChanges();
                 }
                 if (null != emp.EmailAddress)
                 {
@@ -279,6 +281,8 @@ namespace CfdiService.Controllers
                         //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
                         string res = "";
                         SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
+                        doc.Company.SMSBalance -= 1;
+                        db.SaveChanges();
                     }
                 }
                 catch (Exception ex)
@@ -309,6 +313,8 @@ namespace CfdiService.Controllers
                         string res = "";
                         SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
                         SendEmail.SendEmailMessage(doc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
+                        doc.Company.SMSBalance -= 1;
+                        db.SaveChanges();
                     }
                 }
                 catch (Exception ex)

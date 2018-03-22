@@ -83,6 +83,8 @@ namespace CfdiService.Controllers
                 {
                     SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
                             httpDomain, employee1.EmployeeId, code.Vcode), string.Format("+52{0}", employee1.CellPhoneNumber), out res);
+                    employee1.Company.SMSBalance -= 1;
+                    db.SaveChanges();
                 }
                 catch { }
                 try
