@@ -81,10 +81,24 @@ namespace CfdiService.Controllers
                 string res = null;
                 try
                 {
-                    SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
-                            httpDomain, employee1.EmployeeId, code.Vcode), string.Format("+52{0}", employee1.CellPhoneNumber), out res);
-                    employee1.Company.SMSBalance -= 1;
-                    db.SaveChanges();
+                    if (employee1.Company.SMSBalance > 0)
+                    {
+                        SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
+                                httpDomain, employee1.EmployeeId, code.Vcode), string.Format("+52{0}", employee1.CellPhoneNumber), out res);
+                        employee1.Company.SMSBalance -= 1;
+                        db.SaveChanges();
+                    }
+                    if (employee1.Company.SMSBalance <= 10)
+                    {
+                        try
+                        {
+                            SendEmail.SendEmailMessage(employee1.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee1.Company), string.Format(Strings.smsQuantityWarning, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance));
+                            SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance));
+                        }
+                        catch { }
+                    }
                 }
                 catch { }
                 try

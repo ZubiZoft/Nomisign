@@ -170,6 +170,275 @@ namespace CfdiService
 </html>
 ";
 
+
+        public static readonly string smsQuantityWarningSubject = "Advertnecia SMS para la empresa {1} se están agotando.";
+
+        public static readonly string smsQuantityWarning = @"<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset = ""utf-8"">
+  <title>TemplatesNomisign</title>
+  <base href=""/"">
+
+  <meta name = ""viewport"" content=""width=device-width, initial-scale=1"">
+</head>
+<body bgcolor = ""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+<font face=""verdana"">
+<table width = ""100%"">
+  <tr>
+    <th width = ""15%""></th>
+    <th width = ""70%"" bgcolor=""#ffffff"">
+      <br>
+      <img width = ""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <br>
+      <br>
+      <br>
+      <h1>Bienvenido a Nomisign&copy;</h1>
+      <br>
+      <p>
+        Los SMS disponibles para la empresa {1} se están agotando, el numero actual de mensajes disponibles es {2}.
+        <br>
+        Favor de contactar a su representante de ventas para poder adquirir mas SMS.
+      </p>
+      <br>
+      <div>
+        <table width = ""100%"" cellpadding=""15px"">
+          <tr>
+            <th width = ""30%""></th>
+            <th width = ""40%"" bgcolor=""#2cbbc3"">
+              <a href = ""http://{0}/nomisign/"" target=""_blank"">
+                Nomisign
+              </a>
+            </th>
+            <th width = ""30%""></th>
+          </tr>
+        </table>
+      </div>
+      <br>
+      
+      <br>
+      <br>
+    </th>
+    <th width = ""15%""></th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>
+      <font size = ""1"">
+        <code>
+        
+        </code>
+      </font>
+    </th>
+    <th></th>
+  </tr>
+</table>
+</font>
+</body>
+</html>
+";
+
+        public static readonly string signatureLicenseQuantityWarningSubject = "Advertnecia las licencias para firma disponibles para la empresa {1} se están agotando.";
+
+        public static readonly string signatureLicenseQuantityWarning = @"<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset = ""utf-8"">
+  <title>TemplatesNomisign</title>
+  <base href=""/"">
+
+  <meta name = ""viewport"" content=""width=device-width, initial-scale=1"">
+</head>
+<body bgcolor = ""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+<font face=""verdana"">
+<table width = ""100%"">
+  <tr>
+    <th width = ""15%""></th>
+    <th width = ""70%"" bgcolor=""#ffffff"">
+      <br>
+      <img width = ""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <br>
+      <br>
+      <br>
+      <h1>Bienvenido a Nomisign&copy;</h1>
+      <br>
+      <p>
+        Las licencias para firma disponibles para la empresa {1} se están agotando, el numero actual de firmas disponibles es {2}.
+        <br>
+        Favor de contactar a su representante de ventas para poder adquirir mas licencias de firma.
+      </p>
+      <br>
+      <div>
+        <table width = ""100%"" cellpadding=""15px"">
+          <tr>
+            <th width = ""30%""></th>
+            <th width = ""40%"" bgcolor=""#2cbbc3"">
+              <a href = ""http://{0}/nomisign/"" target=""_blank"">
+                Nomisign
+              </a>
+            </th>
+            <th width = ""30%""></th>
+          </tr>
+        </table>
+      </div>
+      <br>
+      
+      <br>
+      <br>
+    </th>
+    <th width = ""15%""></th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>
+      <font size = ""1"">
+        <code>
+        
+        </code>
+      </font>
+    </th>
+    <th></th>
+  </tr>
+</table>
+</font>
+</body>
+</html>
+";
+
+        public static readonly string signatureLicenseWarningSalesMessageSubject = "Las licencias para firma disponibles para la empresa {1} se están agotando.";
+
+        public static readonly string signatureLicenseWarningSalesMessage = @"<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset = ""utf-8"">
+  <title>TemplatesNomisign</title>
+  <base href=""/"">
+
+  <meta name = ""viewport"" content=""width=device-width, initial-scale=1"">
+</head>
+<body bgcolor = ""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+<font face=""verdana"">
+<table width = ""100%"">
+  <tr>
+    <th width = ""15%""></th>
+    <th width = ""70%"" bgcolor=""#ffffff"">
+      <br>
+      <img width = ""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <br>
+      <br>
+      <br>
+      <h1>Bienvenido a Nomisign&copy;</h1>
+      <br>
+      <p>
+        Las licencias para firma disponibles para la empresa {1} se están agotando, el numero actual de firmas disponibles es {2}.
+        <br>
+        Favor de contactar a la empresa {1} para que adquieran mas licencias de firma.
+      </p>
+      <br>
+      <div>
+        <table width = ""100%"" cellpadding=""15px"">
+          <tr>
+            <th width = ""30%""></th>
+            <th width = ""40%"" bgcolor=""#2cbbc3"">
+              <a href = ""http://{0}/nomisign/"" target=""_blank"">
+                Nomisign
+              </a>
+            </th>
+            <th width = ""30%""></th>
+          </tr>
+        </table>
+      </div>
+      <br>
+      
+      <br>
+      <br>
+    </th>
+    <th width = ""15%""></th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>
+      <font size = ""1"">
+        <code>
+        
+        </code>
+      </font>
+    </th>
+    <th></th>
+  </tr>
+</table>
+</font>
+</body>
+</html>
+";
+
+        public static readonly string smsWarningSalesMessageSubject = "Advertnecia SMS para la empresa {1} se están agotando.";
+
+        public static readonly string smsWarningSalesMessage = @"<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset = ""utf-8"">
+  <title>TemplatesNomisign</title>
+  <base href=""/"">
+
+  <meta name = ""viewport"" content=""width=device-width, initial-scale=1"">
+</head>
+<body bgcolor = ""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+<font face=""verdana"">
+<table width = ""100%"">
+  <tr>
+    <th width = ""15%""></th>
+    <th width = ""70%"" bgcolor=""#ffffff"">
+      <br>
+      <img width = ""50%"" src=""http://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <br>
+      <br>
+      <br>
+      <h1>Bienvenido a Nomisign&copy;</h1>
+      <br>
+      <p>
+        Los SMS disponibles para la empresa {1} se están agotando, el numero actual de mensajes disponibles es {2}.
+        <br>
+        Favor de contactar a su representante de ventas para poder adquirir mas SMS.
+      </p>
+      <br>
+      <div>
+        <table width = ""100%"" cellpadding=""15px"">
+          <tr>
+            <th width = ""30%""></th>
+            <th width = ""40%"" bgcolor=""#2cbbc3"">
+              <a href = ""http://{0}/nomisign/"" target=""_blank"">
+                Nomisign
+              </a>
+            </th>
+            <th width = ""30%""></th>
+          </tr>
+        </table>
+      </div>
+      <br>
+      
+      <br>
+      <br>
+    </th>
+    <th width = ""15%""></th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>
+      <font size = ""1"">
+        <code>
+        
+        </code>
+      </font>
+    </th>
+    <th></th>
+  </tr>
+</table>
+</font>
+</body>
+</html>
+";
+
         // ""review your new docs""
         public static readonly string visitSiteTosignDocumentMessageEmailSubject = "Revisar y firmar su documento";
 
