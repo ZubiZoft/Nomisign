@@ -269,8 +269,11 @@ namespace CfdiService.Controllers
                 codes.Vcode = string.Empty;
                 //db.SaveChanges(); redundant
             }
-
             db.SaveChanges();
+
+            db.CreateLog(OperationTypes.EmployeeAccountActivated, string.Format("Cuenta de empleado activada {0}", employee.EmployeeId), User, 
+                    employee.EmployeeId, ObjectTypes.Employee);
+
             return Ok(employeeShape);
         }
 
