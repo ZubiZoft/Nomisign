@@ -21,6 +21,17 @@ namespace CfdiService.Controllers
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         protected readonly string tempZipPath = System.Configuration.ConfigurationManager.AppSettings["tempZipFolder"];
         private ModelDbContext db = new ModelDbContext();
+        protected static readonly Dictionary<string, int> DicTypes = new Dictionary<string, int>()
+        {
+            { "Documento", 1 },
+            { "Recibo", 2 }
+        };
+        protected static readonly Dictionary<string, int> DicStatuses = new Dictionary<string, int>()
+        {
+            { "Sin Firma", 1 },
+            { "Firmado", 2 },
+            { "Rechazado", 3 }
+        };
 
 
         /*[HttpGet]
@@ -112,133 +123,324 @@ namespace CfdiService.Controllers
             DateTime initdateT = DateTime.Parse(range.InitDate);
             DateTime enddateT = DateTime.Parse(range.EndDate).AddDays(1);
             List<Document> docListResult = null;
+            var user = db.Users.Find(int.Parse(User.Identity.GetName()));
+
             if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Rfc) &&
                     string.IsNullOrEmpty(range.Status) &&
                     string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                            enddateT >= x.PayperiodDate
                         ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                            enddateT >= x.PayperiodDate &&
+                            x.CompanyId == user.CompanyId
+                        ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Rfc) &&
                     string.IsNullOrEmpty(range.Status))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
                         x.AlwaysShow == DicTypes[range.Type]
-                        ).ToList();
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Rfc) &&
                     string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
-                        x.SignStatus ==
-                        ).ToList();
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status]
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Status) &&
                     string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.RFC == range.Rfc
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Rfc) &&
-                    string.IsNullOrEmpty(range.Status) &&
-                    string.IsNullOrEmpty(range.Type))
+                           string.IsNullOrEmpty(range.Status) &&
+                           string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.CURP == range.Curp
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.CURP == range.Curp &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Rfc))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
-                        x.AlwaysShow == DicTypes[range.Type]
-                        ).ToList();
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status]
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] && 
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Status) &&
                     string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Rfc) &&
                     string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.CURP == range.Curp
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.CURP == range.Curp &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp) &&
                     string.IsNullOrEmpty(range.Status))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
-                        x.AlwaysShow == DicTypes[range.Type]
-                        ).ToList();
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.Employee.RFC == range.Rfc
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Curp))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
-                        x.AlwaysShow == DicTypes[range.Type]
-                        ).ToList();
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Rfc))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
-                        x.AlwaysShow == DicTypes[range.Type]
-                        ).ToList();
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.CURP == range.Curp
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.CURP == range.Curp &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Status))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else if (string.IsNullOrEmpty(range.Type))
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                        x.PayperiodDate >= initdateT &&
-                        enddateT >= x.PayperiodDate
-                        ).ToList();
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             else
             {
-                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                if (user.UserType == UserAdminType.GlobalAdmin)
+                {
+                    docListResult = db.Documents.Where(x => x.CompanyId == cid &&
                         x.PayperiodDate >= initdateT &&
                         enddateT >= x.PayperiodDate &&
-                        x.AlwaysShow == DicTypes[range.Type]
-                        ).ToList();
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp
+                    ).ToList();
+                }
+                else
+                {
+                    docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type] &&
+                        x.SignStatus == (SignStatus)DicStatuses[range.Status] &&
+                        x.Employee.RFC == range.Rfc &&
+                        x.Employee.CURP == range.Curp &&
+                        x.CompanyId == user.CompanyId
+                    ).ToList();
+                }
             }
             foreach (Document doc in docListResult)
             {
@@ -289,7 +491,7 @@ namespace CfdiService.Controllers
                         try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }
                         try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }
                         try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }
-                        
+
                     }
                 }
                 if (null != emp.EmailAddress)
@@ -408,9 +610,9 @@ namespace CfdiService.Controllers
                 if (d.Company.SMSBalance <= 10)
                 {
                     try { SendEmail.SendEmailMessage(d.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, d.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
-                    try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance));} catch { }
-                    try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance));} catch { }
-                    try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance));} catch { }
+                    try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+                    try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+                    try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
                     try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
 
                 }
@@ -419,7 +621,7 @@ namespace CfdiService.Controllers
             db.SaveChanges();
 
             foreach (var d in docs)
-                db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Cambio de estatus a esperando firma {0}", 
+                db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Cambio de estatus a esperando firma {0}",
                     d.DocumentId), User, d.DocumentId, ObjectTypes.Document);
 
             return Ok("Success");
