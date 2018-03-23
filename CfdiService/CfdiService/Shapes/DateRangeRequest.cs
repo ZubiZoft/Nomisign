@@ -9,5 +9,9 @@ namespace CfdiService.Shapes
     {
         public string InitDate { get; set; }
         public string EndDate { get; set; }
+        public string Rfc { get; set; }
+        public string Curp { get; set; }
+        public string Type { get; set; }
+        public string Status { get; set; }
     }
 }

@@ -111,7 +111,135 @@ namespace CfdiService.Controllers
             log.Info("End Date: " + range.EndDate);
             DateTime initdateT = DateTime.Parse(range.InitDate);
             DateTime enddateT = DateTime.Parse(range.EndDate).AddDays(1);
-            var docListResult = db.Documents.Where(x => x.CompanyId == cid && x.PayperiodDate >= initdateT && enddateT >= x.PayperiodDate).ToList();
+            List<Document> docListResult = null;
+            if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Rfc) &&
+                    string.IsNullOrEmpty(range.Status) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Rfc) &&
+                    string.IsNullOrEmpty(range.Status))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Rfc) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.SignStatus ==
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Status) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Rfc) &&
+                    string.IsNullOrEmpty(range.Status) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Rfc))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Status) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Rfc) &&
+                    string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp) &&
+                    string.IsNullOrEmpty(range.Status))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Curp))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Rfc))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Status))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else if (string.IsNullOrEmpty(range.Type))
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate
+                        ).ToList();
+            }
+            else
+            {
+                docListResult = db.Documents.Where(x => x.CompanyId == cid &&
+                        x.PayperiodDate >= initdateT &&
+                        enddateT >= x.PayperiodDate &&
+                        x.AlwaysShow == DicTypes[range.Type]
+                        ).ToList();
+            }
             foreach (Document doc in docListResult)
             {
                 var docShape = DocumentListShape.FromDataModel(doc, Request);

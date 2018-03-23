@@ -1,4 +1,5 @@
-﻿using Com.Advantage.Nom151;
+﻿using CfdiService.Model;
+using Com.Advantage.Nom151;
 using Org.BouncyCastle.Asn1;
 using System;
 using System.Collections;
@@ -16,12 +17,10 @@ namespace CfdiService.Services
         private static readonly string _pfxFilePassword = "N0M1secure750";
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static string CreateNom151(string pdfPath)
+        public static string CreateNom151(string pdfPath, Document document)
         {
             try
             {
-
-
                 FileInfo fileArp1 = new FileInfo(pdfPath);
                 String expCert = _pfxFileName;
                 String expCertPwd = _pfxFilePassword;
@@ -33,7 +32,7 @@ namespace CfdiService.Services
                 arp1.GetEncoded();
                 //Generacion del Expediente
                 //Indice Archivo Parcial 1
-                NombreOP arpar1Nombre = new NombreOP("prueba.arp");
+                NombreOP arpar1Nombre = new NombreOP(document.DocumentId.ToString());
                 ResumenOP arpar1Resumen = new ResumenOP();
                 arpar1Resumen.setAlgoritmoResumen(new AlgorithmIdentifier(ASN1Helper.SHA256));
                 DerBitString DERBitString = new DerBitString(Encoding.ASCII.GetBytes(ASN1Helper.SHA256_ALGORITHM), arp1.GetEncoded().Length);
@@ -54,13 +53,13 @@ namespace CfdiService.Services
                 {
                     DerObjectIdentifier DERObjectIdentifier = new DerObjectIdentifier(ASN1Helper.NOM_I_PERSONA_MORAL);
                     idUsr.setPersonaFisicaMoral(DERObjectIdentifier);
-                    DerUtf8String DERUTF8String = new DerUtf8String("Nomisign SA de CV");
+                    DerUtf8String DERUTF8String = new DerUtf8String("Requordit.MX SA de CV");
                     razonSocial.setIdPersonaMoral(DERUTF8String);
                 }
                 else
                 {
                     NombrePersonaFisica personaFisica = new NombrePersonaFisica();
-                    personaFisica.setNombre("Arturo Balderas Cruz");
+                    personaFisica.setNombre("Maria Estela Gonzalez Villaseñor");
                     DerObjectIdentifier DERObjectIdentifier = new DerObjectIdentifier(ASN1Helper.NOM_I_PERSONA_FISICA);
                     idUsr.setPersonaFisicaMoral(DERObjectIdentifier);
                     razonSocial.setIdPersonaFisica(personaFisica);
@@ -95,13 +94,13 @@ namespace CfdiService.Services
                         idUsr.setTipoIdU(DERObjectIdentifier_6);
                         break;
                 }
-                string CONTENIDO_ID = "PRU000000XX1";
+                string CONTENIDO_ID = "REQ1409222L6";
                 DerUtf8String DERUtf8String = new DerUtf8String(CONTENIDO_ID);
                 idUsr.setContenidoIdU(DERUtf8String);
 
                 bool EXISTE_REPRESENTANTE_LEGAL = true;
-                string REPRESENTANTE_LEGAL_TIPO_ID = "IFE";
-                string REPRESENTANTE_LEGAL_ID = "000000";
+                string REPRESENTANTE_LEGAL_TIPO_ID = "CURP";
+                string REPRESENTANTE_LEGAL_ID = "GOVE740222MDFNLS02";
                 if (EXISTE_REPRESENTANTE_LEGAL)
                 {
                     IdentificadorPersona idRepresentante = new IdentificadorPersona();
@@ -109,7 +108,7 @@ namespace CfdiService.Services
                     NombrePersonaFisica personaFisica = new NombrePersonaFisica();
                     personaFisica.setNombre("Maria Estela");
                     personaFisica.setApellido1("Gonzalez");
-                    personaFisica.setApellido2("Gonzalez");
+                    personaFisica.setApellido2("Villaseñor");
                     representante.setIdPersonaFisica(personaFisica);
                     idRepresentante.setNombre(representante);
 
@@ -145,7 +144,7 @@ namespace CfdiService.Services
                 IDUsuarioOP idUsuario = new IDUsuarioOP(idUsr);
 
                 Expediente exp = new Expediente();
-                exp.setNombreExpedienteToString("broxel123.exp");
+                exp.setNombreExpedienteToString(document.PathToFile);
                 exp.setIndice(indice);
                 exp.setIdUsuario(idUsuario);
 
