@@ -889,11 +889,11 @@ namespace CfdiService.Controllers
             }
             if (document.Company.SignatureBalance <= 10)
             {
-                try { SendEmail.SendEmailMessage(document.Company.BillingEmailAddress, string.Format(Strings.signatureLicenseQuantityWarningSubject), string.Format(Strings.signatureLicenseQuantityWarning, httpDomain, document.Company.CompanyName, document.Company.SMSBalance)); } catch { }
-                try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SMSBalance)); } catch { }
-                try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SMSBalance)); } catch { }
-                try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SMSBalance)); } catch { }
-                try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SMSBalance)); } catch { }
+                try { SendEmail.SendEmailMessage(document.Company.BillingEmailAddress, string.Format(Strings.signatureLicenseQuantityWarningSubject), string.Format(Strings.signatureLicenseQuantityWarning, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance)); } catch { }
+                try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance)); } catch { }
+                try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance)); } catch { }
+                try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance)); } catch { }
+                try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance)); } catch { }
 
             }
             db.SaveChanges();

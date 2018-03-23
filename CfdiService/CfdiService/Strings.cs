@@ -202,17 +202,7 @@ namespace CfdiService
       </p>
       <br>
       <div>
-        <table width = ""100%"" cellpadding=""15px"">
-          <tr>
-            <th width = ""30%""></th>
-            <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""http://{0}/nomisign/"" target=""_blank"">
-                Nomisign
-              </a>
-            </th>
-            <th width = ""30%""></th>
-          </tr>
-        </table>
+        
       </div>
       <br>
       
@@ -269,17 +259,7 @@ namespace CfdiService
       </p>
       <br>
       <div>
-        <table width = ""100%"" cellpadding=""15px"">
-          <tr>
-            <th width = ""30%""></th>
-            <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""http://{0}/nomisign/"" target=""_blank"">
-                Nomisign
-              </a>
-            </th>
-            <th width = ""30%""></th>
-          </tr>
-        </table>
+        
       </div>
       <br>
       
@@ -336,17 +316,7 @@ namespace CfdiService
       </p>
       <br>
       <div>
-        <table width = ""100%"" cellpadding=""15px"">
-          <tr>
-            <th width = ""30%""></th>
-            <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""http://{0}/nomisign/"" target=""_blank"">
-                Nomisign
-              </a>
-            </th>
-            <th width = ""30%""></th>
-          </tr>
-        </table>
+        
       </div>
       <br>
       
@@ -403,15 +373,7 @@ namespace CfdiService
       </p>
       <br>
       <div>
-        <table width = ""100%"" cellpadding=""15px"">
-          <tr>
-            <th width = ""30%""></th>
-            <th width = ""40%"" bgcolor=""#2cbbc3"">
-
-            </th>
-            <th width = ""30%""></th>
-          </tr>
-        </table>
+        
       </div>
       <br>
       
