@@ -862,7 +862,7 @@ namespace CfdiService.Controllers
             {
                 try
                 {
-                    document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document));
+                    document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document), document);
                     log.Info(document.Nom151);
                 }
                 catch (Exception ex) { log.Info(ex.ToString()); }
