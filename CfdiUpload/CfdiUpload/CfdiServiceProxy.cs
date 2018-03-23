@@ -47,7 +47,10 @@ namespace CfdiService.Upload
                 result = resultTask.Result;
             }
             else
-            throw new CfdiUploadException($"OpenBatch request to cfdiService failed with result code: {response.StatusCode} ({(int)response.StatusCode})");
+            {
+                Console.WriteLine(string.Format("Upload failed due there are more nominas than available licenses to use in the system"));
+                LogErrorMessage(string.Format("Upload failed due there are more nominas than available licenses to use in the system"));
+            }
 
             return result;
         }
