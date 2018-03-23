@@ -171,7 +171,7 @@ namespace CfdiService
 ";
 
 
-        public static readonly string smsQuantityWarningSubject = "Advertnecia SMS para la empresa {1} se están agotando.";
+        public static readonly string smsQuantityWarningSubject = "Advertnecia SMS.";
 
         public static readonly string smsQuantityWarning = @"<!doctype html>
 <html lang=""en"">
@@ -193,12 +193,12 @@ namespace CfdiService
       <br>
       <br>
       <br>
-      <h1>Bienvenido a Nomisign&copy;</h1>
+      <h1>Advertencia SMS</h1>
       <br>
       <p>
-        Los SMS disponibles para la empresa {1} se están agotando, el numero actual de mensajes disponibles es {2}.
+        Los SMS disponibles para tu empresa {1} se están agotando, el número actual de mensajes disponibles es {2}.
         <br>
-        Favor de contactar a su representante de ventas para poder adquirir mas SMS.
+        Favor de contactar a su representante de ventas para poder adquirir más SMS.
       </p>
       <br>
       <div>
@@ -238,7 +238,7 @@ namespace CfdiService
 </html>
 ";
 
-        public static readonly string signatureLicenseQuantityWarningSubject = "Advertnecia las licencias para firma disponibles para la empresa {1} se están agotando.";
+        public static readonly string signatureLicenseQuantityWarningSubject = "Advertnecia las licencias para firma disponibles se están agotando.";
 
         public static readonly string signatureLicenseQuantityWarning = @"<!doctype html>
 <html lang=""en"">
@@ -260,12 +260,12 @@ namespace CfdiService
       <br>
       <br>
       <br>
-      <h1>Bienvenido a Nomisign&copy;</h1>
+      <h1>Advertencia Licencias de Firma</h1>
       <br>
       <p>
-        Las licencias para firma disponibles para la empresa {1} se están agotando, el numero actual de firmas disponibles es {2}.
+        Las licencias para firma disponibles para la empresa {1} se están agotando, el número actual de firmas disponibles es {2}.
         <br>
-        Favor de contactar a su representante de ventas para poder adquirir mas licencias de firma.
+        Favor de contactar a su representante de ventas para poder adquirir más licencias de firma.
       </p>
       <br>
       <div>
@@ -305,7 +305,7 @@ namespace CfdiService
 </html>
 ";
 
-        public static readonly string signatureLicenseWarningSalesMessageSubject = "Las licencias para firma disponibles para la empresa {1} se están agotando.";
+        public static readonly string signatureLicenseWarningSalesMessageSubject = "Las licencias para firma disponibles para la empresa {0} se están agotando.";
 
         public static readonly string signatureLicenseWarningSalesMessage = @"<!doctype html>
 <html lang=""en"">
@@ -327,12 +327,12 @@ namespace CfdiService
       <br>
       <br>
       <br>
-      <h1>Bienvenido a Nomisign&copy;</h1>
+      <h1>Advertencia Licencias de Firma</h1>
       <br>
       <p>
-        Las licencias para firma disponibles para la empresa {1} se están agotando, el numero actual de firmas disponibles es {2}.
+        Las licencias para firma disponibles para la empresa {1} se están agotando, el número actual de firmas disponibles es {2}.
         <br>
-        Favor de contactar a la empresa {1} para que adquieran mas licencias de firma.
+        Favor de contactar al cliente para que adquiera más licencias de firma.
       </p>
       <br>
       <div>
@@ -372,7 +372,7 @@ namespace CfdiService
 </html>
 ";
 
-        public static readonly string smsWarningSalesMessageSubject = "Advertnecia SMS para la empresa {1} se están agotando.";
+        public static readonly string smsWarningSalesMessageSubject = "Advertnecia SMS para la empresa {0} se están agotando.";
 
         public static readonly string smsWarningSalesMessage = @"<!doctype html>
 <html lang=""en"">
@@ -394,12 +394,12 @@ namespace CfdiService
       <br>
       <br>
       <br>
-      <h1>Bienvenido a Nomisign&copy;</h1>
+      <h1>Advertencia SMS</h1>
       <br>
       <p>
-        Los SMS disponibles para la empresa {1} se están agotando, el numero actual de mensajes disponibles es {2}.
+        Los SMS disponibles para la empresa {1} se están agotando, el número actual de mensajes disponibles es {2}.
         <br>
-        Favor de contactar a su representante de ventas para poder adquirir mas SMS.
+        Favor de contactar al cliente para renovar sus SMS
       </p>
       <br>
       <div>
@@ -407,9 +407,7 @@ namespace CfdiService
           <tr>
             <th width = ""30%""></th>
             <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""http://{0}/nomisign/"" target=""_blank"">
-                Nomisign
-              </a>
+
             </th>
             <th width = ""30%""></th>
           </tr>
