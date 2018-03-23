@@ -826,26 +826,20 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-            if (document.Company.SignatureBalance > 0)
+            
+            if (documentShape.SignStatus == 2 && document.SignStatus != SignStatus.Firmado)
             {
-                if (documentShape.SignStatus == 2 && document.SignStatus != SignStatus.Firmado)
+                // sign document
+                if (document.AlwaysShow == 0)
                 {
-                    // sign document
-                    if (document.AlwaysShow == 0)
-                    {
-                        document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
-                    }
-                    else
-                    {
-                        document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
-                    }
-                    db.CreateLog(OperationTypes.SignedBy, string.Format("Documento Firmado {0}", document.DocumentId), User,
-                            document.DocumentId, ObjectTypes.Document);
+                    document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
                 }
-            }
-            else
-            {
-                return BadRequest();
+                else
+                {
+                    document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
+                }
+                db.CreateLog(OperationTypes.SignedBy, string.Format("Documento Firmado {0}", document.DocumentId), User,
+                        document.DocumentId, ObjectTypes.Document);
             }
             document.Company.SignatureBalance -= 1;
             document.SignStatus = (SignStatus)documentShape.SignStatus;
