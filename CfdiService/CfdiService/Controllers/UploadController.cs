@@ -72,7 +72,7 @@ namespace CfdiService.Controllers
                 ApiKey = company.ApiKey,
             };
 
-            company.SignatureBalance -= batchInfo.FileCount;
+            //company.SignatureBalance -= batchInfo.FileCount;
             db.Batches.Add(batch);
             db.SaveChanges();
             return Ok(new BatchResult(batch.BatchId, BatchResultCode.Ok));
@@ -145,15 +145,12 @@ namespace CfdiService.Controllers
                     }
                     if (newDoc.Company.SMSBalance <= 10)
                     {
-                        try
-                        {
-                            SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, newDoc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                        }
-                        catch { }
+                        try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, newDoc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+
                     }
                 }
             }
@@ -248,164 +245,168 @@ namespace CfdiService.Controllers
         public IHttpActionResult UploadFilesFront(int companyId, [FromBody] List<FileUpload> flist)
         {
             Company company = db.Companies.Find(companyId);
-            Batch batchn = new Batch
+            if (company.SignatureBalance >= flist.Count)
             {
-                Company = company,
-                CompanyId = company.CompanyId,
-                BatchOpenTime = DateTime.Now,
-                BatchCloseTime = SqlDateTime.MinValue.Value,
-                ItemCount = flist.Count,
-                WorkDirectory = Guid.NewGuid().ToString(),
-                ActualItemCount = 0,
-                BatchStatus = BatchStatus.Open,
-                ApiKey = company.ApiKey,
-            };
-
-            company.SignatureBalance -= flist.Count;
-            db.Batches.Add(batchn);
-            db.SaveChanges();
-            int BatchId = batchn.BatchId;
-            foreach (FileUpload filetemp in flist)
-            {
-                log.Info("XMLContent: " + filetemp.XMLContent + "\n");
-                log.Info("Filehash: " + filetemp.FileHash + "\n");
-
-                if (string.IsNullOrEmpty(filetemp.XMLContent))
+                Batch batchn = new Batch
                 {
-                    continue;
-                }
-                byte[] content = Encoding.UTF8.GetBytes(filetemp.XMLContent);
-                XElement root;
-                using (MemoryStream ms = new MemoryStream(content))
-                    root = XElement.Load(ms);
-
-                XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
-                XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
-
-                XElement complementoelem = null;
-                ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
-                XElement nominaSubcontracion = null;
-                DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
-                XAttribute clientRfc = null;
-                AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
-
-                if (clientRfc != null)
-                {
-                    Client client = db.FindClientByRfc(clientRfc.Value);
-                    if (client == null)
-                        continue;
-                }
-                else
-                {
-                    continue;
-                }
-
-                //Checking for duplicate Receipt XML Hash
-                if (CheckifReceiptAlreadyExists(filetemp))
-                    continue;
-
-                if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
-                Batch batch = db.Batches.Find(BatchId);
-                if (batch == null)
-                {
-                    log.Error("Error adding document: batch not found: " + BatchId);
-                    return BadRequest();
-                }
-                /*if (batch.ItemCount == batch.ActualItemCount)
-                {
-                    log.Error("Error adding document: canceling batch due to item count: " + BatchId);
-                    CancelBatch(batch);
-                    return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
-                }*/
-                Document newDoc = new Model.Document
-                {
-                    Batch = batch,
-                    UploadTime = DateTime.Now,
-                    SignStatus = SignStatus.SinFirma,
-                    PathToFile = Guid.NewGuid().ToString(),
-                    CompanyId = company.CompanyId
+                    Company = company,
+                    CompanyId = company.CompanyId,
+                    BatchOpenTime = DateTime.Now,
+                    BatchCloseTime = SqlDateTime.MinValue.Value,
+                    ItemCount = flist.Count,
+                    WorkDirectory = Guid.NewGuid().ToString(),
+                    ActualItemCount = 0,
+                    BatchStatus = BatchStatus.Open,
+                    ApiKey = company.ApiKey,
                 };
 
-                try
-                {
-                    // this only applies to XML vis bulk uploader
-                    if (!string.IsNullOrEmpty(filetemp.XMLContent))
-                    {
-                        EvaluateBulkUpload(filetemp, batch, newDoc, company);
-                    }
-                    else // this only applies to admin app uploads where no xml is supplied
-                    {
-                        EvaluateAdminUpload(filetemp, batch, newDoc);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log.Error("Error adding document: verification failed", ex);
-                    // log exception
-                    return BadRequest();
-                }
-
-                SaveContent(filetemp, newDoc);
-
-                db.Documents.Add(newDoc);
-                batch.ActualItemCount++;
+                //company.SignatureBalance -= flist.Count;
+                db.Batches.Add(batchn);
                 db.SaveChanges();
-
-                db.CreateLog(OperationTypes.DocumentStored, string.Format("Nuevo documento almacenado {0}", newDoc.DocumentId), User,
-                        newDoc.DocumentId, ObjectTypes.Document);
-
-                var empDoc = db.Employees.Find(newDoc.EmployeeId);
-                log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
-
-                // send notifications - if fail, log but dont return error code.
-                try
+                int BatchId = batchn.BatchId;
+                foreach (FileUpload filetemp in flist)
                 {
-                    // Send SMS alerting employee of new docs
-                    // send notifications
-                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
-                    SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
-                    if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                    log.Info("XMLContent: " + filetemp.XMLContent + "\n");
+                    log.Info("Filehash: " + filetemp.FileHash + "\n");
+
+                    if (string.IsNullOrEmpty(filetemp.XMLContent))
                     {
-                        //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
-                        string res = "";
-                        var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                        if (newDoc.Company.SMSBalance > 0)
+                        continue;
+                    }
+                    byte[] content = Encoding.UTF8.GetBytes(filetemp.XMLContent);
+                    XElement root;
+                    using (MemoryStream ms = new MemoryStream(content))
+                        root = XElement.Load(ms);
+
+                    XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
+                    XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+
+                    XElement complementoelem = null;
+                    ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
+                    XElement nominaSubcontracion = null;
+                    DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
+                    XAttribute clientRfc = null;
+                    AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+
+                    if (clientRfc != null)
+                    {
+                        Client client = db.FindClientByRfc(clientRfc.Value);
+                        if (client == null)
+                            continue;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    //Checking for duplicate Receipt XML Hash
+                    if (CheckifReceiptAlreadyExists(filetemp))
+                        continue;
+
+                    if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
+                    Batch batch = db.Batches.Find(BatchId);
+                    if (batch == null)
+                    {
+                        log.Error("Error adding document: batch not found: " + BatchId);
+                        return BadRequest();
+                    }
+                    /*if (batch.ItemCount == batch.ActualItemCount)
+                    {
+                        log.Error("Error adding document: canceling batch due to item count: " + BatchId);
+                        CancelBatch(batch);
+                        return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
+                    }*/
+                    Document newDoc = new Model.Document
+                    {
+                        Batch = batch,
+                        UploadTime = DateTime.Now,
+                        SignStatus = SignStatus.SinFirma,
+                        PathToFile = Guid.NewGuid().ToString(),
+                        CompanyId = company.CompanyId
+                    };
+
+                    try
+                    {
+                        // this only applies to XML vis bulk uploader
+                        if (!string.IsNullOrEmpty(filetemp.XMLContent))
                         {
+                            EvaluateBulkUpload(filetemp, batch, newDoc, company);
+                        }
+                        else // this only applies to admin app uploads where no xml is supplied
+                        {
+                            EvaluateAdminUpload(filetemp, batch, newDoc);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("Error adding document: verification failed", ex);
+                        // log exception
+                        return BadRequest();
+                    }
+
+                    SaveContent(filetemp, newDoc);
+
+                    db.Documents.Add(newDoc);
+                    batch.ActualItemCount++;
+                    db.SaveChanges();
+
+                    db.CreateLog(OperationTypes.DocumentStored, string.Format("Nuevo documento almacenado {0}", newDoc.DocumentId), User,
+                            newDoc.DocumentId, ObjectTypes.Document);
+
+                    var empDoc = db.Employees.Find(newDoc.EmployeeId);
+                    log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
+
+                    // send notifications - if fail, log but dont return error code.
+                    try
+                    {
+                        // Send SMS alerting employee of new docs
+                        // send notifications
+                        string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                        SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
+                        if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                        {
+                            //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                            string res = "";
+                            var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                             if (newDoc.Company.SMSBalance > 0)
                             {
-                                SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
-                                newDoc.Company.SMSBalance -= 1;
-                                db.SaveChanges();
-                            }
-                            if (newDoc.Company.SMSBalance <= 10)
-                            {
-                                try
+                                if (newDoc.Company.SMSBalance > 0)
                                 {
-                                    SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, newDoc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                                    SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                                    SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                                    SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
-                                    SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance));
+                                    SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                                    newDoc.Company.SMSBalance -= 1;
+                                    db.SaveChanges();
                                 }
-                                catch { }
+                                if (newDoc.Company.SMSBalance <= 10)
+                                {
+                                    try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, newDoc.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                    try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                    try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                    try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                    try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+
+                                }
                             }
-                        }
-                        else
-                        {
-                            string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
-                            SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBodySMSWarning);
+                            else
+                            {
+                                string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                                SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBodySMSWarning);
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        log.Error("warning adding document: one or both notifications failed to send", ex);
+                        log.Error(ex.Message);
+                        log.Error(ex.Source);
+                        log.Error(ex.StackTrace);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    log.Error("warning adding document: one or both notifications failed to send", ex);
-                    log.Error(ex.Message);
-                    log.Error(ex.Source);
-                    log.Error(ex.StackTrace);
-                }
+                return Ok();
             }
-            return Ok();
+            else
+            {
+                return BadRequest();   
+            }
         }
         private bool CheckifReceiptAlreadyExists(FileUpload filetemp)
         {
