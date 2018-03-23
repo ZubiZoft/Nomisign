@@ -441,15 +441,12 @@ namespace CfdiService.Controllers
                         }
                         if (employee.Company.SMSBalance <= 10)
                         {
-                            try
-                            {
-                                SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee.Company), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                                SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                                SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                                SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                                SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            }
-                            catch { }
+                            try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee.Company), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+
                         }
                         //SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
                     }
@@ -564,15 +561,12 @@ namespace CfdiService.Controllers
                     }
                     if (employee.Company.SMSBalance <= 10)
                     {
-                        try
-                        {
-                            SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                        }
-                        catch { }
+                        try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+
                     }
                 }
             }
@@ -609,15 +603,12 @@ namespace CfdiService.Controllers
                     }
                     if (employee.Company.SMSBalance <= 10)
                     {
-                        try
-                        {
-                            SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                            SendEmail.SendEmailMessage("artturobldrq@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance));
-                        }
-                        catch { }
+                        try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject, employee.Company.CompanyName), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+
                     }
                     return Ok("Success");
                 }
