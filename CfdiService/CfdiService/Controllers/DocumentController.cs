@@ -124,8 +124,13 @@ namespace CfdiService.Controllers
             DateTime enddateT = DateTime.Parse(range.EndDate).AddDays(1);
             List<Document> docListResult = null;
             var user = db.Users.Find(int.Parse(User.Identity.GetName()));
-            var typeNum = DicTypes[range.Type];
-            var statusNum = (SignStatus)DicStatuses[range.Status];
+
+            var typeNum = -1;
+            if (!string.IsNullOrEmpty(range.Type))
+                typeNum = DicTypes[range.Type];
+            var statusNum = SignStatus.Invalid;
+            if (!string.IsNullOrEmpty(range.Status))
+                statusNum = (SignStatus) DicStatuses[range.Status];
 
             try
             {
