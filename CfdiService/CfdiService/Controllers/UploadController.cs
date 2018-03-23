@@ -405,7 +405,7 @@ namespace CfdiService.Controllers
             }
             else
             {
-                return BadRequest();   
+                return Conflict();   
             }
         }
         private bool CheckifReceiptAlreadyExists(FileUpload filetemp)
