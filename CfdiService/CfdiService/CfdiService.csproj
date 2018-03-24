@@ -50,7 +50,7 @@
     </Reference>
     <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\BouncyCastle.Crypto.dll</HintPath>
+      <HintPath>..\..\..\..\..\Downloads\DLL\DLL\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
     <Reference Include="DocuSign">
       <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\DocuSign.dll</HintPath>
@@ -90,7 +90,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NOM151">
-      <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\NOM151.dll</HintPath>
+      <HintPath>..\..\..\..\..\Downloads\DLL\DLL\NOM151.dll</HintPath>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

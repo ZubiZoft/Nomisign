@@ -147,7 +147,6 @@ namespace CfdiService.Services
                 exp.setNombreExpedienteToString(document.PathToFile);
                 exp.setIndice(indice);
                 exp.setIdUsuario(idUsuario);
-
                 exp.sign(ASN1Helper.SHA256_WITH_RSA_ENCRIPTION, 1, expCert, expCertPwd);
                 string texre = Convert.ToBase64String(exp.GetEncoded());
                 return texre;
