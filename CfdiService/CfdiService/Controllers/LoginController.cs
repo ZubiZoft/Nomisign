@@ -74,6 +74,23 @@ namespace CfdiService.Controllers
                             }
                             employeeByCell.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
                             db.SaveChanges();
+                            if (employeeByCell.Company.SMSBalance > 0 && employeeByCell.Company.TotalSMSPurchased > 0)
+                            {
+                                string res = "";
+                                SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
+                                httpDomain, employeeByCell.EmployeeId, code.Vcode), string.Format("+52{0}", employeeByCell.CellPhoneNumber), out res);
+                                employeeByCell.Company.SMSBalance -= 1;
+                                db.SaveChanges();
+                            }
+                            if (employeeByCell.Company.SMSBalance <= 10 && employeeByCell.Company.TotalSMSPurchased > 0)
+                            {
+                                try { SendEmail.SendEmailMessage(employeeByCell.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - " + employeeByCell.Company.BillingEmailAddress, ex); }
+                                try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
+                                try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - estela.gonzalez@nomisign.com ", ex); }
+                                try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - info@nomisign.com ", ex); }
+                                try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - artturobldrq@gmail.com ", ex); }
+
+                            }
                             SendEmail.SendEmailMessage(employeeByCell.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employeeByCell.EmployeeId, code.Vcode));
                         }
                         catch { }
