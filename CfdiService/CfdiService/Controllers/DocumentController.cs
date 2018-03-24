@@ -594,52 +594,63 @@ namespace CfdiService.Controllers
         [IdentityBasicAuthentication]
         public IHttpActionResult SendDocumentsToUnsignedStatus([FromBody] List<int> dids)
         {
-            if (dids == null)
+            try
             {
-                BadRequest();
+
+
+                if (dids == null)
+                {
+                    BadRequest();
+                }
+                var docs = new List<Document>();
+                foreach (int id in dids)
+                {
+                    Document document = db.Documents.Find(id);
+                    if (document == null)
+                    {
+                        return NotFound();
+                    }
+                    docs.Add(document);
+                }
+                foreach (var d in docs)
+                {
+                    d.SignStatus = SignStatus.SinFirma;
+                    string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, d.Employee.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"));
+                    if (d.Company.SMSBalance.Value > 0 && d.Company.TotalSMSPurchased > 0)
+                    {
+                        //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                        string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
+                        //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
+                        //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
+                        string res = "";
+                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", d.Employee.CellPhoneNumber), out res);
+                        d.Company.SMSBalance -= 1;
+                        db.SaveChanges();
+                    }
+                    if (d.Company.SMSBalance <= 10 && d.Company.TotalSMSPurchased > 0)
+                    {
+                        try { SendEmail.SendEmailMessage(d.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
+
+                    }
+                    SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
+                }
+                db.SaveChanges();
+
+                foreach (var d in docs)
+                    db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Cambio de estatus a esperando firma {0}",
+                        d.DocumentId), User, d.DocumentId, ObjectTypes.Document);
             }
-            var docs = new List<Document>();
-            foreach (int id in dids)
+            catch (Exception ex)
             {
-                Document document = db.Documents.Find(id);
-                if (document == null)
-                {
-                    return NotFound();
-                }
-                docs.Add(document);
+                log.Info(ex);
+                log.Info(ex.StackTrace);
+                log.Info(ex.Source);
+                log.Info(ex.Message);
             }
-            foreach (var d in docs)
-            {
-                d.SignStatus = SignStatus.SinFirma;
-                string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, d.Employee.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"));
-                if (d.Company.SMSBalance > 0 && d.Company.TotalSMSPurchased > 0)
-                {
-                    //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                    string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
-                    //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
-                    //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
-                    string res = "";
-                    SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", d.Employee.CellPhoneNumber), out res);
-                    d.Company.SMSBalance -= 1;
-                    db.SaveChanges();
-                }
-                if (d.Company.SMSBalance <= 10 && d.Company.TotalSMSPurchased > 0)
-                {
-                    try { SendEmail.SendEmailMessage(d.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
-                    try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
-                    try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
-                    try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
-                    try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
-
-                }
-                SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
-            }
-            db.SaveChanges();
-
-            foreach (var d in docs)
-                db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Cambio de estatus a esperando firma {0}",
-                    d.DocumentId), User, d.DocumentId, ObjectTypes.Document);
-
             return Ok("Success");
         }
 

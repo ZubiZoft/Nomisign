@@ -585,44 +585,73 @@ namespace CfdiService.Controllers
         [IdentityBasicAuthentication]
         public IHttpActionResult VerifyEmployeePhoneNumber(EmployeeShape employeeShape)
         {
-            if (null != employeeShape.CellPhoneNumber)
+            try
             {
-                try
-                {
-                    Employee employee = EmployeeShape.ToDataModel(employeeShape);
-                    //SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
-                    log.Info("EmployeeShape celphone : " + employeeShape.CellPhoneNumber);
-                    log.Info("verifyPhoneNumberSMSMessage : " + Strings.verifyPhoneNumberSMSMessage);
-                    if (employee.Company.SMSBalance > 0 && employee.Company.TotalSMSPurchased > 0)
-                    {
-                        string res = "";
-                        SendSMS.SendSMSQuiubo(Strings.verifyPhoneNumberSMSMessage, string.Format("+52{0}", employeeShape.CellPhoneNumber), out res);
-                        employee.Company.SMSBalance -= 1;
-                        db.SaveChanges();
-                        log.Info("res : " + res);
-                    }
-                    if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
-                    {
-                        try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
 
-                    }
-                    return Ok("Success");
-                }
-                catch (Exception ex)
+                if (null != employeeShape.CellPhoneNumber)
                 {
-                    log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber, ex);
-                    return Ok("Cell Phone not verified");
+                    try
+                    {
+                        Employee employee = db.Employees.Find(employeeShape.EmployeeId);
+                        //SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
+                        log.Info("EmployeeShape celphone : " + employeeShape.CellPhoneNumber);
+                        log.Info("verifyPhoneNumberSMSMessage : " + Strings.verifyPhoneNumberSMSMessage);
+                        log.Info("1");
+                        if (employee.Company.SMSBalance.Value > 0 && employee.Company.TotalSMSPurchased.Value > 0)
+                        {
+                            string res = "";
+                            log.Info("1.1");
+                            SendSMS.SendSMSQuiubo(Strings.verifyPhoneNumberSMSMessage, string.Format("+52{0}", employeeShape.CellPhoneNumber), out res);
+                            log.Info("1.2");
+                            employee.Company.SMSBalance -= 1;
+                            log.Info("1.3");
+                            db.SaveChanges();
+                            log.Info("1.4");
+                            log.Info("res : " + res);
+                            log.Info("1.5");
+                        }
+                        log.Info("2");
+                        if (employee.Company.SMSBalance.Value <= 10 && employee.Company.TotalSMSPurchased.Value > 0)
+                        {
+                            log.Info("2.1");
+                            try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            log.Info("2.2");
+                            try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            log.Info("2.3");
+                            try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            log.Info("2.4");
+                            try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            log.Info("2.5");
+                            try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
+                            log.Info("2.6");
+
+                        }
+                        return Ok("Success");
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber, ex);
+                        log.Info(ex);
+                        log.Info(ex.StackTrace);
+                        log.Info(ex.Source);
+                        log.Info(ex.Message);
+                        return Ok("Cell Phone not verified");
+                    }
+                }
+                else
+                {
+                    log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber);
+                    return BadRequest("Cell Phone Number empty");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                log.Error("Error verifying cell number: " + employeeShape.CellPhoneNumber);
-                return BadRequest("Cell Phone Number empty");
+                log.Info(ex);
+                log.Info(ex.StackTrace);
+                log.Info(ex.Source);
+                log.Info(ex.Message);
             }
+            return BadRequest("Cell Phone Number empty");
         }
         // DELETE: api/companyusers/5
         [HttpDelete]
