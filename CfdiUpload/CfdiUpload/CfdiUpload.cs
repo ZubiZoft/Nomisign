@@ -52,10 +52,9 @@ namespace CfdiService.Upload
                 LogErrorMessage(string.Format("Error Inner:  {0}", ex.InnerException.Message));
                 LogErrorMessage(string.Format("Error Exception:  {0}", ex.StackTrace));
             }
-            uploader.CloseBatch();
+            //uploader.CloseBatch();
 
-            Console.WriteLine("Upload Completed");
-            LogErrorMessage(string.Format("Upload Completed"));
+            
             Console.ReadLine();
             Environment.Exit(0);
         }
@@ -85,7 +84,7 @@ namespace CfdiService.Upload
             {
                 List<string> uploadFiles = GetUploadFiles();
                 List<FileUpload> files = new List<FileUpload>();
-                CreateBatch(uploadFiles.Count);
+                //CreateBatch(uploadFiles.Count);
                 foreach (string fn in uploadFiles)
                 {
                     string xmlContent = File.ReadAllText(fn);
@@ -114,6 +113,7 @@ namespace CfdiService.Upload
                 LogErrorMessage(string.Format("Files to upload:  {0}", files.Count));
 
                 string br = "";
+                Console.WriteLine(string.Format("Nominas to be uploaded: {0}", files.Count));
                 if (files.Count > 0)
                     br = cfdiService.UploadFiles(CompanyId, files);
             }

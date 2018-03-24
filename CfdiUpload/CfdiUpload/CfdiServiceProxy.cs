@@ -98,9 +98,14 @@ namespace CfdiService.Upload
                 Task<string> resultTask = response.Content.ReadAsAsync<string>();
                 resultTask.Wait();
                 result = resultTask.Result;
+                Console.WriteLine("Upload Completed");
+                LogErrorMessage(string.Format("Upload Completed"));
             }
             else
-                throw new CfdiUploadException($"AddFile request to cfdiService failed with result code: {response.StatusCode} ({(int)response.StatusCode})");
+            {
+                Console.WriteLine("Upload was not completed due the number of licenses are less than the number of nominas that you are attempting to upload.");
+                LogErrorMessage(string.Format("Upload was not completed due the number of licenses are less than the number of nominas that you are attempting to upload."));
+            }
 
             return result;
         }
