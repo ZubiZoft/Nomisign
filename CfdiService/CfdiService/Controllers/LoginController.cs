@@ -443,6 +443,11 @@ namespace CfdiService.Controllers
             foreach (var e in commonEmplyees)
             {
                 var countDocs = db.CountDocumentsByCompanyNUser(e.CompanyId, e.EmployeeId);
+                var esec = db.SecurityQuestions.Where(u => u.userID == e.EmployeeId).FirstOrDefault();
+                if (string.IsNullOrEmpty(esec.SecurityQuestion1) || string.IsNullOrEmpty(esec.SecurityQuestion2) || string.IsNullOrEmpty(esec.SecurityQuestion3))
+                {
+                    return 0;
+                }
                 if (countDocs > 1)
                 {
                     continue;
