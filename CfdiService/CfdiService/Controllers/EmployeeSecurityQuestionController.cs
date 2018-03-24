@@ -29,8 +29,8 @@ namespace CfdiService.Controllers
             return Ok(securityQuestions);
         }
 
-        [HttpGet]
-        [Route("securityQuestionsForgot/")]
+        [HttpPost]
+        [Route("securityQuestionsForgot")]
         public IHttpActionResult GetEmployeeSecurityQuestionsAcc(EmployeeShape account)
         {
             var emps = db.Employees.Where(e => e.EmailAddress == account.EmailAddress).ToList();
