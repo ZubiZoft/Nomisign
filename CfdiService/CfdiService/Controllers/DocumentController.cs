@@ -493,14 +493,14 @@ namespace CfdiService.Controllers
                 {
                     log.Info(string.Format("4"));
                     //SendSMS.SendSMSMsg(emp.CellPhoneNumber, msgBodySpanish);
-                    if (doc.Company.SMSBalance > 0)
+                    if (doc.Company.SMSBalance > 0 && doc.Company.TotalSMSPurchased > 0)
                     {
                         string res = "";
                         SendSMS.SendSMSQuiubo(msgBodySpanishMobile, string.Format("+52{0}", emp.CellPhoneNumber), out res);
                         doc.Company.SMSBalance -= 1;
                         db.SaveChanges();
                     }
-                    if (doc.Company.SMSBalance <= 10)
+                    if (doc.Company.SMSBalance <= 10 && doc.Company.TotalSMSPurchased > 0)
                     {
                         try { SendEmail.SendEmailMessage(doc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - " + doc.Company.BillingEmailAddress, ex); }
                         try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
@@ -612,7 +612,7 @@ namespace CfdiService.Controllers
             {
                 d.SignStatus = SignStatus.SinFirma;
                 string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, d.Employee.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"));
-                if (d.Company.SMSBalance > 0)
+                if (d.Company.SMSBalance > 0 && d.Company.TotalSMSPurchased > 0)
                 {
                     //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                     string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
@@ -623,7 +623,7 @@ namespace CfdiService.Controllers
                     d.Company.SMSBalance -= 1;
                     db.SaveChanges();
                 }
-                if (d.Company.SMSBalance <= 10)
+                if (d.Company.SMSBalance <= 10 && d.Company.TotalSMSPurchased > 0)
                 {
                     try { SendEmail.SendEmailMessage(d.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
                     try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
@@ -658,7 +658,7 @@ namespace CfdiService.Controllers
                 {
                     if (doc.Employee != null && !string.IsNullOrEmpty(doc.Employee.CellPhoneNumber))
                     {
-                        if (doc.Company.SMSBalance > 0)
+                        if (doc.Company.SMSBalance > 0 && doc.Company.TotalSMSPurchased > 0)
                         {
                             //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                             string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
@@ -669,7 +669,7 @@ namespace CfdiService.Controllers
                             doc.Company.SMSBalance -= 1;
                             db.SaveChanges();
                         }
-                        if (doc.Company.SMSBalance <= 10)
+                        if (doc.Company.SMSBalance <= 10 && doc.Company.TotalSMSPurchased > 0)
                         {
                             try { SendEmail.SendEmailMessage(doc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }
                             try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }
@@ -705,14 +705,14 @@ namespace CfdiService.Controllers
                     {
                         string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage + ", http://{0}/nomisign", httpDomain);
                         //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
-                        if (doc.Company.SMSBalance > 0)
+                        if (doc.Company.SMSBalance > 0 && doc.Company.TotalSMSPurchased > 0)
                         {
                             string res = "";
                             SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", doc.Employee.CellPhoneNumber), out res);
                             doc.Company.SMSBalance -= 1;
                             db.SaveChanges();
                         }
-                        if (doc.Company.SMSBalance <= 10)
+                        if (doc.Company.SMSBalance <= 10 && doc.Company.TotalSMSPurchased > 0)
                         {
                             try { SendEmail.SendEmailMessage(doc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }
                             try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, doc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, doc.Company.CompanyName, doc.Company.SMSBalance)); } catch { }

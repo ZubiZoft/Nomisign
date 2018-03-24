@@ -432,14 +432,14 @@ namespace CfdiService.Controllers
                     {
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId));
-                        if (employee.Company.SMSBalance > 0)
+                        if (employee.Company.SMSBalance > 0 && employee.Company.TotalSMSPurchased > 0)
                         {
                             string res = "";
                             SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", employee.CellPhoneNumber), out res);
                             employee.Company.SMSBalance -= 1;
                             db.SaveChanges();
                         }
-                        if (employee.Company.SMSBalance <= 10)
+                        if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
                         {
                             try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch(Exception ex) { log.Error("Error sending Email - " + employee.Company.BillingEmailAddress, ex); }
                             try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
@@ -551,7 +551,7 @@ namespace CfdiService.Controllers
                 if (null != employee.CellPhoneNumber)
                 {
                     //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodySpanish);
-                    if (employee.Company.SMSBalance > 0)
+                    if (employee.Company.SMSBalance > 0 && employee.Company.TotalSMSPurchased > 0)
                     {
                         string res = "";
                         SendSMS.SendSMSQuiubo(msgBodySpanish, string.Format("+52{0}", employee.CellPhoneNumber), out res);
@@ -559,7 +559,7 @@ namespace CfdiService.Controllers
                         db.SaveChanges();
                         log.Info("res : " + res);
                     }
-                    if (employee.Company.SMSBalance <= 10)
+                    if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
                     {
                         try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
                         try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
@@ -593,7 +593,7 @@ namespace CfdiService.Controllers
                     //SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
                     log.Info("EmployeeShape celphone : " + employeeShape.CellPhoneNumber);
                     log.Info("verifyPhoneNumberSMSMessage : " + Strings.verifyPhoneNumberSMSMessage);
-                    if (employee.Company.SMSBalance > 0)
+                    if (employee.Company.SMSBalance > 0 && employee.Company.TotalSMSPurchased > 0)
                     {
                         string res = "";
                         SendSMS.SendSMSQuiubo(Strings.verifyPhoneNumberSMSMessage, string.Format("+52{0}", employeeShape.CellPhoneNumber), out res);
@@ -601,7 +601,7 @@ namespace CfdiService.Controllers
                         db.SaveChanges();
                         log.Info("res : " + res);
                     }
-                    if (employee.Company.SMSBalance <= 10)
+                    if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
                     {
                         try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
                         try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }

@@ -136,14 +136,14 @@ namespace CfdiService.Controllers
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
                     //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
-                    if (newDoc.Company.SMSBalance > 0)
+                    if (newDoc.Company.SMSBalance > 0 && newDoc.Company.TotalSMSPurchased > 0)
                     {
                         string res = "";
                         SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                         newDoc.Company.SMSBalance -= 1;
                         db.SaveChanges();
                     }
-                    if (newDoc.Company.SMSBalance <= 10)
+                    if (newDoc.Company.SMSBalance <= 10 && newDoc.Company.TotalSMSPurchased > 0)
                     {
                         try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
                         try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
@@ -366,13 +366,13 @@ namespace CfdiService.Controllers
                             var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                             if (newDoc.Company.SMSBalance > 0)
                             {
-                                if (newDoc.Company.SMSBalance > 0)
+                                if (newDoc.Company.SMSBalance > 0 && newDoc.Company.TotalSMSPurchased > 0)
                                 {
                                     SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
                                     newDoc.Company.SMSBalance -= 1;
                                     db.SaveChanges();
                                 }
-                                if (newDoc.Company.SMSBalance <= 10)
+                                if (newDoc.Company.SMSBalance <= 10 && newDoc.Company.TotalSMSPurchased > 0)
                                 {
                                     try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
                                     try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
