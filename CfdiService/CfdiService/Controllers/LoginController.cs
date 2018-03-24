@@ -37,78 +37,61 @@ namespace CfdiService.Controllers
 
         [HttpPost]
         [Route("login/reset")]
-        public IHttpActionResult DoEmployeeLoginReset(EmployeeShape employeeShape)
+        public IHttpActionResult DoEmployeeLoginReset(SecurityAnswers securityanswers)
         {
             var employeeByCell = db.Employees.Where(e =>
-                    e.CellPhoneNumber.Equals(employeeShape.CellPhoneNumber) ||
-                    e.EmailAddress.Equals(employeeShape.CellPhoneNumber)
-                ).ToList();
-            if (employeeByCell.Count > 0)
+                    e.CellPhoneNumber.Equals(securityanswers.Email) ||
+                    e.EmailAddress.Equals(securityanswers.Email)
+                ).FirstOrDefault();
+
+            if (employeeByCell != null)
             {
-                // lock employee account
-                foreach (var employeeForReset in employeeByCell)
+                var securityquestions = db.SecurityQuestions.Where(e => e.userID == employeeByCell.EmployeeId).FirstOrDefault();
+                if (securityquestions != null)
                 {
-                    employeeForReset.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
-                    employeeForReset.FailedLoginCount = 0;
-                    //db.SaveChanges();
-
-                    // generate code
-
-                    db.SaveChanges();
-
-                    //SendSMS.SendSMSMsg(employeeForReset.CellPhoneNumber, String.Format("Password reset was requested.  Please visit http://{0}/nomisign/account/{1} to reset password.  Security Code: {2}", 
-                    //    httpDomain, employeeForReset.EmployeeId, code.Vcode));
-                    log.Info("Reset password request for user: " + employeeForReset.EmployeeId);
-                }
-                var employee1 = employeeByCell[0];
-                EmployeesCode code = db.EmployeeSecurityCodes.Find(employee1.EmployeeId);
-                if (null == code)
-                {
-                    code = new EmployeesCode()
+                    if (securityquestions.SecurityAnswer1.ToUpper().Trim().Equals(securityanswers.Answer1.ToUpper().Trim())
+                        && securityquestions.SecurityAnswer2.ToUpper().Trim().Equals(securityanswers.Answer2.ToUpper().Trim())
+                        && securityquestions.SecurityAnswer3.ToUpper().Trim().Equals(securityanswers.Answer3.ToUpper().Trim()))
                     {
-                        Vcode = EncryptionService.GenerateSecurityCode(),
-                        GeneratedDate = DateTime.Now,
-                        EmployeeId = employee1.EmployeeId,
-                        Prefix = Guid.NewGuid().ToString()
-                    };
-                    db.EmployeeSecurityCodes.Add(code);
+                        try
+                        {
+                            EmployeesCode code = db.EmployeeSecurityCodes.Find(employeeByCell.EmployeeId);
+                            if (null == code)
+                            {
+                                code = new EmployeesCode()
+                                {
+                                    Vcode = EncryptionService.GenerateSecurityCode(),
+                                    GeneratedDate = DateTime.Now,
+                                    EmployeeId = employeeByCell.EmployeeId,
+                                    Prefix = Guid.NewGuid().ToString()
+                                };
+                                db.EmployeeSecurityCodes.Add(code);
+                            }
+                            else
+                            {
+                                code.Vcode = EncryptionService.GenerateSecurityCode();
+                                code.GeneratedDate = DateTime.Now;
+                            }
+                            SendEmail.SendEmailMessage(employeeByCell.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employeeByCell.EmployeeId, code.Vcode));
+                        }
+                        catch { }
+                        return Ok();
+                    }
+                    else
+                    {
+                        log.Info("Security questions does not match for user: " + employeeByCell.EmailAddress);
+                        return BadRequest("Invalid Login Data");
+                    }
                 }
                 else
                 {
-                    code.Vcode = EncryptionService.GenerateSecurityCode();
-                    code.GeneratedDate = DateTime.Now;
+                    log.Info("No security questions found for user: " + employeeByCell.EmailAddress);
+                    return BadRequest("Invalid Login Data");
                 }
-                string res = null;
-                try
-                {
-                    if (employee1.Company.SMSBalance > 0 && employee1.Company.TotalSMSPurchased > 0)
-                    {
-                        SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
-                                httpDomain, employee1.EmployeeId, code.Vcode), string.Format("+52{0}", employee1.CellPhoneNumber), out res);
-                        employee1.Company.SMSBalance -= 1;
-                        db.SaveChanges();
-                    }
-                    if (employee1.Company.SMSBalance <= 10 && employee1.Company.TotalSMSPurchased > 0)
-                    {
-                        try { SendEmail.SendEmailMessage(employee1.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee1.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee1.Company.CompanyName, employee1.Company.SMSBalance)); } catch { }
-
-                    }
-                }
-                catch { }
-                try
-                {
-                    SendEmail.SendEmailMessage(employee1.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employee1.EmployeeId, code.Vcode));
-                }
-                catch { }
-                return Ok();
             }
             else
             {
-                log.Info("Invalid password request for user: " + employeeShape.EmailAddress);
+                log.Info("Invalid password request for user: " + employeeByCell.EmailAddress);
                 return BadRequest("Invalid Login Data");
             }
 
