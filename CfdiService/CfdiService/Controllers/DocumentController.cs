@@ -596,8 +596,6 @@ namespace CfdiService.Controllers
         {
             try
             {
-
-
                 if (dids == null)
                 {
                     BadRequest();
@@ -615,6 +613,7 @@ namespace CfdiService.Controllers
                 foreach (var d in docs)
                 {
                     d.SignStatus = SignStatus.SinFirma;
+                    db.SaveChanges();
                     string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, d.Employee.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"));
                     if (d.Company.SMSBalance.Value > 0 && d.Company.TotalSMSPurchased > 0)
                     {
@@ -638,11 +637,14 @@ namespace CfdiService.Controllers
                     }
                     SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
                 }
-                db.SaveChanges();
+
 
                 foreach (var d in docs)
+                {
                     db.CreateLog(OperationTypes.DocumentUpdated, string.Format("Cambio de estatus a esperando firma {0}",
                         d.DocumentId), User, d.DocumentId, ObjectTypes.Document);
+                    db.SaveChanges();
+                }
             }
             catch (Exception ex)
             {
