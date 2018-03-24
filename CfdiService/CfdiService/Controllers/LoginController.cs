@@ -72,6 +72,8 @@ namespace CfdiService.Controllers
                                 code.Vcode = EncryptionService.GenerateSecurityCode();
                                 code.GeneratedDate = DateTime.Now;
                             }
+                            employeeByCell.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
+                            db.SaveChanges();
                             SendEmail.SendEmailMessage(employeeByCell.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employeeByCell.EmployeeId, code.Vcode));
                         }
                         catch { }
