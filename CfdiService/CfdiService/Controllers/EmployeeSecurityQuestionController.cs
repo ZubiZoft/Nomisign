@@ -28,6 +28,43 @@ namespace CfdiService.Controllers
             return Ok(securityQuestions);
         }
 
+        [HttpGet]
+        [Route("securityQuestionsForgot/{account}")]
+        public IHttpActionResult GetEmployeeSecurityQuestionsAcc(string account)
+        {
+            var emps = db.Employees.Where(e => e.EmailAddress == account).ToList();
+            if (emps.Count > 0)
+            {
+                foreach(var e in emps)
+                {
+                    var q = db.SecurityQuestions.Find(e.EmployeeId);
+                    if (q != null)
+                    {
+                        q.SecurityAnswer1 = null;
+                        q.SecurityAnswer2 = null;
+                        q.SecurityAnswer3 = null;
+                        return Ok(q);
+                    }
+                }
+            }
+            emps = db.Employees.Where(e => e.CellPhoneNumber == account).ToList();
+            if (emps.Count > 0)
+            {
+                foreach (var e in emps)
+                {
+                    var q = db.SecurityQuestions.Find(e.EmployeeId);
+                    if (q != null)
+                    {
+                        q.SecurityAnswer1 = null;
+                        q.SecurityAnswer2 = null;
+                        q.SecurityAnswer3 = null;
+                        return Ok(q);
+                    }
+                }
+            }
+            return BadRequest();
+        }
+
         [HttpPut]
         [Route("securityquestions/{id}")]
         [Authorize(Roles = "EMPLOYEE,CLIENT")]
