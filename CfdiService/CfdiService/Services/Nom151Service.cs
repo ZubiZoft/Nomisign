@@ -99,8 +99,8 @@ namespace CfdiService.Services
                 idUsr.setContenidoIdU(DERUtf8String);
 
                 bool EXISTE_REPRESENTANTE_LEGAL = true;
-                string REPRESENTANTE_LEGAL_TIPO_ID = "CURP";
-                string REPRESENTANTE_LEGAL_ID = "GOVE740222MDFNLS02";
+                string REPRESENTANTE_LEGAL_TIPO_ID = "IFE";
+                string REPRESENTANTE_LEGAL_ID = "1644249848";
                 if (EXISTE_REPRESENTANTE_LEGAL)
                 {
                     IdentificadorPersona idRepresentante = new IdentificadorPersona();

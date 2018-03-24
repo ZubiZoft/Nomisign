@@ -294,10 +294,6 @@ namespace CfdiService.Controllers
                         if (client == null)
                             continue;
                     }
-                    else
-                    {
-                        continue;
-                    }
 
                     //Checking for duplicate Receipt XML Hash
                     if (CheckifReceiptAlreadyExists(filetemp))
@@ -502,9 +498,14 @@ namespace CfdiService.Controllers
             AttributeCheckXMLTagValue("Curp", nominaReceptor, ref receptorCurp);
             // try to get client RFC - may not be one
             XElement nominaSubcontracion = null;
-            DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
             XAttribute clientRfc = null;
-            AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+
+            try
+            {
+                DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
+                AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+            }
+            catch { }
 
             /* //XElement elem = root.Element(cfdi + "Emisor");
              XElement elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Emisor", root);
@@ -595,6 +596,16 @@ namespace CfdiService.Controllers
                         emp.FirstName = splittedName[0];
                         emp.LastName1 = splittedName[1];
                         emp.LastName2 = splittedName[2];
+                    }
+                    else
+                    {
+                        splittedName = FullNameSplitterFromRFCService.SplitName2((string)receptorRfc, (string)receptorfullName);
+                        if (splittedName != null)
+                        {
+                            emp.FirstName = splittedName[0];
+                            emp.LastName1 = splittedName[1];
+                            emp.LastName2 = splittedName[2];
+                        }
                     }
                 }
                 catch (Exception ex)

@@ -62,6 +62,60 @@ namespace CfdiService.Services
             return null;
         }
 
+        public static string[] SplitName2(string rfc, string fullName)
+        {
+            try
+            {
+                /*Second Fullname format*/
+                var r = rfc.ToUpper();
+                var n = fullName.ToUpper();
+
+                var first = r.Substring(0, 2).RemoveAccents();
+                var second = r.Substring(2, 1).RemoveAccents();
+                var third = r.Substring(3, 1).RemoveAccents();
+
+                if (n.Contains(" " + third) && n.Contains(" " + second) && n.Substring(0, 2).Equals(first))
+                {
+                    var nameSplit = GetSplitterNameSecond(first, second, third, n);
+                    return nameSplit;
+                }
+
+                if ((first.Substring(0, 1) + "H").RemoveAccents().Equals("CH"))
+                {
+                    first = "CH";
+                    var nameSplit = GetSplitterNameSecond(first, second, third, n);
+                    if (nameSplit != null)
+                        return nameSplit;
+                }
+
+                first = r.Substring(0, 1).RemoveAccents();
+                second = r.Substring(1, 1).RemoveAccents();
+                third = r.Substring(2, 2).RemoveAccents();
+                if (n.Contains(" " + third) && n.Contains(" " + second) && n.Substring(0, 1).RemoveAccents().Equals(first))
+                {
+                    var nameSplit = GetSplitterNameSecond(first, second, third, n);
+                    return nameSplit;
+                }
+
+                first = r.Substring(0, 2).RemoveAccents();
+                second = r.Substring(2, 1).RemoveAccents();
+                third = r.Substring(3, 1).RemoveAccents();
+                if (n.Contains(" " + third) && n.Contains(" " + second) && n.Contains(" " + first))
+                {
+                    var nameSplit = GetSplitterNameSecond(first, second, third, n);
+                    return nameSplit;
+                }
+
+                if (third.Equals("X"))
+                {
+                    var nameSplit = GetSplitterNameSecond(first, second, "-1", n);
+                    return nameSplit;
+                }
+            }
+            catch { }
+            return null;
+        }
+
         private static string[] GetSplitterName(string first, string second, string third, string n)
         {
             var arr = n.Split(new char[] { ' ' });
@@ -82,6 +136,48 @@ namespace CfdiService.Services
 
                     name = arr.JoinEntries(0, j - 1);
                     break;
+                }
+            }
+            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(firstLast) && !string.IsNullOrEmpty(secondLast))
+            {
+                return new string[] { name.CapitalizeString(), firstLast.CapitalizeString(), secondLast.CapitalizeString() };
+            }
+            return null;
+        }
+
+        private static string[] GetSplitterNameSecond(string first, string second, string third, string n)
+        {
+            var arr = n.Split(new char[] { ' ' });
+            var name = "";
+            var firstLast = "";
+            var secondLast = "";
+            for (int j = 1, k = 0; j < arr.Length; j++)
+            {
+                if (arr[j].RemoveAccents().StartsWith(second) && string.IsNullOrEmpty(firstLast))
+                {
+                    firstLast = arr.JoinEntries(k, j - 1);
+                    k = j;
+                }
+                else if (arr[j].RemoveAccents().StartsWith(third) && !string.IsNullOrEmpty(firstLast) && string.IsNullOrEmpty(secondLast))
+                {
+                    secondLast = arr.JoinEntries(k, j - 1);
+                    if (secondLast.RemoveAccents().Contains("MARIA") || secondLast.RemoveAccents().Contains("JOSE"))
+                    {
+                        secondLast = arr.JoinEntries(k, j - 2);
+                        k = j - 1;
+                    }
+                    else
+                    {
+                        k = j;
+                    }
+
+                    name = arr.JoinEntries(k, arr.Length - 1);
+                    break;
+                }
+                else if (third.Equals("-1") && !string.IsNullOrEmpty(firstLast) && string.IsNullOrEmpty(secondLast))
+                {
+                    secondLast = arr.JoinEntries(k, k);
+                    name = arr.JoinEntries(k + 1, arr.Length - 1);
                 }
             }
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(firstLast) && !string.IsNullOrEmpty(secondLast))
