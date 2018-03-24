@@ -1,5 +1,6 @@
 ﻿using CfdiService.Filters;
 using CfdiService.Model;
+using CfdiService.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,10 +30,10 @@ namespace CfdiService.Controllers
         }
 
         [HttpGet]
-        [Route("securityQuestionsForgot/{account}")]
-        public IHttpActionResult GetEmployeeSecurityQuestionsAcc(string account)
+        [Route("securityQuestionsForgot/")]
+        public IHttpActionResult GetEmployeeSecurityQuestionsAcc(EmployeeShape account)
         {
-            var emps = db.Employees.Where(e => e.EmailAddress == account).ToList();
+            var emps = db.Employees.Where(e => e.EmailAddress == account.EmailAddress).ToList();
             if (emps.Count > 0)
             {
                 foreach(var e in emps)
@@ -47,7 +48,7 @@ namespace CfdiService.Controllers
                     }
                 }
             }
-            emps = db.Employees.Where(e => e.CellPhoneNumber == account).ToList();
+            emps = db.Employees.Where(e => e.CellPhoneNumber == account.EmailAddress).ToList();
             if (emps.Count > 0)
             {
                 foreach (var e in emps)
