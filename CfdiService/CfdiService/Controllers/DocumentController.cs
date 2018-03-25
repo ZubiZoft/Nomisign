@@ -615,6 +615,7 @@ namespace CfdiService.Controllers
                     d.SignStatus = SignStatus.SinFirma;
                     db.SaveChanges();
                     string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, d.Employee.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"));
+                    SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
                     if (d.Company.SMSBalance.Value > 0 && d.Company.TotalSMSPurchased > 0)
                     {
                         //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
@@ -635,7 +636,7 @@ namespace CfdiService.Controllers
                         try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance)); } catch { }
 
                     }
-                    SendEmail.SendEmailMessage(d.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
+                    
                 }
 
 
