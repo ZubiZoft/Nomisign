@@ -567,6 +567,12 @@ namespace CfdiService.Controllers
                 if (client != null)
                     doc.ClientCompanyId = client.ClientCompanyID;
             }
+            else
+            {
+                Client client = db.FindClientByRfc(emisorRfc.Value);
+                if (client != null)
+                    doc.ClientCompanyId = client.ClientCompanyID;
+            }
 
             Employee emp = db.FindEmployeeByCURPCompany(company.CompanyId, (string)receptorCurp);
             if (emp == null)

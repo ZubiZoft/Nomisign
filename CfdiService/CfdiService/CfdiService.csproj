@@ -52,7 +52,7 @@
       <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
     <Reference Include="DocuSign">
-      <HintPath>..\..\..\NomiSign\LibreriasNOM151Net\bin\DocuSign.dll</HintPath>
+      <HintPath>..\..\..\DocuSign.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
@@ -108,6 +108,8 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web.Cors, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Cors.5.2.3\lib\net45\System.Web.Cors.dll</HintPath>
       <Private>True</Private>
@@ -146,9 +148,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Connected Services\ReachcoreService\CfdiService.ReachcoreService.GeneraConstanciaResponse.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Content>
+    <Content Include="Connected Services\ReachcoreService\CfdiService.ReachcoreService.GeneraEstampillaResponse.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Content>
+    <None Include="Connected Services\ReachcoreService\configuration91.svcinfo" />
+    <None Include="Connected Services\ReachcoreService\configuration.svcinfo" />
+    <None Include="Connected Services\ReachcoreService\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
     <Content Include="DocumentHandler.ashx" />
+    <None Include="Connected Services\ReachcoreService\service.wsdl" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -165,6 +180,11 @@
   <ItemGroup>
     <Compile Include="Authentication\EmployeeIdentity.cs" />
     <Compile Include="Authentication\EmployeePrincipal.cs" />
+    <Compile Include="Connected Services\ReachcoreService\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
     <Compile Include="Controllers\ClientController.cs" />
     <Compile Include="Controllers\ClientUserController.cs" />
     <Compile Include="Controllers\CompaniesController.cs" />
@@ -228,7 +248,12 @@
     <Compile Include="Startup.cs" />
     <Compile Include="Strings.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Connected Services\ReachcoreService\" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

@@ -13,8 +13,10 @@ namespace CfdiService.Services
 {
     public class Nom151Service
     {
-        private static readonly string _pfxFileName = @"C:\inetpub\wwwroot\nomiadmin\nomisign.pfx";
-        private static readonly string _pfxFilePassword = "N0M1secure750";
+        private static readonly string _reachcoreUser = System.Configuration.ConfigurationManager.AppSettings["ReachcoreUser"];
+        private static readonly string _reachcorePassword = System.Configuration.ConfigurationManager.AppSettings["ReachcorePassword"];
+        private static readonly string _pfxFileName = @"C:\NOM151Cert\Maria Estela Gonzalez Villaseñor.p12";
+        private static readonly string _pfxFilePassword = "N0misignR0cks";
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public static string CreateNom151(string pdfPath, Document document)
@@ -53,7 +55,7 @@ namespace CfdiService.Services
                 {
                     DerObjectIdentifier DERObjectIdentifier = new DerObjectIdentifier(ASN1Helper.NOM_I_PERSONA_MORAL);
                     idUsr.setPersonaFisicaMoral(DERObjectIdentifier);
-                    DerUtf8String DERUTF8String = new DerUtf8String("Requordit.MX SA de CV");
+                    DerUtf8String DERUTF8String = new DerUtf8String("REQUORDIT.MX SA de CV");
                     razonSocial.setIdPersonaMoral(DERUTF8String);
                 }
                 else
@@ -106,9 +108,9 @@ namespace CfdiService.Services
                     IdentificadorPersona idRepresentante = new IdentificadorPersona();
                     NombreRazonSocialIdU representante = new NombreRazonSocialIdU();
                     NombrePersonaFisica personaFisica = new NombrePersonaFisica();
-                    personaFisica.setNombre("Maria Estela");
-                    personaFisica.setApellido1("Gonzalez");
-                    personaFisica.setApellido2("Villaseñor");
+                    personaFisica.setNombre("MARIA ESTELA");
+                    personaFisica.setApellido1("GONZALEZ");
+                    personaFisica.setApellido2("VILLASEÑOR");
                     representante.setIdPersonaFisica(personaFisica);
                     idRepresentante.setNombre(representante);
 
@@ -156,6 +158,26 @@ namespace CfdiService.Services
                 log.Info(ex);
             }
             return null;
+        }
+
+        public static string GenerateNOM151(string expediente)
+        {
+            ReachcoreService.ServiceSoapClient client = new ReachcoreService.ServiceSoapClient();
+            string cert = null;
+            try
+            {
+                log.Info(string.Format("Cert U:{0} - C:{1}, E:{2}", _reachcoreUser, _reachcorePassword, expediente));
+                cert = client.GeneraConstancia(_reachcoreUser, _reachcorePassword, expediente);
+                log.Info(cert);
+            }
+            catch (Exception ex)
+            {
+                log.Info(ex);
+                log.Info(ex.Message);
+                log.Info(ex.Source);
+                log.Info(ex.StackTrace);
+            }
+            return cert;
         }
     }
 }

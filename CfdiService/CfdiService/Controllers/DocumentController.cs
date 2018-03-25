@@ -821,8 +821,25 @@ namespace CfdiService.Controllers
             Document document = null;
             try
             {
-                document = db.Documents.Find(id);
-                db.Entry(document).Reference(b => b.Batch).Load();
+                if (User.Identity.GetRole().Equals("EMPLOYEE"))
+                {
+                    var eId = int.Parse(User.Identity.GetName());
+                    document = db.Documents.Where(d => d.DocumentId == id && d.EmployeeId == eId).FirstOrDefault();
+                }
+                else if (User.Identity.GetRole().Equals("ADMIN"))
+                {
+                    var user = db.Users.Find(int.Parse(User.Identity.GetName()));
+                    if (user.UserType == UserAdminType.GlobalAdmin)
+                        document = db.Documents.Where(d => d.DocumentId == id).FirstOrDefault();
+                    else
+                        document = db.Documents.Where(d => d.DocumentId == id && d.CompanyId == user.CompanyId).FirstOrDefault();
+                }
+                else
+                {
+                    var client = db.ClientUsers.Find(int.Parse(User.Identity.GetName()));
+                    document = db.Documents.Where(d => d.DocumentId == id && d.ClientCompanyId == client.ClientCompanyID).FirstOrDefault();
+                }
+                
                 if (document == null)
                 {
                     return NotFound();
@@ -887,6 +904,7 @@ namespace CfdiService.Controllers
                 try
                 {
                     document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document), document);
+                    document.Nom151Cert = Nom151Service.GenerateNOM151(document.Nom151);
                     log.Info(document.Nom151);
                 }
                 catch (Exception ex) { log.Info(ex.ToString()); }
