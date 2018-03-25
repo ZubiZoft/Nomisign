@@ -619,7 +619,7 @@ namespace CfdiService.Controllers
                     if (d.Company.SMSBalance.Value > 0 && d.Company.TotalSMSPurchased > 0)
                     {
                         //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                        string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS + ", http://{0}/nomisign", httpDomain);
+                        string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, d.Company.CompanyName, d.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
                         //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
                         //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
                         string res = "";
