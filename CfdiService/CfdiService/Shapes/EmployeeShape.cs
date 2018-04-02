@@ -103,8 +103,8 @@ namespace CfdiService.Shapes
             var now = DateTime.Now;
             if(DateTime.TryParse(employeeShape.LastLogin, out now))
             { employee.LastLoginDate = now; }
-            employee.EmployeeId = employeeShape.EmployeeId;
-            employee.CompanyId = employeeShape.CompanyId;
+            //employee.EmployeeId = employeeShape.EmployeeId;
+            //employee.CompanyId = employeeShape.CompanyId;
             employee.FirstName = employeeShape.FirstName;
             employee.LastName1 = employeeShape.LastName1;
             employee.LastName2 = employeeShape.LastName2;

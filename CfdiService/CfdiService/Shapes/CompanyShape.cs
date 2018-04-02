@@ -81,7 +81,7 @@ namespace CfdiService.Shapes
             company.DocStoragePath1 = String.IsNullOrEmpty(companyShape.DocStoragePath1) ?  Guid.NewGuid().ToString(): companyShape.DocStoragePath1; 
             company.DocStoragePath2 = String.IsNullOrEmpty(companyShape.DocStoragePath2) ? Guid.NewGuid().ToString() : companyShape.DocStoragePath2; 
             company.CompanyRFC = companyShape.CompanyRFC;
-            company.BillingEmailAddress = companyShape.BillingEmailAddress;
+            company.BillingEmailAddress = companyShape.BillingEmailAddress ?? "";
             company.AccountStatus = (AccountStatusType)companyShape.AccountStatus;
             company.NewEmployeeGetDoc = companyShape.NewEmployeeGetDoc ? NewEmployeeGetDocType.AddDocument : NewEmployeeGetDocType.None;
             company.NewEmployeeDocument = companyShape.NewEmployeeDocument;

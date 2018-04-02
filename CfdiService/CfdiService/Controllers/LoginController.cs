@@ -384,35 +384,47 @@ namespace CfdiService.Controllers
         [Route("clientlogin")]
         public IHttpActionResult DoClientLogin(ClientUserShape clientUserShape)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
 
-            ClientUser clientUser;
-            var userByEmail = db.ClientUsers.Where(u => u.EmailAddress.Equals(clientUserShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            if (userByEmail.Count != 1)
-            {
-                log.Info("Invalid login request for user (wrong username): " + clientUserShape.EmailAddress);
-                return BadRequest("Invalid Login Data");
-            }
-            else
-            {
-                clientUser = userByEmail[0];
-            }
 
-            if (null != clientUser.PasswordHash &&
-                clientUser.UserStatus == UserStatusType.Active &&
-                clientUser.PasswordHash == EncryptionService.Sha256_hash(clientUserShape.PasswordHash, string.Empty))
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                ClientUser clientUser;
+                var userByEmail = db.ClientUsers.Where(u => u.EmailAddress.Equals(clientUserShape.EmailAddress, StringComparison.InvariantCultureIgnoreCase)).ToList();
+                if (userByEmail.Count != 1)
+                {
+                    log.Info("Invalid login request for user (wrong username): " + clientUserShape.EmailAddress);
+                    return BadRequest("Invalid Login Data");
+                }
+                else
+                {
+                    clientUser = userByEmail[0];
+                }
+
+                if (null != clientUser.PasswordHash &&
+                    clientUser.UserStatus == UserStatusType.Active &&
+                    clientUser.PasswordHash == EncryptionService.Sha256_hash(clientUserShape.PasswordHash, string.Empty))
+                {
+                    clientUser.LastLogin = DateTime.Now;
+                    clientUser.TokenTimeout = DateTime.Now;
+                    clientUser.SessionToken = TokenGenerator.GetToken();
+                    db.SaveChanges();
+                    // return DB user.  Not shape because need user stats as a int
+                    // Dont return password 
+                    clientUser.PasswordHash = string.Empty;
+                    return Ok(clientUser);
+                }
+            }
+            catch (Exception ex)
             {
-                clientUser.LastLogin = DateTime.Now;
-                clientUser.TokenTimeout = DateTime.Now;
-                clientUser.SessionToken = TokenGenerator.GetToken();
-                db.SaveChanges();
-                // return DB user.  Not shape because need user stats as a int
-                // Dont return password 
-                clientUser.PasswordHash = string.Empty;
-                return Ok(clientUser);
+                log.Info(ex);
+                log.Info(ex.Message);
+                log.Info(ex.Source);
+                log.Info(ex.StackTrace);
             }
 
             log.Info("Invalid login request for user (wrong password): " + clientUserShape.EmailAddress);
@@ -449,6 +461,8 @@ namespace CfdiService.Controllers
                 {
                     return 0;
                 }
+                if (e.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.None)
+                    continue;
                 var countDocs = db.CountDocumentsByCompanyNUser(e.CompanyId, e.EmployeeId);
                 if (countDocs > 1)
                 {

@@ -319,42 +319,49 @@ namespace CfdiService.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+            //log.Info("1");
             if (id != employeeShape.EmployeeId)
             {
                 return BadRequest();
             }
+            //log.Info("2");
             Employee employee = db.Employees.Find(id);
             if (employee == null)
             {
                 return NotFound();
             }
-            var emps = db.Employees.Where(e => e.CURP == employee.CURP).ToList();
-            foreach (var e in emps)
-            {
-                // transform to data model
-                EmployeeShape.ToDataModel(employeeShape, e);
-            }
+            //log.Info("3");
+
+            // transform to data model
+            EmployeeShape.ToDataModel(employeeShape, employee);
+
+            //log.Info("4");
             //seperate service for password change
             // but for one time updates for auto generated users need to set code
             try
             {
+                //log.Info("5");
+
                 if (employeeShape.EmployeeStatus == EmployeeStatusType.PasswordAwaitingLocked)
                 {
+                    //log.Info("6");
                     EmployeesCode codes = db.EmployeeSecurityCodes.Find(employee.EmployeeId);
                     if (codes != null)
                     {
+                        //log.Info("7");
                         codes.Vcode = EncryptionService.GenerateSecurityCode();
                         codes.GeneratedDate = DateTime.Now;
                     }
                     else
                     {
+                        //log.Info("8");
                         // verify a codes row does not already exist, if not create one, otherwise add new vcode
                         codes = new EmployeesCode() { EmployeeId = employee.EmployeeId, GeneratedDate = DateTime.Now, Prefix = Guid.NewGuid().ToString(), Vcode = EncryptionService.GenerateSecurityCode() };
                         db.EmployeeSecurityCodes.Add(codes);
                     }
+                    //log.Info("9");
                     db.SaveChanges();
-
+                    //log.Info("10");
                     string customsizedmail = string.Format(@"<!doctype html>
 <html lang=""en"">
 <head>
@@ -423,24 +430,30 @@ namespace CfdiService.Controllers
 </body>
 </html>
 ", httpDomain);
+                    //log.Info("11");
                     customsizedmail = customsizedmail.Replace("#-SECCODE-#", codes.Vcode);
                     customsizedmail = customsizedmail.Replace("#-ID-#", employee.EmployeeId.ToString());
                     customsizedmail = customsizedmail.Replace("#-COMPANY-#", employee.Company.CompanyName);
                     string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, employee.EmployeeId, codes.Vcode);
                     string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, employee.Company.CompanyName, httpDomain, employee.EmployeeId, codes.Vcode);
+                    //log.Info("12");
                     if (null != employee.CellPhoneNumber)
                     {
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, msgBodyMobile);
                         //SendSMS.SendSMSMsg(employee.CellPhoneNumber, String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId));
+                        //log.Info("13");
                         if (employee.Company.SMSBalance > 0 && employee.Company.TotalSMSPurchased > 0)
                         {
+                            //log.Info("14");
                             string res = "";
                             SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", employee.CellPhoneNumber), out res);
                             employee.Company.SMSBalance -= 1;
+                            //log.Info("15");
                             db.SaveChanges();
                         }
                         if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
                         {
+                            //log.Info("16");
                             try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch(Exception ex) { log.Error("Error sending Email - " + employee.Company.BillingEmailAddress, ex); }
                             try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
                             try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - estela.gonzalez@nomisign.com ", ex); }
@@ -450,21 +463,27 @@ namespace CfdiService.Controllers
                         }
                         //SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
                     }
-
+                    //log.Info("17");
                     SendEmail.SendEmailMessage(employee.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, customsizedmail);
+                    //log.Info("18");
                 }
             }
             catch (Exception ex)
             {
+                log.Info(ex);
+                log.Info(ex.Source);
+                log.Info(ex.Message);
+                log.Info(ex.StackTrace);
                 log.Error("Error sending Msg - Adding employee: " + employeeShape.EmployeeId, ex);
                 return BadRequest(ex.Message);
             }
 
+            log.Info("19");
             db.SaveChanges();
-
+            log.Info("20");
             db.CreateLog(OperationTypes.EmployeeUpdated, string.Format("Empleado actualizado {0}", id), 
                     User, id, ObjectTypes.Employee);
-
+            log.Info("21");
             return Ok(employeeShape);
         }
 
