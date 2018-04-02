@@ -297,7 +297,12 @@ namespace CfdiService.Controllers
 
                     //Checking for duplicate Receipt XML Hash
                     if (CheckifReceiptAlreadyExists(filetemp))
+                    {
+                        log.Error("Receipt already exists for user: " + filetemp.EmployeeCURP);
+                        log.Error("Receipt already exists: " + filetemp.FileName);
                         continue;
+                    }
+                    
 
                     if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
                     Batch batch = db.Batches.Find(BatchId);

@@ -115,7 +115,7 @@ namespace CfdiService.Upload
                     }
 
                     
-                    if (counter == 60 || total == uploadFiles.Count)
+                    if (counter == 50 || total == uploadFiles.Count)
                     {
                         files.Add(f);
                         counter = 0;
@@ -135,10 +135,22 @@ namespace CfdiService.Upload
                 //Console.WriteLine(string.Format("Nominas to be uploaded: {0}", files.Count));
                 if (files.Count > 0)
                 {
+                    string directoryn = Path.Combine(Environment.CurrentDirectory, "Backup");
+                    if (!Directory.Exists(directoryn))
+                    {
+                        Directory.CreateDirectory(directoryn);
+                    }
+
                     foreach (List<FileUpload> up in files)
                     {
                         Console.WriteLine(string.Format("Nominas to be uploaded: {0}", up.Count));
                         br = cfdiService.UploadFiles(CompanyId, up);
+                        List<FileUpload> temp = up;
+                        foreach (FileUpload fl in temp)
+                        {
+                            File.Move(fl.FileName, Path.Combine(directoryn, Path.GetFileName(fl.FileName)));
+                            File.Move(Path.ChangeExtension(fl.FileName, "pdf"), Path.Combine(directoryn, Path.GetFileName(Path.ChangeExtension(fl.FileName, "pdf"))));
+                        }
                     }
                     Console.WriteLine("Upload Completed");
                     LogErrorMessage(string.Format("Upload Completed"));
