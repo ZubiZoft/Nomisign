@@ -880,15 +880,16 @@ namespace CfdiService.Controllers
                 if (document.AlwaysShow == 0)
                 {
                     document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
+                    document.Company.SignatureBalance -= 1;
                 }
                 else
                 {
-                    document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
+                    //document.PathToFile = Path.GetFileNameWithoutExtension(DigitalSignatures.SignPdfDocument(document));
                 }
                 db.CreateLog(OperationTypes.SignedBy, string.Format("Documento Firmado {0}", document.DocumentId), User,
                         document.DocumentId, ObjectTypes.Document);
             }
-            document.Company.SignatureBalance -= 1;
+            
             document.SignStatus = (SignStatus)documentShape.SignStatus;
             log.Info("Employee Concern : " + documentShape.EmployeeConcern);
             if (documentShape.SignStatus == 3)
