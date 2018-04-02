@@ -133,6 +133,22 @@ namespace CfdiService.Controllers
             objCtx.ExecuteStoreCommand("truncate table Logs");
             objCtx.ExecuteStoreCommand("delete from dbo.Batches");
             objCtx.ExecuteStoreCommand("delete from Employees");
+
+            var c = db.Companies.Find(10);
+            c.CompanyName = "";
+            c.CompanyRFC = "";
+            c.Address1 = "";
+            c.Address2 = "";
+            c.PostalCode = "";
+            c.City = "";
+            c.State = "";
+            c.NewEmployeeDocument = "";
+            c.NewEmployeeGetDoc = NewEmployeeGetDocType.None;
+
+            db.Entry(c).State = EntityState.Modified;
+
+            db.SaveChanges();
+
             return Ok("Success");
         }
 
