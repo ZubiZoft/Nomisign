@@ -245,6 +245,13 @@ namespace CfdiService.Controllers
         public IHttpActionResult UploadFilesFront(int companyId, [FromBody] List<FileUpload> flist)
         {
             Company company = db.Companies.Find(companyId);
+            if (User.Identity.GetRole().Equals("UPLOADER"))
+            {
+                if (!User.Identity.GetName().Equals(company.ApiKey))
+                {
+                    Conflict();
+                }
+            }
             if (company.SignatureBalance >= flist.Count)
             {
                 Batch batchn = new Batch
