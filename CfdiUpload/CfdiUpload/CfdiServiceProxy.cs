@@ -98,8 +98,7 @@ namespace CfdiService.Upload
                 Task<string> resultTask = response.Content.ReadAsAsync<string>();
                 resultTask.Wait();
                 result = resultTask.Result;
-                Console.WriteLine("Upload Completed");
-                LogErrorMessage(string.Format("Upload Completed"));
+                
             }
             else
             {

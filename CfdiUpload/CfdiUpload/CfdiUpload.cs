@@ -83,8 +83,11 @@ namespace CfdiService.Upload
             try
             {
                 List<string> uploadFiles = GetUploadFiles();
-                List<FileUpload> files = new List<FileUpload>();
+                List<List<FileUpload>> files = new List<List<FileUpload>>();
                 //CreateBatch(uploadFiles.Count);
+                int counter = 0;
+                List<FileUpload> f = new List<FileUpload>();
+                int total = 1;
                 foreach (string fn in uploadFiles)
                 {
                     string xmlContent = File.ReadAllText(fn);
@@ -100,22 +103,51 @@ namespace CfdiService.Upload
                     };
 
                     if (ValidateValidRfc(fileUpload.XMLContent))
-                        files.Add(fileUpload);
+                    {
+                        f.Add(fileUpload);
+                        counter++;
+                    }
                     else
+                    {
+                        Console.WriteLine($"{fn} File Is not going to be Uploaded.");
+                        LogErrorMessage(string.Format($"{fn} File Is not going to be Uploaded."));
                         LogErrorMessage(string.Format("File Is not going to be Uploaded:  {0}", fileUpload.XMLContent));
+                    }
 
+                    
+                    if (counter == 60 || total == uploadFiles.Count)
+                    {
+                        files.Add(f);
+                        counter = 0;
+                        f = new List<FileUpload>();
+                    }
+
+                    total++;
                     //if (br.ResultCode == BatchResultCode.Ok)
                     //    File.Move(fn, fn + ".tx");
                     //else
                     //    throw new CfdiUploadException(br.ResultCode);
                 }
 
-                LogErrorMessage(string.Format("Files to upload:  {0}", files.Count));
+                LogErrorMessage(string.Format("Packages to upload:  {0}", files.Count));
 
                 string br = "";
-                Console.WriteLine(string.Format("Nominas to be uploaded: {0}", files.Count));
+                //Console.WriteLine(string.Format("Nominas to be uploaded: {0}", files.Count));
                 if (files.Count > 0)
-                    br = cfdiService.UploadFiles(CompanyId, files);
+                {
+                    foreach (List<FileUpload> up in files)
+                    {
+                        Console.WriteLine(string.Format("Nominas to be uploaded: {0}", up.Count));
+                        br = cfdiService.UploadFiles(CompanyId, up);
+                    }
+                    Console.WriteLine("Upload Completed");
+                    LogErrorMessage(string.Format("Upload Completed"));
+                }
+                else
+                {
+                    Console.WriteLine("There aren't files to upload");
+                    LogErrorMessage(string.Format("There aren't files to upload"));
+                }
             }
             catch (Exception ex) { LogErrorMessage(string.Format("Ex Stacktrace:  {0}", ex.StackTrace)); LogErrorMessage(string.Format("Ex Message:  {0}", ex.Message)); }
         }
