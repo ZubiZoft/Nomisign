@@ -141,6 +141,7 @@ namespace CfdiService.Upload
                         Directory.CreateDirectory(directoryn);
                     }
 
+                    int nmtotal = 0;
                     foreach (List<FileUpload> up in files)
                     {
                         Console.WriteLine(string.Format("Nominas to be uploaded: {0}", up.Count));
@@ -151,6 +152,8 @@ namespace CfdiService.Upload
                             File.Move(fl.FileName, Path.Combine(directoryn, Path.GetFileName(fl.FileName)));
                             File.Move(Path.ChangeExtension(fl.FileName, "pdf"), Path.Combine(directoryn, Path.GetFileName(Path.ChangeExtension(fl.FileName, "pdf"))));
                         }
+                        nmtotal += up.Count;
+                        Console.WriteLine(string.Format("Total Uploaded Nominas: {0}", nmtotal));
                     }
                     Console.WriteLine("Upload Completed");
                     LogErrorMessage(string.Format("Upload Completed"));
