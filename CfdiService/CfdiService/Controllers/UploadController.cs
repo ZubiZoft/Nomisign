@@ -476,6 +476,7 @@ namespace CfdiService.Controllers
 
             XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
             XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+            XNamespace tfd = "http://www.sat.gob.mx/TimbreFiscalDigital";
 
             //XElement elem = root.Element(cfdi + "Emisor");
             XElement elem = null;
@@ -502,8 +503,12 @@ namespace CfdiService.Controllers
             ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
             XElement nomina = null;
             DescendantsCheckXMLTagValue(nomina12, "Nomina", complementoelem, ref nomina);
+            XElement timbrefiscaldigital = null;
+            DescendantsCheckXMLTagValue(tfd, "TimbreFiscalDigital", complementoelem, ref timbrefiscaldigital);
             XAttribute payPeriod = null;
             AttributeCheckXMLTagValue("FechaFinalPago", nomina, ref payPeriod);
+            XAttribute payPeriodInit = null;
+            AttributeCheckXMLTagValue("FechaInicialPago", nomina, ref payPeriodInit);
             XElement nominaReceptor = null;
             DescendantsCheckXMLTagValue(nomina12, "Receptor", complementoelem, ref nominaReceptor);
             XAttribute receptorCurp = null;
@@ -511,6 +516,8 @@ namespace CfdiService.Controllers
             // try to get client RFC - may not be one
             XElement nominaSubcontracion = null;
             XAttribute clientRfc = null;
+            XAttribute uuid = null;
+            AttributeCheckXMLTagValue("UUID", timbrefiscaldigital, ref uuid);
 
             try
             {
@@ -683,7 +690,9 @@ namespace CfdiService.Controllers
             doc.PayAmount = Decimal.Parse(payAmount.Value);
             doc.FileHash = upload.FileHash;
             doc.PayperiodDate = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
+            doc.StartingPeriod = DateTime.ParseExact((string)payPeriodInit, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            doc.EndPeriod = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            doc.UUID = uuid.Value;
         }
 
         private void AttributeCheckXMLTagValue(string tag, XElement elem, ref XAttribute element)

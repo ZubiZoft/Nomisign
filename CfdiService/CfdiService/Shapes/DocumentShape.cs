@@ -25,6 +25,9 @@ namespace CfdiService.Shapes
         public decimal PayAmount { get; set; }
         public int AlwaysShow { get; set; }
         public string NomCert { get; set; }
+        public DateTime StartingPeriod { get; set; }
+        public DateTime EndPeriod { get; set; }
+        public string UUID { get; set; }
 
         public class LinksClass
         {
@@ -50,9 +53,12 @@ namespace CfdiService.Shapes
                 PayAmount = document.PayAmount,
                 UploadTime = document.UploadTime.ToShortDateString(),
                 PayperiodDate = document.PayperiodDate.ToShortDateString(),
-                SignStatusText =  document.SignStatus == Model.SignStatus.SinFirma ?  "Sin Firma": document.SignStatus.ToString(), // this Sin Firma needs addressed and not hard coded
+                SignStatusText = document.SignStatus == Model.SignStatus.SinFirma ? "Sin Firma" : document.SignStatus.ToString(), // this Sin Firma needs addressed and not hard coded
                 SignStatus = (int)document.SignStatus,
                 NomCert = document.Nom151Cert,
+                StartingPeriod = document.StartingPeriod,
+                EndPeriod = document.EndPeriod,
+                UUID = document.UUID,
                 Links = new LinksClass()
             };
 

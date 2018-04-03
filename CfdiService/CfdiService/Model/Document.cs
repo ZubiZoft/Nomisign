@@ -28,5 +28,9 @@ namespace CfdiService.Model
         public decimal PayAmount { get; set; }
         public string Nom151 { get; set; }
         public string Nom151Cert { get; set; }
+        public DateTime StartingPeriod { get; set; }
+        public DateTime EndPeriod { get; set; }
+        public string UUID { get; set; }
+
     }
 }
