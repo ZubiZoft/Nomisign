@@ -98,7 +98,12 @@ namespace CfdiService.Upload
                 Task<string> resultTask = response.Content.ReadAsAsync<string>();
                 resultTask.Wait();
                 result = resultTask.Result;
-                
+
+            }
+            else if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                Console.WriteLine("Upload was not completed. Please review the company ID, API Key and Company RFC in your configuration file.");
+                LogErrorMessage(string.Format("Upload was not completed. Please review the company ID, API Key and Company RFC in your configuration file."));
             }
             else
             {

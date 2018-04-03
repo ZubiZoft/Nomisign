@@ -106,12 +106,12 @@ namespace CfdiService.Services
 
                 // make sure path exists, if not this will create it
                 Directory.CreateDirectory(fullFilePath);
-                using (Stream streampdf = GenerateStreamFromString(fileInfo.PDFContent))
+                /*using (Stream streampdf = GenerateStreamFromString(fileInfo.PDFContent))
                 {
                     Aspose.Pdf.Document pdfDocument = new Aspose.Pdf.Document(streampdf, Path.Combine(fullFilePath, fileInfo.FileName));
                     pdfDocument.Pages.Add();
                     pdfDocument.Save(Path.Combine(fullFilePath, fileInfo.FileName));
-                }
+                }*/
                     
                 // need to manage root path from this class properties
                 SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.PDFContent); 
