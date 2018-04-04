@@ -773,10 +773,11 @@ namespace CfdiService.Controllers
                             // var fName = Path.Combine(NomiFileAccess.GetFilePath(d), d.PathToFile + ".pdf");
                             var fName = NomiFileAccess.GetFilePath(d);
                             log.Info(fName);
-                            archive.CreateEntryFromFile(fName, i.ToString() + ".pdf");
+                            string fullname = d.Employee.FullName.Replace(" ", String.Empty);
+                            archive.CreateEntryFromFile(fName, string.Format("{0}_{1}_{2}.pdf",d.Company.CompanyRFC, fullname, d.PayperiodDate.ToString("dd-MM-yyyy")));
                             if (d.Nom151 != null)
                             {
-                                var entryNom = archive.CreateEntry(i.ToString() + ".txt");
+                                var entryNom = archive.CreateEntry(string.Format("{0}_{1}_{2}.nom151", d.Company.CompanyRFC, fullname, d.PayperiodDate.ToString("dd-MM-yyyy")));
                                 using (var writer = new StreamWriter(entryNom.Open()))
                                 {
                                     writer.WriteLine(d.Nom151);

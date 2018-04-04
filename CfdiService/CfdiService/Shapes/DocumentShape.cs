@@ -25,8 +25,8 @@ namespace CfdiService.Shapes
         public decimal PayAmount { get; set; }
         public int AlwaysShow { get; set; }
         public string NomCert { get; set; }
-        public DateTime StartingPeriod { get; set; }
-        public DateTime EndPeriod { get; set; }
+        public DateTime? StartingPeriod { get; set; }
+        public DateTime? EndPeriod { get; set; }
         public string UUID { get; set; }
 
         public class LinksClass

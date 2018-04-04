@@ -160,7 +160,7 @@ namespace CfdiService.Controllers
             }
             finally
             { // commit to DB
-                db.Documents.Add(newDoc);
+                //db.Documents.Add(newDoc);
                 batch.ActualItemCount++;
                 db.SaveChanges();
             }
@@ -271,143 +271,156 @@ namespace CfdiService.Controllers
                 db.Batches.Add(batchn);
                 db.SaveChanges();
                 int BatchId = batchn.BatchId;
-                foreach (FileUpload filetemp in flist)
+                try
                 {
-                    log.Info("XMLContent: " + filetemp.XMLContent + "\n");
-                    log.Info("Filehash: " + filetemp.FileHash + "\n");
-
-                    if (string.IsNullOrEmpty(filetemp.XMLContent))
+                    foreach (FileUpload filetemp in flist)
                     {
-                        continue;
-                    }
-                    byte[] content = Encoding.UTF8.GetBytes(filetemp.XMLContent);
-                    XElement root;
-                    using (MemoryStream ms = new MemoryStream(content))
-                        root = XElement.Load(ms);
+                        log.Info("XMLContent: " + filetemp.XMLContent + "\n");
+                        log.Info("Filehash: " + filetemp.FileHash + "\n");
 
-                    XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
-                    XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
-
-                    XElement complementoelem = null;
-                    ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
-                    XElement nominaSubcontracion = null;
-                    DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
-                    XAttribute clientRfc = null;
-                    AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
-
-                    if (clientRfc != null)
-                    {
-                        Client client = db.FindClientByRfc(clientRfc.Value);
-                        if (client == null)
+                        if (string.IsNullOrEmpty(filetemp.XMLContent))
+                        {
                             continue;
-                    }
-
-                    //Checking for duplicate Receipt XML Hash
-                    if (CheckifReceiptAlreadyExists(filetemp))
-                    {
-                        log.Error("Receipt already exists for user: " + filetemp.EmployeeCURP);
-                        log.Error("Receipt already exists: " + filetemp.FileName);
-                        continue;
-                    }
-                    
-
-                    if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
-                    Batch batch = db.Batches.Find(BatchId);
-                    if (batch == null)
-                    {
-                        log.Error("Error adding document: batch not found: " + BatchId);
-                        return BadRequest();
-                    }
-                    /*if (batch.ItemCount == batch.ActualItemCount)
-                    {
-                        log.Error("Error adding document: canceling batch due to item count: " + BatchId);
-                        CancelBatch(batch);
-                        return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
-                    }*/
-                    Document newDoc = new Model.Document
-                    {
-                        Batch = batch,
-                        UploadTime = DateTime.Now,
-                        SignStatus = SignStatus.SinFirma,
-                        PathToFile = Guid.NewGuid().ToString(),
-                        CompanyId = company.CompanyId
-                    };
-
-                    try
-                    {
-                        // this only applies to XML vis bulk uploader
-                        if (!string.IsNullOrEmpty(filetemp.XMLContent))
-                        {
-                            EvaluateBulkUpload(filetemp, batch, newDoc, company);
                         }
-                        else // this only applies to admin app uploads where no xml is supplied
+                        byte[] content = Encoding.UTF8.GetBytes(filetemp.XMLContent);
+                        XElement root;
+                        using (MemoryStream ms = new MemoryStream(content))
+                            root = XElement.Load(ms);
+
+                        XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
+                        XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+
+                        XElement complementoelem = null;
+                        ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
+                        XElement nominaSubcontracion = null;
+                        DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
+                        XAttribute clientRfc = null;
+                        AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+
+                        if (clientRfc != null)
                         {
-                            EvaluateAdminUpload(filetemp, batch, newDoc);
+                            Client client = db.FindClientByRfc(clientRfc.Value);
+                            if (client == null)
+                                continue;
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error("Error adding document: verification failed", ex);
-                        // log exception
-                        return BadRequest();
-                    }
 
-                    SaveContent(filetemp, newDoc);
-
-                    db.Documents.Add(newDoc);
-                    batch.ActualItemCount++;
-                    db.SaveChanges();
-
-                    db.CreateLog(OperationTypes.DocumentStored, string.Format("Nuevo documento almacenado {0}", newDoc.DocumentId), User,
-                            newDoc.DocumentId, ObjectTypes.Document);
-
-                    var empDoc = db.Employees.Find(newDoc.EmployeeId);
-                    log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
-
-                    // send notifications - if fail, log but dont return error code.
-                    try
-                    {
-                        // Send SMS alerting employee of new docs
-                        // send notifications
-                        string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
-                        SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
-                        if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                        //Checking for duplicate Receipt XML Hash
+                        if (CheckifReceiptAlreadyExists(filetemp))
                         {
-                            //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
-                            string res = "";
-                            var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                            if (newDoc.Company.SMSBalance > 0)
+                            log.Error("Receipt already exists for user: " + filetemp.EmployeeCURP);
+                            log.Error("Receipt already exists: " + filetemp.FileName);
+                            continue;
+                        }
+
+
+                        if (!filetemp.XMLContent.Contains("<cfdi:Comprobante") || !filetemp.XMLContent.Contains("<nomina12:Nomina") || string.IsNullOrEmpty(filetemp.PDFContent)) { continue; }
+                        Batch batch = db.Batches.Find(BatchId);
+                        if (batch == null)
+                        {
+                            log.Error("Error adding document: batch not found: " + BatchId);
+                            return BadRequest();
+                        }
+                        /*if (batch.ItemCount == batch.ActualItemCount)
+                        {
+                            log.Error("Error adding document: canceling batch due to item count: " + BatchId);
+                            CancelBatch(batch);
+                            return Ok(new BatchResult(batch.BatchId, BatchResultCode.Cancelled));
+                        }*/
+                        Document newDoc = new Model.Document
+                        {
+                            Batch = batch,
+                            UploadTime = DateTime.Now,
+                            SignStatus = SignStatus.SinFirma,
+                            PathToFile = Guid.NewGuid().ToString(),
+                            CompanyId = company.CompanyId
+                        };
+
+                        try
+                        {
+                            // this only applies to XML vis bulk uploader
+                            if (!string.IsNullOrEmpty(filetemp.XMLContent))
                             {
-                                if (newDoc.Company.SMSBalance > 0 && newDoc.Company.TotalSMSPurchased > 0)
-                                {
-                                    SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
-                                    newDoc.Company.SMSBalance -= 1;
-                                    db.SaveChanges();
-                                }
-                                if (newDoc.Company.SMSBalance <= 10 && newDoc.Company.TotalSMSPurchased > 0)
-                                {
-                                    try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                    try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                    try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                    try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                    try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-
-                                }
+                                EvaluateBulkUpload(filetemp, batch, newDoc, company);
                             }
-                            else
+                            else // this only applies to admin app uploads where no xml is supplied
                             {
-                                string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
-                                SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBodySMSWarning);
+                                EvaluateAdminUpload(filetemp, batch, newDoc);
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            log.Error("Error adding document: verification failed", ex);
+                            // log exception
+                            return BadRequest();
+                        }
+
+                        SaveContent(filetemp, newDoc);
+
+                        //db.Documents.Add(newDoc);
+                        batch.ActualItemCount++;
+                        db.SaveChanges();
+
+                        db.CreateLog(OperationTypes.DocumentStored, string.Format("Nuevo documento almacenado {0}", newDoc.DocumentId), User,
+                                newDoc.DocumentId, ObjectTypes.Document);
+
+                        var empDoc = db.Employees.Find(newDoc.EmployeeId);
+                        log.Info("ID Emp: " + newDoc.EmployeeId.ToString());
+
+                        // send notifications - if fail, log but dont return error code.
+                        try
+                        {
+                            // Send SMS alerting employee of new docs
+                            // send notifications
+                            string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                            SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
+                            if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
+                            {
+                                //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
+                                string res = "";
+                                var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                                if (newDoc.Company.SMSBalance > 0)
+                                {
+                                    if (newDoc.Company.SMSBalance > 0 && newDoc.Company.TotalSMSPurchased > 0)
+                                    {
+                                        SendSMS.SendSMSQuiubo(smsBody, string.Format("+52{0}", newDoc.Employee.CellPhoneNumber), out res);
+                                        newDoc.Company.SMSBalance -= 1;
+                                        db.SaveChanges();
+                                    }
+                                    if (newDoc.Company.SMSBalance <= 10 && newDoc.Company.TotalSMSPurchased > 0)
+                                    {
+                                        try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+
+                                    }
+                                }
+                                else
+                                {
+                                    string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                                    SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBodySMSWarning);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("warning adding document: one or both notifications failed to send", ex);
+                            log.Error(ex.Message);
+                            log.Error(ex.Source);
+                            log.Error(ex.StackTrace);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        log.Error("warning adding document: one or both notifications failed to send", ex);
-                        log.Error(ex.Message);
-                        log.Error(ex.Source);
-                        log.Error(ex.StackTrace);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Error UploadFilesFront: ");
+                    log.Error("Error Message: " + ex.Message);
+                    log.Error("Error Stacktrace: " + ex.StackTrace);
+                    log.Error("Error Source: " + ex.Source);
+                    log.Error("Error Inner: " + ex.InnerException);
+                    log.Error("Error : " + ex.ToString());
+                    return Conflict();
                 }
                 return Ok();
             }
@@ -463,236 +476,252 @@ namespace CfdiService.Controllers
         }
         private void EvaluateBulkUpload(FileUpload upload, Batch batch, Document doc, Company company)
         {
-            // No need for this if only a PDF doc is uploadded by admin screen
-            if (string.IsNullOrEmpty(upload.XMLContent))
-            {
-                return;
-            }
-            byte[] content = Encoding.UTF8.GetBytes(upload.XMLContent);
-            ValidateContentHash(content, upload.FileHash);
-            XElement root;
-            using (MemoryStream ms = new MemoryStream(content))
-                root = XElement.Load(ms);
-
-            XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
-            XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
-            XNamespace tfd = "http://www.sat.gob.mx/TimbreFiscalDigital";
-
-            //XElement elem = root.Element(cfdi + "Emisor");
-            XElement elem = null;
-            ElementCheckXMLTagValue(cfdi, "Emisor", root, ref elem);
-            XAttribute emisorRfc = null;
-            AttributeCheckXMLTagValue("rfc", elem, ref emisorRfc);
-            XAttribute emisorName = null;
-            AttributeCheckXMLTagValue("Nombre", elem, ref emisorName);
-            XAttribute emisorRegimenFiscal = null;
-            AttributeCheckXMLTagValue("RegimenFiscal", elem, ref emisorRegimenFiscal);
-            XElement conceptoselem = null;
-            ElementCheckXMLTagValue(cfdi, "Conceptos", root, ref conceptoselem);
-            XElement conceptoelem = null;
-            DescendantsCheckXMLTagValue(cfdi, "Concepto", conceptoselem, ref conceptoelem);
-            XAttribute payAmount = null;
-            AttributeCheckXMLTagValue("importe", conceptoelem, ref payAmount);
-            XElement Receptorelem = null;
-            ElementCheckXMLTagValue(cfdi, "Receptor", root, ref Receptorelem);
-            XAttribute receptorRfc = null;
-            AttributeCheckXMLTagValue("rfc", Receptorelem, ref receptorRfc);
-            XAttribute receptorfullName = null;
-            AttributeCheckXMLTagValue("nombre", Receptorelem, ref receptorfullName);
-            XElement complementoelem = null;
-            ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
-            XElement nomina = null;
-            DescendantsCheckXMLTagValue(nomina12, "Nomina", complementoelem, ref nomina);
-            XElement timbrefiscaldigital = null;
-            DescendantsCheckXMLTagValue(tfd, "TimbreFiscalDigital", complementoelem, ref timbrefiscaldigital);
-            XAttribute payPeriod = null;
-            AttributeCheckXMLTagValue("FechaFinalPago", nomina, ref payPeriod);
-            XAttribute payPeriodInit = null;
-            AttributeCheckXMLTagValue("FechaInicialPago", nomina, ref payPeriodInit);
-            XElement nominaReceptor = null;
-            DescendantsCheckXMLTagValue(nomina12, "Receptor", complementoelem, ref nominaReceptor);
-            XAttribute receptorCurp = null;
-            AttributeCheckXMLTagValue("Curp", nominaReceptor, ref receptorCurp);
-            // try to get client RFC - may not be one
-            XElement nominaSubcontracion = null;
-            XAttribute clientRfc = null;
-            XAttribute uuid = null;
-            AttributeCheckXMLTagValue("UUID", timbrefiscaldigital, ref uuid);
-
             try
             {
-                DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
-                AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
-            }
-            catch { }
-
-            /* //XElement elem = root.Element(cfdi + "Emisor");
-             XElement elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Emisor", root);
-            //XAttribute emisorRfc = elem.Attribute("rfc");
-            XAttribute emisorRfc = AttributeCheckXMLTagValue("rfc", elem);
-            //elem = root.Element(cfdi + "Conceptos");
-            elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Conceptos", root);
-            //elem = elem.Descendants(cfdi + "Concepto").First();
-            elem = DescendantsCheckXMLTagValue(cfdi.NamespaceName, "Concepto", root);
-            //XAttribute payAmount = elem.Attribute("importe");
-            XAttribute payAmount = AttributeCheckXMLTagValue("importe", elem);
-            //elem = root.Element(cfdi + "Receptor");
-            elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Receptor", root);
-            //XAttribute receptorRfc = elem.Attribute("rfc");
-            XAttribute receptorRfc = AttributeCheckXMLTagValue("rfc", elem);
-            //XAttribute fullName = elem.Attribute("nombre");
-            XAttribute fullName = AttributeCheckXMLTagValue("nombre", elem);
-            //elem = root.Descendants(nomina12 + "Nomina").First();
-            elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Nomina", root);
-            //XAttribute payPeriod = elem.Attribute("FechaFinalPago");
-            XAttribute payPeriod = AttributeCheckXMLTagValue("FechaFinalPago", elem);
-            //elem = elem.Descendants(nomina12 + "Receptor").First();
-            elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Receptor", root);
-            //XAttribute receptorCurp = elem.Attribute("Curp");
-            XAttribute receptorCurp = AttributeCheckXMLTagValue("Curp", elem);
-            XAttribute clientRfc = null;
-
-            // try to get client RFC - may not be one
-            try
-            {
-                //elem = root.Element(cfdi + "Complemento");
-                elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Complemento", root);
-                //elem = elem.Descendants(nomina12 + "Nomina").First();
-                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Nomina", elem);
-                //elem = elem.Descendants(nomina12 + "Receptor").First();
-                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Receptor", elem);
-                //elem = elem.Descendants(nomina12 + "SubContratacion").First();
-                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "SubContratacion", elem);
-                //clientRfc = elem.Attribute("RfcLabora");
-                clientRfc = AttributeCheckXMLTagValue("RfcLabora", elem);
-            }
-            catch (Exception ex)
-            { log.Error("Error adding document: bulk verification failed", ex); }*/
-            if (emisorRfc == null)
-                log.Info("emisorRfc is NULL");
-            if (receptorRfc == null)
-                log.Info("receptorRfc is NULL");
-            if (receptorCurp == null)
-                log.Info("receptorCurp is NULL");
-            if (payPeriod == null)
-                log.Info("payPeriod is NULL");
-
-            if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
-                throw new ApplicationException("Invalid XML format");
-
-            if (clientRfc != null)
-            {
-                Client client = db.FindClientByRfc(clientRfc.Value);
-                if (client != null)
-                    doc.ClientCompanyId = client.ClientCompanyID;
-            }
-            else
-            {
-                Client client = db.FindClientByRfc(emisorRfc.Value);
-                if (client != null)
-                    doc.ClientCompanyId = client.ClientCompanyID;
-            }
-
-            Employee emp = db.FindEmployeeByCURPCompany(company.CompanyId, (string)receptorCurp);
-            if (emp == null)
-            {
-                // create employee setting full name
-                // employee status is provisional (to be completed at a later time)
-                // throw new ApplicationException("Cannot find employee RFC with ID: " + receptorRfc);
-                log.Info("Created By: " + User.Identity.GetName());
-                emp = new Employee
+                // No need for this if only a PDF doc is uploadded by admin screen
+                if (string.IsNullOrEmpty(upload.XMLContent))
                 {
-                    RFC = (string)receptorRfc,
-                    FullName = (string)receptorfullName,
-                    CURP = (string)receptorCurp,
-                    CreatedDate = DateTime.Now,
-                    LastLoginDate = SqlDateTime.MinValue.Value,
-                    EmployeeStatus = EmployeeStatusType.Unverified,
-                    CreatedByUserId = int.Parse(User.Identity.GetName()),
-                    CellPhoneNumber = ""
-                };
-                emp.Company = batch.Company;
+                    return;
+                }
+                byte[] content = Encoding.UTF8.GetBytes(upload.XMLContent);
+                ValidateContentHash(content, upload.FileHash);
+                XElement root;
+                using (MemoryStream ms = new MemoryStream(content))
+                    root = XElement.Load(ms);
+
+                XNamespace cfdi = "http://www.sat.gob.mx/cfd/3";
+                XNamespace nomina12 = "http://www.sat.gob.mx/nomina12";
+                XNamespace tfd = "http://www.sat.gob.mx/TimbreFiscalDigital";
+
+                //XElement elem = root.Element(cfdi + "Emisor");
+                XElement elem = null;
+                ElementCheckXMLTagValue(cfdi, "Emisor", root, ref elem);
+                XAttribute emisorRfc = null;
+                AttributeCheckXMLTagValue("rfc", elem, ref emisorRfc);
+                XAttribute emisorName = null;
+                AttributeCheckXMLTagValue("Nombre", elem, ref emisorName);
+                XAttribute emisorRegimenFiscal = null;
+                AttributeCheckXMLTagValue("RegimenFiscal", elem, ref emisorRegimenFiscal);
+                XElement conceptoselem = null;
+                ElementCheckXMLTagValue(cfdi, "Conceptos", root, ref conceptoselem);
+                XElement conceptoelem = null;
+                DescendantsCheckXMLTagValue(cfdi, "Concepto", conceptoselem, ref conceptoelem);
+                XAttribute payAmount = null;
+                AttributeCheckXMLTagValue("importe", conceptoelem, ref payAmount);
+                XElement Receptorelem = null;
+                ElementCheckXMLTagValue(cfdi, "Receptor", root, ref Receptorelem);
+                XAttribute receptorRfc = null;
+                AttributeCheckXMLTagValue("rfc", Receptorelem, ref receptorRfc);
+                XAttribute receptorfullName = null;
+                AttributeCheckXMLTagValue("nombre", Receptorelem, ref receptorfullName);
+                XElement complementoelem = null;
+                ElementCheckXMLTagValue(cfdi, "Complemento", root, ref complementoelem);
+                XElement nomina = null;
+                DescendantsCheckXMLTagValue(nomina12, "Nomina", complementoelem, ref nomina);
+                XElement timbrefiscaldigital = null;
+                DescendantsCheckXMLTagValue(tfd, "TimbreFiscalDigital", complementoelem, ref timbrefiscaldigital);
+                XAttribute payPeriod = null;
+                AttributeCheckXMLTagValue("FechaFinalPago", nomina, ref payPeriod);
+                XAttribute payPeriodInit = null;
+                AttributeCheckXMLTagValue("FechaInicialPago", nomina, ref payPeriodInit);
+                XElement nominaReceptor = null;
+                DescendantsCheckXMLTagValue(nomina12, "Receptor", complementoelem, ref nominaReceptor);
+                XAttribute receptorCurp = null;
+                AttributeCheckXMLTagValue("Curp", nominaReceptor, ref receptorCurp);
+                // try to get client RFC - may not be one
+                XElement nominaSubcontracion = null;
+                XAttribute clientRfc = null;
+                XAttribute uuid = null;
+                AttributeCheckXMLTagValue("UUID", timbrefiscaldigital, ref uuid);
 
                 try
                 {
-                    var splittedName = FullNameSplitterFromRFCService.SplitName((string)receptorRfc, (string)receptorfullName);
-                    if (splittedName != null)
+                    DescendantsCheckXMLTagValue(nomina12, "SubContratacion", complementoelem, ref nominaSubcontracion);
+                    AttributeCheckXMLTagValue("RfcLabora", nominaSubcontracion, ref clientRfc);
+                }
+                catch { }
+
+                /* //XElement elem = root.Element(cfdi + "Emisor");
+                 XElement elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Emisor", root);
+                //XAttribute emisorRfc = elem.Attribute("rfc");
+                XAttribute emisorRfc = AttributeCheckXMLTagValue("rfc", elem);
+                //elem = root.Element(cfdi + "Conceptos");
+                elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Conceptos", root);
+                //elem = elem.Descendants(cfdi + "Concepto").First();
+                elem = DescendantsCheckXMLTagValue(cfdi.NamespaceName, "Concepto", root);
+                //XAttribute payAmount = elem.Attribute("importe");
+                XAttribute payAmount = AttributeCheckXMLTagValue("importe", elem);
+                //elem = root.Element(cfdi + "Receptor");
+                elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Receptor", root);
+                //XAttribute receptorRfc = elem.Attribute("rfc");
+                XAttribute receptorRfc = AttributeCheckXMLTagValue("rfc", elem);
+                //XAttribute fullName = elem.Attribute("nombre");
+                XAttribute fullName = AttributeCheckXMLTagValue("nombre", elem);
+                //elem = root.Descendants(nomina12 + "Nomina").First();
+                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Nomina", root);
+                //XAttribute payPeriod = elem.Attribute("FechaFinalPago");
+                XAttribute payPeriod = AttributeCheckXMLTagValue("FechaFinalPago", elem);
+                //elem = elem.Descendants(nomina12 + "Receptor").First();
+                elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Receptor", root);
+                //XAttribute receptorCurp = elem.Attribute("Curp");
+                XAttribute receptorCurp = AttributeCheckXMLTagValue("Curp", elem);
+                XAttribute clientRfc = null;
+
+                // try to get client RFC - may not be one
+                try
+                {
+                    //elem = root.Element(cfdi + "Complemento");
+                    elem = ElementCheckXMLTagValue(cfdi.NamespaceName, "Complemento", root);
+                    //elem = elem.Descendants(nomina12 + "Nomina").First();
+                    elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Nomina", elem);
+                    //elem = elem.Descendants(nomina12 + "Receptor").First();
+                    elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "Receptor", elem);
+                    //elem = elem.Descendants(nomina12 + "SubContratacion").First();
+                    elem = DescendantsCheckXMLTagValue(nomina12.NamespaceName, "SubContratacion", elem);
+                    //clientRfc = elem.Attribute("RfcLabora");
+                    clientRfc = AttributeCheckXMLTagValue("RfcLabora", elem);
+                }
+                catch (Exception ex)
+                { log.Error("Error adding document: bulk verification failed", ex); }*/
+                if (emisorRfc == null)
+                    log.Info("emisorRfc is NULL");
+                if (receptorRfc == null)
+                    log.Info("receptorRfc is NULL");
+                if (receptorCurp == null)
+                    log.Info("receptorCurp is NULL");
+                if (payPeriod == null)
+                    log.Info("payPeriod is NULL");
+
+                if (emisorRfc == null || receptorRfc == null || receptorCurp == null || payPeriod == null)
+                    throw new ApplicationException("Invalid XML format");
+
+                if (clientRfc != null)
+                {
+                    Client client = db.FindClientByRfc(clientRfc.Value);
+                    if (client != null)
+                        doc.ClientCompanyId = client.ClientCompanyID;
+                }
+                else
+                {
+                    Client client = db.FindClientByRfc(emisorRfc.Value);
+                    if (client != null)
+                        doc.ClientCompanyId = client.ClientCompanyID;
+                }
+
+                Employee emp = db.FindEmployeeByCURPCompany(company.CompanyId, (string)receptorCurp);
+                if (emp == null)
+                {
+                    // create employee setting full name
+                    // employee status is provisional (to be completed at a later time)
+                    // throw new ApplicationException("Cannot find employee RFC with ID: " + receptorRfc);
+                    log.Info("Created By: " + User.Identity.GetName());
+                    emp = new Employee
                     {
-                        emp.FirstName = splittedName[0];
-                        emp.LastName1 = splittedName[1];
-                        emp.LastName2 = splittedName[2];
-                    }
-                    else
+                        RFC = (string)receptorRfc,
+                        FullName = (string)receptorfullName,
+                        CURP = (string)receptorCurp,
+                        CreatedDate = DateTime.Now,
+                        LastLoginDate = SqlDateTime.MinValue.Value,
+                        EmployeeStatus = EmployeeStatusType.Unverified,
+                        CreatedByUserId = int.Parse(User.Identity.GetName()),
+                        CellPhoneNumber = ""
+                    };
+                    emp.Company = batch.Company;
+
+                    try
                     {
-                        splittedName = FullNameSplitterFromRFCService.SplitName2((string)receptorRfc, (string)receptorfullName);
+                        var splittedName = FullNameSplitterFromRFCService.SplitName((string)receptorRfc, (string)receptorfullName);
                         if (splittedName != null)
                         {
                             emp.FirstName = splittedName[0];
                             emp.LastName1 = splittedName[1];
                             emp.LastName2 = splittedName[2];
                         }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log.Info("Error splitting the Full Name", ex);
-                }
-
-                db.Employees.Add(emp);
-
-                // add company default doc
-                if (emp.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument)
-                {
-                    batch.ActualItemCount++;
-                    string fileName = NomiFileAccess.CopyCompanyAgreementFileForEmployee(emp.CompanyId,
-                       batch.WorkDirectory,  //file name to write
-                       emp.Company.NewEmployeeDocument.Trim()); // trim only needed due to DB scheme issue
-
-                    if (!String.IsNullOrEmpty(fileName))
-                    {
-                        // TODO: Write file to DB after copied to disk
-                        Document document = new Document()
+                        else
                         {
-                            AlwaysShow = 1,
-                            BatchId = batch.BatchId,
-                            CompanyId = emp.CompanyId,
-                            EmployeeId = emp.EmployeeId,
-                            PathToFile = fileName,
-                            PayperiodDate = DateTime.Now,
-                            SignStatus = SignStatus.SinFirma,
-                            UploadTime = DateTime.Now,
-                            ClientCompanyId = doc.ClientCompanyId
-                        };
-                        db.Documents.Add(document);
+                            splittedName = FullNameSplitterFromRFCService.SplitName2((string)receptorRfc, (string)receptorfullName);
+                            if (splittedName != null)
+                            {
+                                emp.FirstName = splittedName[0];
+                                emp.LastName1 = splittedName[1];
+                                emp.LastName2 = splittedName[2];
+                            }
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        log.Info("Error splitting the Full Name", ex);
+                    }
+
+                    db.Employees.Add(emp);
+
+                    // add company default doc
+                    if (emp.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.AddDocument)
+                    {
+                        batch.ActualItemCount++;
+                        string fileName = NomiFileAccess.CopyCompanyAgreementFileForEmployee(emp.CompanyId,
+                           batch.WorkDirectory,  //file name to write
+                           emp.Company.NewEmployeeDocument.Trim()); // trim only needed due to DB scheme issue
+
+                        if (!String.IsNullOrEmpty(fileName))
+                        {
+                            // TODO: Write file to DB after copied to disk
+                            Document document = new Document()
+                            {
+                                AlwaysShow = 1,
+                                BatchId = batch.BatchId,
+                                CompanyId = emp.CompanyId,
+                                EmployeeId = emp.EmployeeId,
+                                PathToFile = fileName,
+                                PayperiodDate = DateTime.Now,
+                                SignStatus = SignStatus.SinFirma,
+                                UploadTime = DateTime.Now,
+                                ClientCompanyId = doc.ClientCompanyId
+                            };
+                            db.Documents.Add(document);
+                        }
+                    }
+                    log.Error("warning adding document: employee not found for CURP " + (string)receptorCurp);
                 }
-                log.Error("warning adding document: employee not found for CURP " + (string)receptorCurp);
+
+                log.Info("Emisor: " + emisorRfc);
+                log.Info("Receptor: " + receptorRfc);
+                log.Info("Company: " + emp.Company.CompanyRFC);
+                log.Info("StartingPeriod: " + payPeriodInit.Value);
+                log.Info("EndPeriod: " + payPeriod.Value);
+                log.Info("UUID: " + uuid.Value);
+
+                //Changed emp.Company.CompanyRFC to be current company since one employee can be in several companies.
+                if (company.CompanyRFC != emisorRfc.Value)
+                    throw new ApplicationException("Company RFC with ID: " + company.CompanyRFC + " does not match Company RFC in xml: " + emisorRfc);
+
+                if (clientRfc != null)
+                {
+                    Client client = db.FindClientByRfc(clientRfc.Value);
+                    if (client != null)
+                        doc.ClientCompanyId = client.ClientCompanyID;
+                }
+
+                // VALIDATE CURP?
+                doc.Employee = emp;
+                doc.EmployeeId = emp.EmployeeId;
+                doc.CompanyId = emp.Company.CompanyId;
+                doc.PayAmount = Decimal.Parse(payAmount.Value);
+                doc.FileHash = upload.FileHash;
+                //doc.PayperiodDate = DateTime.Now;
+                doc.PayperiodDate = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                //doc.StartingPeriod = DateTime.Now;
+                //doc.EndPeriod = DateTime.Now;
+                doc.StartingPeriod = DateTime.ParseExact((string)payPeriodInit, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                doc.EndPeriod = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                doc.UUID = uuid.Value;
+                db.Documents.Add(doc);
+                db.SaveChanges();
             }
-
-            log.Info("Emisor: " + emisorRfc);
-            log.Info("Receptor: " + receptorRfc);
-            log.Info("Company: " + emp.Company.CompanyRFC);
-            //Changed emp.Company.CompanyRFC to be current company since one employee can be in several companies.
-            if (company.CompanyRFC != emisorRfc.Value)
-                throw new ApplicationException("Company RFC with ID: " + company.CompanyRFC + " does not match Company RFC in xml: " + emisorRfc);
-
-            if (clientRfc != null)
+            catch (Exception ex)
             {
-                Client client = db.FindClientByRfc(clientRfc.Value);
-                if (client != null)
-                    doc.ClientCompanyId = client.ClientCompanyID;
+                log.Error("Error EvaluateBulkUpload : ", ex);
             }
-
-            // VALIDATE CURP?
-            doc.Employee = emp;
-            doc.EmployeeId = emp.EmployeeId;
-            doc.CompanyId = emp.Company.CompanyId;
-            doc.PayAmount = Decimal.Parse(payAmount.Value);
-            doc.FileHash = upload.FileHash;
-            doc.PayperiodDate = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            doc.StartingPeriod = DateTime.ParseExact((string)payPeriodInit, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            doc.EndPeriod = DateTime.ParseExact((string)payPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            doc.UUID = uuid.Value;
         }
 
         private void AttributeCheckXMLTagValue(string tag, XElement elem, ref XAttribute element)

@@ -19,6 +19,11 @@ namespace CfdiService.Shapes
         public decimal PayAmount { get; set; }
         public int AlwaysShow { get; set; }
         public string CompanyName { get; set; }
+
+        public DateTime? StartingPeriod { get; set; }
+        public DateTime? EndPeriod { get; set; }
+        public string UUID { get; set; }
+
         public class LinksClass
         {
             public string SelfUri { get; set; }
@@ -40,6 +45,9 @@ namespace CfdiService.Shapes
                 PayAmount = document.PayAmount,
                 SignStatus = document.SignStatus == Model.SignStatus.SinFirma ? "Sin Firma" : document.SignStatus.ToString(),
                 CompanyName = document.Company.CompanyName,
+                StartingPeriod = document.StartingPeriod,
+                EndPeriod = document.EndPeriod,
+                UUID = document.UUID,
                 Links = new LinksClass()
             };
 

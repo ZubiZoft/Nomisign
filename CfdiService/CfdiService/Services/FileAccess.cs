@@ -96,6 +96,7 @@ namespace CfdiService.Services
         {
             try
             {
+                log.Info("Into WriteCompanyAgreementFile");
                 verifyCompanyCache1(company.CompanyId);
                 // path to file is computed
                 // 1. root from web.config
@@ -106,13 +107,14 @@ namespace CfdiService.Services
 
                 // make sure path exists, if not this will create it
                 Directory.CreateDirectory(fullFilePath);
-                /*using (Stream streampdf = GenerateStreamFromString(fileInfo.PDFContent))
+                log.Info("Agreement File path: " + Path.Combine(fullFilePath, fileInfo.FileName));
+                using (Stream streampdf = GenerateStreamFromString(fileInfo.PDFContent))
                 {
                     Aspose.Pdf.Document pdfDocument = new Aspose.Pdf.Document(streampdf, Path.Combine(fullFilePath, fileInfo.FileName));
-                    pdfDocument.Pages.Add();
+                    //pdfDocument.Pages.Add();
                     pdfDocument.Save(Path.Combine(fullFilePath, fileInfo.FileName));
-                }*/
-                    
+                }
+                log.Info("Agreement File path: " + Path.Combine(fullFilePath, fileInfo.FileName));
                 // need to manage root path from this class properties
                 SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.PDFContent); 
             }
@@ -267,6 +269,8 @@ namespace CfdiService.Services
                 var fileName = Guid.NewGuid().ToString();
                 // need to manage root path from this class properties
                 File.Copy(fileSourceDocumentPath + "\\" + companyAgreementFile, Path.Combine(fullFileDestPath, fileName + Strings.PDF_EXT));
+                log.Info("CopyCompanyAgreementFileForEmployee DEST : " + Path.Combine(fullFileDestPath, fileName + Strings.PDF_EXT));
+                log.Info("CopyCompanyAgreementFileForEmployee SOURCE : " + fileSourceDocumentPath + "\\" + companyAgreementFile);
                 return fileName;
             }
             catch (Exception ex)
