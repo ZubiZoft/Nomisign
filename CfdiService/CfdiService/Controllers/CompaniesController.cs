@@ -136,7 +136,6 @@ namespace CfdiService.Controllers
 
             var c = db.Companies.Find(10);
             c.CompanyName = "";
-            c.CompanyRFC = "";
             c.Address1 = "";
             c.Address2 = "";
             c.PostalCode = "";
