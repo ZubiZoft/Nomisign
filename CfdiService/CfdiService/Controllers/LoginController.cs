@@ -82,7 +82,7 @@ namespace CfdiService.Controllers
                                 employeeByCell.Company.SMSBalance -= 1;
                                 db.SaveChanges();
                             }
-                            if (employeeByCell.Company.SMSBalance <= 10 && employeeByCell.Company.TotalSMSPurchased > 0)
+                            if (employeeByCell.Company.SMSBalance <= 50 && employeeByCell.Company.TotalSMSPurchased > 0)
                             {
                                 try { SendEmail.SendEmailMessage(employeeByCell.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - " + employeeByCell.Company.BillingEmailAddress, ex); }
                                 try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }

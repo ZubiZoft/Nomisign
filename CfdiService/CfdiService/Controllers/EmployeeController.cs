@@ -487,7 +487,7 @@ namespace CfdiService.Controllers
                             //log.Info("15");
                             db.SaveChanges();
                         }
-                        if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
+                        if (employee.Company.SMSBalance <= 50 && employee.Company.TotalSMSPurchased > 0)
                         {
                             //log.Info("16");
                             try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch(Exception ex) { log.Error("Error sending Email - " + employee.Company.BillingEmailAddress, ex); }
@@ -614,7 +614,7 @@ namespace CfdiService.Controllers
                         db.SaveChanges();
                         log.Info("res : " + res);
                     }
-                    if (employee.Company.SMSBalance <= 10 && employee.Company.TotalSMSPurchased > 0)
+                    if (employee.Company.SMSBalance <= 50 && employee.Company.TotalSMSPurchased > 0)
                     {
                         try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
                         try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }
@@ -666,7 +666,7 @@ namespace CfdiService.Controllers
                             log.Info("1.5");
                         }
                         log.Info("2");
-                        if (employee.Company.SMSBalance.Value <= 10 && employee.Company.TotalSMSPurchased.Value > 0)
+                        if (employee.Company.SMSBalance.Value <= 50 && employee.Company.TotalSMSPurchased.Value > 0)
                         {
                             log.Info("2.1");
                             try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance)); } catch { }

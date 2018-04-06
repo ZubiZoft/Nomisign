@@ -253,7 +253,9 @@ namespace CfdiService
       <h1>Advertencia Licencias de Firma</h1>
       <br>
       <p>
-        Las licencias para firma disponibles para la empresa {1} se están agotando, el número actual de firmas disponibles es {2}.
+        Las licencias para firma disponibles para la empresa {1} son menores al numero de documentos en nomisign disponibles para firma, el número actual de firmas disponibles es {2}.
+        <br>
+        Se le recomienda hacer una compra de {3} firmas.
         <br>
         Favor de contactar a su representante de ventas para poder adquirir más licencias de firma.
       </p>
@@ -310,7 +312,9 @@ namespace CfdiService
       <h1>Advertencia Licencias de Firma</h1>
       <br>
       <p>
-        Las licencias para firma disponibles para la empresa {1} se están agotando, el número actual de firmas disponibles es {2}.
+        Las licencias para firma disponibles para la empresa {1} se están agotando, son menores al numero de documentos en nomisign disponibles para firma, el número actual de firmas disponibles es {2}.
+        <br>
+        Se le recomienda hacer una compra de {3} firmas.
         <br>
         Favor de contactar al cliente para que adquiera más licencias de firma.
       </p>
