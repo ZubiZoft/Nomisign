@@ -221,6 +221,42 @@ namespace CfdiService.Controllers
         }
 
         [HttpPut]
+        [Route("employees/passwordsessionadmin/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult UpdateEmployeePasswordSessionAdmin(int id, UserShape adminShape)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            if (id != adminShape.UserId)
+            {
+                return BadRequest();
+            }
+            User user = db.Users.Find(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            // transform to data model
+            UserShape.ToDataModel(adminShape, user);
+            // password is not set on initial employee creation
+            if(!String.IsNullOrEmpty(adminShape.PasswordHash))
+            {
+                user.PasswordHash = EncryptionService.Sha256_hash(adminShape.PasswordHash, string.Empty);
+                var usrs = db.Users.Where(e => e.EmailAddress.Equals(user.EmailAddress) || e.PhoneNumber.Equals(user.PhoneNumber)).ToList();
+                foreach (var e in usrs)
+                {
+                    e.PasswordHash = EncryptionService.Sha256_hash(adminShape.PasswordHash, string.Empty);
+                }
+                db.SaveChanges();
+            }
+            db.SaveChanges();
+            return Ok(adminShape);
+        }
+
+        [HttpPut]
         [Route("employees/password/{id}")]
         public IHttpActionResult UpdateEmployeePassword(int id, EmployeeShape employeeShape)
         {
