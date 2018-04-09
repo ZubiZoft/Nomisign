@@ -84,7 +84,7 @@ namespace CfdiService.Upload
             return result;
         }
 
-        public string UploadFiles(string companyid, List<FileUpload> upload)
+        public bool UploadFiles(string companyid, List<FileUpload> upload)
         {
             string result = null;
             Task<HttpResponseMessage> openTask = client.PostAsJsonAsync($"api/upload/uploadfilesfront/{companyid}", upload);
@@ -98,20 +98,20 @@ namespace CfdiService.Upload
                 Task<string> resultTask = response.Content.ReadAsAsync<string>();
                 resultTask.Wait();
                 result = resultTask.Result;
-
+                return true;
             }
             else if (response.StatusCode == HttpStatusCode.Conflict)
             {
                 Console.WriteLine("Upload was not completed. Please review the company ID, API Key and Company RFC in your configuration file.");
                 LogErrorMessage(string.Format("Upload was not completed. Please review the company ID, API Key and Company RFC in your configuration file."));
+                return false;
             }
             else
             {
                 Console.WriteLine("Upload was not completed due the number of licenses are less than the number of nominas that you are attempting to upload.");
                 LogErrorMessage(string.Format("Upload was not completed due the number of licenses are less than the number of nominas that you are attempting to upload."));
+                return false;
             }
-
-            return result;
         }
 
         public void CloseBatch(string batchid)

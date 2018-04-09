@@ -421,8 +421,17 @@ namespace CfdiService.Controllers
       <h1>Bienvenido a Nomisign&copy;</h1>
       <br>
       <p>
-        La empresa #-COMPANY-# utiliza los servicios de la plataforma NomiSign® para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. Da click en este enlace para crear tu contraseña. 
-        
+        La empresa #-COMPANY-# utiliza los servicios de la plataforma NomiSign® para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. 
+      </p>
+      <br>
+      <p>
+      Para crear tu contraseña debes ingresar el siguiente código de seguridad:
+      </p>
+      <br>
+      <h4>Código de seguridad: #-SECCODE-#</h4>
+      <br>
+      <p>
+      Dando click en el siguiente enlace:
       </p>
       <br>
       <div>
@@ -438,10 +447,6 @@ namespace CfdiService.Controllers
           </tr>
         </table>
       </div>
-      <br>
-        <p>
-        Tu código de seguridad es <strong>#-SECCODE-#</strong>
-        </p>
       <br>
       <p>O copia y pega la siguiente liga en cualquier navegador:</p>
       <p>http://{0}/nomisign/account/#-ID-#</p>

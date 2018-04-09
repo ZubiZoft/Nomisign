@@ -109,13 +109,21 @@ namespace CfdiService.Upload
                     }
                     else
                     {
+                        string directoryfailed = Path.Combine(Environment.CurrentDirectory, "Error");
+                        if (!Directory.Exists(directoryfailed))
+                        {
+                            Directory.CreateDirectory(directoryfailed);
+                        }
+                        File.Move(fileUpload.FileName, Path.Combine(directoryfailed, Path.GetFileName(fileUpload.FileName)));
+                        File.Move(Path.ChangeExtension(fileUpload.FileName, "pdf"), Path.Combine(directoryfailed, Path.GetFileName(Path.ChangeExtension(fileUpload.FileName, "pdf"))));
                         Console.WriteLine($"{fn} File Is not going to be Uploaded.");
                         LogErrorMessage(string.Format($"{fn} File Is not going to be Uploaded."));
                         LogErrorMessage(string.Format("File Is not going to be Uploaded:  {0}", fileUpload.XMLContent));
                     }
 
-                    
-                    if (counter == 50 || total == uploadFiles.Count)
+
+                    //if (counter == 50 || total == uploadFiles.Count)
+                    if (total <= uploadFiles.Count)
                     {
                         files.Add(f);
                         counter = 0;
@@ -131,7 +139,7 @@ namespace CfdiService.Upload
 
                 LogErrorMessage(string.Format("Packages to upload:  {0}", files.Count));
 
-                string br = "";
+                
                 //Console.WriteLine(string.Format("Nominas to be uploaded: {0}", files.Count));
                 if (files.Count > 0)
                 {
@@ -140,20 +148,40 @@ namespace CfdiService.Upload
                     {
                         Directory.CreateDirectory(directoryn);
                     }
-
+                    string directoryfailed = Path.Combine(Environment.CurrentDirectory, "Error");
+                    if (!Directory.Exists(directoryfailed))
+                    {
+                        Directory.CreateDirectory(directoryfailed);
+                    }
                     int nmtotal = 0;
+                    int failedtotal = 0;
                     foreach (List<FileUpload> up in files)
                     {
-                        Console.WriteLine(string.Format("Nominas to be uploaded: {0}", up.Count));
+                        bool br = false;
+                        //Console.WriteLine(string.Format("Nominas to be uploaded: {0}", up.Count));
                         br = cfdiService.UploadFiles(CompanyId, up);
                         List<FileUpload> temp = up;
-                        foreach (FileUpload fl in temp)
+                        if (br)
                         {
-                            File.Move(fl.FileName, Path.Combine(directoryn, Path.GetFileName(fl.FileName)));
-                            File.Move(Path.ChangeExtension(fl.FileName, "pdf"), Path.Combine(directoryn, Path.GetFileName(Path.ChangeExtension(fl.FileName, "pdf"))));
+                            foreach (FileUpload fl in temp)
+                            {
+                                File.Move(fl.FileName, Path.Combine(directoryn, Path.GetFileName(fl.FileName)));
+                                File.Move(Path.ChangeExtension(fl.FileName, "pdf"), Path.Combine(directoryn, Path.GetFileName(Path.ChangeExtension(fl.FileName, "pdf"))));
+                            }
+                            nmtotal += up.Count;
+                            Console.WriteLine(string.Format("Total Uploaded Nominas: {0}", nmtotal));
                         }
-                        nmtotal += up.Count;
-                        Console.WriteLine(string.Format("Total Uploaded Nominas: {0}", nmtotal));
+                        else
+                        {
+                            foreach (FileUpload fl in temp)
+                            {
+                                File.Move(fl.FileName, Path.Combine(directoryfailed, Path.GetFileName(fl.FileName)));
+                                File.Move(Path.ChangeExtension(fl.FileName, "pdf"), Path.Combine(directoryfailed, Path.GetFileName(Path.ChangeExtension(fl.FileName, "pdf"))));
+                            }
+                            failedtotal += up.Count;
+                            Console.WriteLine(string.Format("Total Error Nominas: {0}", failedtotal));
+                        }
+                        
                     }
                     Console.WriteLine("Upload Completed");
                     LogErrorMessage(string.Format("Upload Completed"));

@@ -115,6 +115,8 @@ namespace CfdiService.Services
                     pdfDocument.Save(Path.Combine(fullFilePath, fileInfo.FileName));
                 }
                 log.Info("Agreement File path: " + Path.Combine(fullFilePath, fileInfo.FileName));
+                if (File.Exists(Path.Combine(fullFilePath, fileInfo.FileName)))
+                { File.Delete(Path.Combine(fullFilePath, fileInfo.FileName)); }
                 // need to manage root path from this class properties
                 SaveByteArrayAsImage(Path.Combine(fullFilePath, fileInfo.FileName), fileInfo.PDFContent); 
             }
