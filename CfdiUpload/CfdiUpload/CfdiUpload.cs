@@ -14,6 +14,7 @@ namespace CfdiService.Upload
     {
         static void Main(string[] args)
         {
+            string temp = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             string CfdiServiceUrl = ConfigurationManager.AppSettings["CfdiServiceUrl"];
             string CfdiServiceKey = ConfigurationManager.AppSettings["CfdiServiceKey"];
             string CompanyId = ConfigurationManager.AppSettings["CompanyId"];
@@ -23,7 +24,7 @@ namespace CfdiService.Upload
 
             //Environment.Exit(0);
 
-            string uploadDirectory = Environment.CurrentDirectory;
+            string uploadDirectory = temp;
             if (args.Length >= 3 && args[1] == "-d")
                 uploadDirectory = args[2];
             else if (args.Length > 1)
@@ -80,8 +81,10 @@ namespace CfdiService.Upload
 
         public void Upload()
         {
+            string tempo = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             try
             {
+                
                 List<string> uploadFiles = GetUploadFiles();
                 List<List<FileUpload>> files = new List<List<FileUpload>>();
                 //CreateBatch(uploadFiles.Count);
@@ -109,7 +112,7 @@ namespace CfdiService.Upload
                     }
                     else
                     {
-                        string directoryfailed = Path.Combine(Environment.CurrentDirectory, "Error");
+                        string directoryfailed = Path.Combine(tempo, "Error");
                         if (!Directory.Exists(directoryfailed))
                         {
                             Directory.CreateDirectory(directoryfailed);
@@ -143,12 +146,12 @@ namespace CfdiService.Upload
                 //Console.WriteLine(string.Format("Nominas to be uploaded: {0}", files.Count));
                 if (files.Count > 0)
                 {
-                    string directoryn = Path.Combine(Environment.CurrentDirectory, "Backup");
+                    string directoryn = Path.Combine(tempo, "Backup");
                     if (!Directory.Exists(directoryn))
                     {
                         Directory.CreateDirectory(directoryn);
                     }
-                    string directoryfailed = Path.Combine(Environment.CurrentDirectory, "Error");
+                    string directoryfailed = Path.Combine(tempo, "Error");
                     if (!Directory.Exists(directoryfailed))
                     {
                         Directory.CreateDirectory(directoryfailed);
@@ -360,19 +363,20 @@ namespace CfdiService.Upload
 
         public static void LogErrorMessage(string message)
         {
+            string temp = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             string filename = string.Format("logfile-{0}.log", DateTime.Now.ToString("dd-MM-yyyy"));
-            if (!File.Exists(Path.Combine(Environment.CurrentDirectory, filename))) //No File? Create
+            if (!File.Exists(Path.Combine(temp, filename))) //No File? Create
             {
-                Stream stream = File.Create(Path.Combine(Environment.CurrentDirectory, filename));
+                Stream stream = File.Create(Path.Combine(temp, filename));
                 stream.Close();
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Environment.CurrentDirectory, filename), true))
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(temp, filename), true))
                 {
                     file.WriteLine(string.Format("[{0}] - {1}", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"), message));
                 }
             }
             else
             {
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Environment.CurrentDirectory, filename), true))
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(temp, filename), true))
                 {
                     file.WriteLine(string.Format("[{0}] - {1}", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"), message));
                 }

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="www.XMLWebServiceSoapHeaderAuth.net" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="www.XMLWebServiceSoapHeaderAuth.net" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="www.XMLWebServiceSoapHeaderAuth.net">
+      <s:element name="GeneraConstancia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="referencia" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="solicitud" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GeneraConstanciaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="GeneraConstanciaResult" type="tns:TConstancia" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="TConstancia">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Estado" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Constancia" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Folio" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="AuthSoapHd" type="tns:AuthSoapHd" />
+      <s:complexType name="AuthSoapHd">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Usuario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Clave" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Entidad" type="s:string" />
+        </s:sequence>
+        <s:anyAttribute />
+      </s:complexType>
+      <s:element name="GeneraRefrendo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="referencia" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="solicitud" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="refrendo" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GeneraRefrendoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="GeneraRefrendoResult" type="tns:TConstancia" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ValidaConstancia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="referencia" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="constancia" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ValidaConstanciaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="ValidaConstanciaResult" type="tns:TValidaConstancia" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="TValidaConstancia">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Estado" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Folio" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Digestion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fecha" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Serie" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CertificadoPsc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaInicial" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SerieInicial" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaCertificado">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="referencia" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="certificadoPsc" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaCertificadoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="ConsultaCertificadoResult" type="tns:TConsultaCertificado" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="TConsultaCertificado">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Estado" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Folio" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Certificado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GeneraConstanciaSoapIn">
+    <wsdl:part name="parameters" element="tns:GeneraConstancia" />
+  </wsdl:message>
+  <wsdl:message name="GeneraConstanciaSoapOut">
+    <wsdl:part name="parameters" element="tns:GeneraConstanciaResponse" />
+  </wsdl:message>
+  <wsdl:message name="GeneraConstanciaAuthSoapHd">
+    <wsdl:part name="AuthSoapHd" element="tns:AuthSoapHd" />
+  </wsdl:message>
+  <wsdl:message name="GeneraRefrendoSoapIn">
+    <wsdl:part name="parameters" element="tns:GeneraRefrendo" />
+  </wsdl:message>
+  <wsdl:message name="GeneraRefrendoSoapOut">
+    <wsdl:part name="parameters" element="tns:GeneraRefrendoResponse" />
+  </wsdl:message>
+  <wsdl:message name="GeneraRefrendoAuthSoapHd">
+    <wsdl:part name="AuthSoapHd" element="tns:AuthSoapHd" />
+  </wsdl:message>
+  <wsdl:message name="ValidaConstanciaSoapIn">
+    <wsdl:part name="parameters" element="tns:ValidaConstancia" />
+  </wsdl:message>
+  <wsdl:message name="ValidaConstanciaSoapOut">
+    <wsdl:part name="parameters" element="tns:ValidaConstanciaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ValidaConstanciaAuthSoapHd">
+    <wsdl:part name="AuthSoapHd" element="tns:AuthSoapHd" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCertificadoSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaCertificado" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCertificadoSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaCertificadoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCertificadoAuthSoapHd">
+    <wsdl:part name="AuthSoapHd" element="tns:AuthSoapHd" />
+  </wsdl:message>
+  <wsdl:portType name="WebServiceSoap">
+    <wsdl:operation name="GeneraConstancia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">GeneraConstancia</wsdl:documentation>
+      <wsdl:input message="tns:GeneraConstanciaSoapIn" />
+      <wsdl:output message="tns:GeneraConstanciaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GeneraRefrendo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">GeneraRefrendo</wsdl:documentation>
+      <wsdl:input message="tns:GeneraRefrendoSoapIn" />
+      <wsdl:output message="tns:GeneraRefrendoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ValidaConstancia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">ValidaConstancia</wsdl:documentation>
+      <wsdl:input message="tns:ValidaConstanciaSoapIn" />
+      <wsdl:output message="tns:ValidaConstanciaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCertificado">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">ConsultaCertificado</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaCertificadoSoapIn" />
+      <wsdl:output message="tns:ConsultaCertificadoSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WebServiceSoap" type="tns:WebServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GeneraConstancia">
+      <soap:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/GeneraConstancia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+        <soap:header message="tns:GeneraConstanciaAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GeneraRefrendo">
+      <soap:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/GeneraRefrendo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+        <soap:header message="tns:GeneraRefrendoAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ValidaConstancia">
+      <soap:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/ValidaConstancia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+        <soap:header message="tns:ValidaConstanciaAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCertificado">
+      <soap:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/ConsultaCertificado" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+        <soap:header message="tns:ConsultaCertificadoAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WebServiceSoap12" type="tns:WebServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GeneraConstancia">
+      <soap12:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/GeneraConstancia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+        <soap12:header message="tns:GeneraConstanciaAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GeneraRefrendo">
+      <soap12:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/GeneraRefrendo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+        <soap12:header message="tns:GeneraRefrendoAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ValidaConstancia">
+      <soap12:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/ValidaConstancia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+        <soap12:header message="tns:ValidaConstanciaAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCertificado">
+      <soap12:operation soapAction="www.XMLWebServiceSoapHeaderAuth.net/ConsultaCertificado" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+        <soap12:header message="tns:ConsultaCertificadoAuthSoapHd" part="AuthSoapHd" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WebService">
+    <wsdl:port name="WebServiceSoap" binding="tns:WebServiceSoap">
+      <soap:address location="https://pilot-psc.reachcore.com/wsnom151/webservice.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WebServiceSoap12" binding="tns:WebServiceSoap12">
+      <soap12:address location="https://pilot-psc.reachcore.com/wsnom151/webservice.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
