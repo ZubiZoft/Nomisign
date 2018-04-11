@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Security.Cryptography;
 using Org.BouncyCastle.Tsp;
-
+using CfdiService.Model;
 
 namespace CfdiService.Services
 {
@@ -12,8 +12,10 @@ namespace CfdiService.Services
     {
         private static readonly string _reachcoreUser = System.Configuration.ConfigurationManager.AppSettings["ReachcoreUser"];
         private static readonly string _reachcorePassword = System.Configuration.ConfigurationManager.AppSettings["ReachcorePassword"];
+        private static readonly string _reachcoreEntity = System.Configuration.ConfigurationManager.AppSettings["ReachcoreEntity"];
+        private static readonly string _reachcoreReqPolicy = System.Configuration.ConfigurationManager.AppSettings["ReachcoreReqPolicy"];
 
-        public static string GeneraConstanciaNOM1512017(string pdfpath)
+        public static ConstanciaNOM151 GeneraConstanciaNOM1512017(string pdfpath, Document document)
         {
             byte[] bytes = System.IO.File.ReadAllBytes(pdfpath);
 
@@ -22,7 +24,7 @@ namespace CfdiService.Services
 
 
             TimeStampRequestGenerator tsr = new TimeStampRequestGenerator();
-            tsr.SetReqPolicy("1.16.484.101.10.316.1.2");
+            tsr.SetReqPolicy(_reachcoreReqPolicy);
             TimeStampRequest tsq = tsr.Generate(TspAlgorithms.Sha256, hash, null);
 
             byte[] tsqbin = tsq.GetEncoded();
@@ -30,11 +32,11 @@ namespace CfdiService.Services
             String tsqb64 = Convert.ToBase64String(tsqbin);
 
             ServiceReference1.AuthSoapHd hdrs = new ServiceReference1.AuthSoapHd();
-            hdrs.Clave = "PassW0rd23.";
-            hdrs.Entidad = "bancox";
-            hdrs.Usuario = "bancox_user2";
+            hdrs.Clave = _reachcorePassword;
+            hdrs.Entidad = _reachcoreEntity;
+            hdrs.Usuario = _reachcoreUser;
 
-            String referencia = "12";
+            String referencia = string.Format("{0}-{1}", document.DocumentId.ToString(), DateTime.Now.ToString("ddMMyyyyHHmmssfff"));
 
             ServiceReference1.GeneraConstanciaRequest req = new ServiceReference1.GeneraConstanciaRequest(hdrs, referencia, tsqb64);
             ServiceReference1.WebServiceSoap client = new ServiceReference1.WebServiceSoapClient();
@@ -43,10 +45,13 @@ namespace CfdiService.Services
             String constancia = cons.Constancia;
             String descripcion = cons.Descripcion;
 
-            if (!string.IsNullOrEmpty(constancia))
-                return constancia;
+            ConstanciaNOM151 con151 = new ConstanciaNOM151(cons.Constancia, cons.Descripcion, cons.Folio.ToString(), cons.Estado.ToString());
+            if (!string.IsNullOrEmpty(con151.constancia))
+                return con151;
             else
                 return null;
         }
     }
+
+    
 }

@@ -907,8 +907,11 @@ namespace CfdiService.Controllers
             {
                 try
                 {
-                    document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document), document);
-                    document.Nom151Cert = Nom151Service.GenerateNOM151(document.Nom151);
+                    ConstanciaNOM151 nom151 = Nom1512017Service.GeneraConstanciaNOM1512017(NomiFileAccess.GetFilePath(document), document);
+                    document.Nom151 = nom151.folio;
+                    document.Nom151Cert = nom151.constancia;
+                    //document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document), document);
+                    //document.Nom151Cert = Nom151Service.GenerateNOM151(document.Nom151);
                     log.Info(document.Nom151);
                 }
                 catch (Exception ex) { log.Info(ex.ToString()); }
