@@ -71,10 +71,10 @@ namespace CfdiService
             return employee;
         }
 
-        public List<Employee> FindEmployeesByCurp(string curp)
+        public List<Employee> FindEmployeesByCurp(int companyId, string curp)
         {
             var employees = Employees
-                .Where(e => e.CURP == curp)
+                .Where(e => e.CURP == curp && e.CompanyId == companyId)
                 .ToList();
 
             return employees;
@@ -89,9 +89,9 @@ namespace CfdiService
             return employee;
         }
 
-        public Employee FindEmployeeByAccount(string account)
+        public Employee FindEmployeeByAccount(int companyId, string account)
         {
-            var employee = Employees.Where(e => e.EmailAddress.Equals(account) || e.CellPhoneNumber.Equals(account)).FirstOrDefault();
+            var employee = Employees.Where(e => e.EmailAddress.Equals(account) || e.CellPhoneNumber.Equals(account) && e.CompanyId == companyId).FirstOrDefault();
             return employee;
         }
 

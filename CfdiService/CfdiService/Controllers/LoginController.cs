@@ -314,7 +314,7 @@ namespace CfdiService.Controllers
         {
             try
             {
-                int result = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
+                int result = LooksForAUnSignedContract(employeeShape.CompanyId, employeeShape.CellPhoneNumber);
                 return Ok(result);
             }
             catch (Exception e)
@@ -448,11 +448,11 @@ namespace CfdiService.Controllers
             return false;
         }
 
-        private int LooksForAUnSignedContract(string account)
+        private int LooksForAUnSignedContract(int companyId, string account)
         {
-            var employeeAcc = db.FindEmployeeByAccount(account);
+            var employeeAcc = db.FindEmployeeByAccount(companyId, account);
 
-            var commonEmplyees = db.FindEmployeesByCurp(employeeAcc.CURP);
+            var commonEmplyees = db.FindEmployeesByCurp(companyId, employeeAcc.CURP);
 
             foreach (var e in commonEmplyees)
             {

@@ -45,7 +45,7 @@ namespace CfdiService.Services
             String constancia = cons.Constancia;
             String descripcion = cons.Descripcion;
 
-            ConstanciaNOM151 con151 = new ConstanciaNOM151(cons.Constancia, cons.Descripcion, cons.Folio.ToString(), cons.Estado.ToString());
+            ConstanciaNOM151 con151 = new ConstanciaNOM151(cons.Constancia, cons.Descripcion, cons.Folio.ToString(), cons.Estado.ToString(), tsqb64);
             if (!string.IsNullOrEmpty(con151.constancia))
                 return con151;
             else
