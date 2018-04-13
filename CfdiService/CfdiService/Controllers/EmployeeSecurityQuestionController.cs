@@ -21,12 +21,32 @@ namespace CfdiService.Controllers
         [Route("securityquestions/{id}")]
         public IHttpActionResult GetEmployeeSecurityQuestions(int id)
         {
-            EmployeeSecurityQuestions securityQuestions = db.SecurityQuestions.Find(id);
-            if (securityQuestions == null)
+            Employee emp = db.Employees.Where(x => x.EmployeeId == id).FirstOrDefault();
+            List<Employee> empL = db.Employees.Where(y => y.RFC == emp.RFC).ToList();
+            List<EmployeeSecurityQuestions> securityQuestionsL = new List<EmployeeSecurityQuestions>();
+            foreach (Employee e in empL)
             {
-                return Ok(new EmployeeSecurityQuestions() { userID = id });
+                EmployeeSecurityQuestions securityQuestions = db.SecurityQuestions.Find(e.EmployeeId);
+                if (securityQuestions != null){ return Ok(securityQuestions); }
             }
-            return Ok(securityQuestions);
+            /*EmployeeSecurityQuestions securityQuestions = db.SecurityQuestions.Find(id);
+            if (securityQuestionsL.Count < 1)
+            {
+                if (securityQuestions == null)
+                {
+                    return Ok(new EmployeeSecurityQuestions() { userID = id });
+                }
+                return Ok(securityQuestions);
+            }
+            else
+            {
+                foreach(EmployeeSecurityQuestions securityQuestionstemp in securityQuestionsL)
+                {
+
+                }
+                return Ok(securityQuestions);
+            }*/
+            return BadRequest();
         }
 
         [HttpPost]
@@ -75,10 +95,6 @@ namespace CfdiService.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
-            }
-            if (id != newSecurityQuestions.userID)
-            {
-                return BadRequest();
             }
 
             EmployeeSecurityQuestions securityQuestions = db.SecurityQuestions.Find(id);

@@ -453,14 +453,28 @@ namespace CfdiService.Controllers
             var employeeAcc = db.FindEmployeeByAccount(companyId, account);
 
             var commonEmplyees = db.FindEmployeesByCurp(companyId, employeeAcc.CURP);
-
+            var secflag = false;
             foreach (var e in commonEmplyees)
             {
                 var esec = db.SecurityQuestions.Where(u => u.userID == e.EmployeeId).ToList();
-                if (esec.Count() < 1)
+                if (esec.Count() > 0)
                 {
-                    return 0;
+                    secflag = true;
+                    break;
                 }
+            }
+
+            if (!secflag)
+                return 0;
+
+            var contflag = -1;
+
+            List<Document> tempL = db.FindUnsignedContractsDocumentsByEmployeeRFC(employeeAcc.EmployeeId);
+
+            if (tempL.Count > 0)
+                contflag = tempL[0].DocumentId;
+            /*foreach (var e in commonEmplyees)
+            {
                 if (e.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.None)
                     continue;
                 var countDocs = db.CountDocumentsByCompanyNUser(e.CompanyId, e.EmployeeId);
@@ -477,12 +491,34 @@ namespace CfdiService.Controllers
                     }
                     else
                     {
-                        return unsignedDocs[0].DocumentId;
+                        contflag = unsignedDocs[0].DocumentId;
                     }
                 }
-            }
+            }*/
 
-            return -1;
+
+
+            /*if (e.Company.NewEmployeeGetDoc == NewEmployeeGetDocType.None)
+                continue;
+            var countDocs = db.CountDocumentsByCompanyNUser(e.CompanyId, e.EmployeeId);
+            if (countDocs > 1)
+            {
+                continue;
+            }
+            else
+            {
+                var unsignedDocs = db.CountDocumentsNotSignedByCompanyNUser(e.CompanyId, e.EmployeeId);
+                if (unsignedDocs.Count() < 1)
+                {
+                    continue;
+                }
+                else
+                {
+                    return unsignedDocs[0].DocumentId;
+                }
+            }*/
+
+            return contflag;
         }
     }
 }

@@ -827,7 +827,18 @@ namespace CfdiService.Controllers
                 if (User.Identity.GetRole().Equals("EMPLOYEE"))
                 {
                     var eId = int.Parse(User.Identity.GetName());
-                    document = db.Documents.Where(d => d.DocumentId == id && d.EmployeeId == eId).FirstOrDefault();
+                    Employee employee = db.Employees.Where(e => e.EmployeeId == eId).FirstOrDefault();
+                    document = db.Documents.Where(d => d.DocumentId == id && d.Employee.RFC == employee.RFC).FirstOrDefault();
+                    if (document == null)
+                    {
+                        log.Info("Employee Id: " + eId);
+                        log.Info("Document is null for DOCUMENTSEMPLOYEE");
+                    }
+                    else
+                    {
+                        log.Info("Employee Id: " + eId);
+                        log.Info("Document Id: " + document.DocumentId);
+                    }
                 }
                 else if (User.Identity.GetRole().Equals("ADMIN"))
                 {

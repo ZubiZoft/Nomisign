@@ -95,6 +95,13 @@ namespace CfdiService
             return employee;
         }
 
+        public List<Document> FindUnsignedContractsDocumentsByEmployeeRFC(int employeeid)
+        {
+            Employee temp = Employees.Where(e => e.EmployeeId == employeeid).FirstOrDefault();
+            List<Document> tempL = Documents.Where(y => y.Employee.RFC == temp.RFC && y.AlwaysShow == 1 && y.SignStatus == SignStatus.SinFirma).ToList();
+            return tempL;
+        }
+
         public int CountDocumentsByCompanyNUser(int companyId, int employeeId)
         {
             return Documents.Count(d => d.CompanyId == companyId && d.EmployeeId == employeeId && d.AlwaysShow == 1);
