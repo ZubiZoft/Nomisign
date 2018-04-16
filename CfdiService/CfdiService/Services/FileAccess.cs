@@ -158,6 +158,8 @@ namespace CfdiService.Services
         {
             try
             {
+                License lic = new License();
+                lic.SetLicense("Aspose.Pdf.lic");
                 string originalPdfDocumentPath = NomiFileAccess.GetFilePath(document);
                 var xmlfullFilePath = string.Format(@"{0}\{1}", Path.Combine(RootFilePath, RootSystemPath, string.Format(@"{0}\{1}\", companyPaths1[document.CompanyId], document.Batch.WorkDirectory)), document.PathToFile + ".xml");
                 using (Stream streampdf = GenerateStreamFromString(base64String))

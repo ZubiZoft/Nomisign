@@ -47,7 +47,7 @@ namespace CfdiService.Shapes
                 ClientCompanyId = document.ClientCompanyId,
                 EmployeeId = document.EmployeeId,
                 BatchId = document.BatchId,
-                DocumentBytes = string.Format("http://{0}/nomiadmin/document-handler/viewer.cshtml?docid={1}", httpDomain, document.DocumentId),
+                DocumentBytes = string.Format("http://{0}/nomiservice/document-handler/viewer.cshtml?docid={1}", httpDomain, document.DocumentId),
                 EmployeeConcern = document.EmployeeConcern,
                 AlwaysShow = document.AlwaysShow,
                 PayAmount = document.PayAmount,

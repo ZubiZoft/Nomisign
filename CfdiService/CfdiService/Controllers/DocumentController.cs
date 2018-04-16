@@ -20,6 +20,8 @@ namespace CfdiService.Controllers
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         protected readonly string tempZipPath = System.Configuration.ConfigurationManager.AppSettings["tempZipFolder"];
+        protected readonly string rootPath = System.Configuration.ConfigurationManager.AppSettings["rootDiskPath"];
+        
         private ModelDbContext db = new ModelDbContext();
         protected static readonly Dictionary<string, int> DicTypes = new Dictionary<string, int>()
         {
@@ -798,6 +800,45 @@ namespace CfdiService.Controllers
                 response.Content = new StreamContent(dataStream);
                 response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
                 response.Content.Headers.ContentDisposition.FileName = "Nominas.zip";
+                response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                log.Info(3);
+            }
+            catch (Exception ex)
+            {
+                log.Info(ex);
+                log.Info(ex.Message);
+                log.Info(ex.StackTrace);
+                log.Info(ex.Source);
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
+            log.Info(5);
+            return response;
+
+        }
+
+        [HttpGet]
+        [Route("documents/DownloadPdf/{did}")]
+        [Authorize(Roles = "EMPLOYEE")]
+        [IdentityBasicAuthentication]
+        public HttpResponseMessage DownloadSingleDocuments(int did)
+        {
+            string rootFilesPath = Path.Combine(rootPath, "Nomisign_Files1");
+            
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
+            log.Info(1);
+            Document docResult = db.Documents.Where(x => x.DocumentId == did).FirstOrDefault();
+            string rootFilesCompanyPath = Path.Combine(rootFilesPath, docResult.Company.DocStoragePath1);
+            string rootpath = Path.Combine(rootFilesCompanyPath, docResult.Batch.WorkDirectory); 
+            log.Info(1.1);
+            var tempZip = Path.Combine(rootpath, docResult.PathToFile + ".pdf");
+            try
+            {
+                log.Info(2);
+                var dataBytes = File.ReadAllBytes(tempZip);
+                var dataStream = new MemoryStream(dataBytes);
+                response.Content = new StreamContent(dataStream);
+                response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                response.Content.Headers.ContentDisposition.FileName = string.Format("{0}.pdf", docResult.PathToFile);
                 response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
                 log.Info(3);
             }
