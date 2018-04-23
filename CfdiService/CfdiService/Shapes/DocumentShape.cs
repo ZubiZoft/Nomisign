@@ -40,14 +40,15 @@ namespace CfdiService.Shapes
             // untill i get file IO working, do this
             var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("sample sign doc info");
             string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
+            string httpDomainPrefix = System.Configuration.ConfigurationManager.AppSettings["DomainHttpPrefix"];
 
-            var documentShape = new DocumentShape
+        var documentShape = new DocumentShape
             {
                 DocumentId = document.DocumentId,
                 ClientCompanyId = document.ClientCompanyId,
                 EmployeeId = document.EmployeeId,
                 BatchId = document.BatchId,
-                DocumentBytes = string.Format("http://{0}/nomiservice/document-handler/viewer.cshtml?docid={1}", httpDomain, document.DocumentId),
+                DocumentBytes = string.Format("{2}://{0}/nomiservice/document-handler/viewer.cshtml?docid={1}", httpDomain, document.DocumentId, httpDomainPrefix),
                 EmployeeConcern = document.EmployeeConcern,
                 AlwaysShow = document.AlwaysShow,
                 PayAmount = document.PayAmount,

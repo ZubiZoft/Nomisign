@@ -104,12 +104,16 @@ namespace CfdiService.Upload
             {
                 Console.WriteLine("Upload was not completed. Please review the company ID, API Key and Company RFC in your configuration file.");
                 LogErrorMessage(string.Format("Upload was not completed. Please review the company ID, API Key and Company RFC in your configuration file."));
+                Console.WriteLine(string.Format("Status Code: {0}", response.StatusCode.ToString()));
+                LogErrorMessage(string.Format("Status Code: {0}", response.StatusCode.ToString()));
                 return false;
             }
             else
             {
                 Console.WriteLine("Upload was not completed due the number of licenses are less than the number of nominas that you are attempting to upload.");
                 LogErrorMessage(string.Format("Upload was not completed due the number of licenses are less than the number of nominas that you are attempting to upload."));
+                Console.WriteLine(string.Format("Status Code: {0}", response.StatusCode.ToString()));
+                LogErrorMessage(string.Format("Status Code: {0}", response.StatusCode.ToString()));
                 return false;
             }
         }

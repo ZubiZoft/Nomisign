@@ -249,10 +249,10 @@
   </wsdl:binding>
   <wsdl:service name="WebService">
     <wsdl:port name="WebServiceSoap" binding="tns:WebServiceSoap">
-      <soap:address location="https://pilot-psc.reachcore.com/wsnom151/webservice.asmx" />
+      <soap:address location="https://nom151.advantage-security.com/wsnom151/webservice.asmx" />
     </wsdl:port>
     <wsdl:port name="WebServiceSoap12" binding="tns:WebServiceSoap12">
-      <soap12:address location="https://pilot-psc.reachcore.com/wsnom151/webservice.asmx" />
+      <soap12:address location="https://nom151.advantage-security.com/wsnom151/webservice.asmx" />
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

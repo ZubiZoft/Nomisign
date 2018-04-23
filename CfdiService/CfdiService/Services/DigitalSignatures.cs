@@ -30,6 +30,8 @@ namespace CfdiService.Services
                 log.Info("Path original: " + originalPdfDocumentPath);
                 log.Info("Path signed: " + signedpath);
                 log.Info("Path temp: " + temppath);
+                License lic = new License();
+                lic.SetLicense("Aspose.Pdf.lic");
                 var docCount = 0;
                 using (Aspose.Pdf.Document document = new Aspose.Pdf.Document(originalPdfDocumentPath))
                 {

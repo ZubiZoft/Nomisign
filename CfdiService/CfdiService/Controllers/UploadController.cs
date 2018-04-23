@@ -15,6 +15,8 @@ using System.Data.SqlTypes;
 using System.Security.Cryptography;
 using CfdiService.Services;
 using CfdiService.Filters;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.FileIO;
 
 namespace CfdiService.Controllers
 {
@@ -25,6 +27,7 @@ namespace CfdiService.Controllers
         private ModelDbContext db = new ModelDbContext();
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly string httpDomainPrefix = System.Configuration.ConfigurationManager.AppSettings["DomainHttpPrefix"];
 
         [HttpPost]
         [Route("openbatch/{id}")]
@@ -131,7 +134,7 @@ namespace CfdiService.Controllers
             {
                 // Send SMS alerting employee of new docs
                 // send notifications
-                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                string smsBody = String.Format(Strings.visitSiteTosignDocumentMessage, company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain, httpDomainPrefix);
                 SendEmail.SendEmailMessage(newDoc.Employee.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, smsBody);
                 if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                 {
@@ -145,11 +148,11 @@ namespace CfdiService.Controllers
                     }
                     if (newDoc.Company.SMSBalance <= 50 && newDoc.Company.TotalSMSPurchased > 0)
                     {
-                        try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                        try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
 
                     }
                 }
@@ -238,6 +241,225 @@ namespace CfdiService.Controllers
 
             return Ok();
         }
+
+        [HttpPost]
+        [Route("ReadCSVFile/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult ReadCSVFile(int id, [FromBody] CfdiService.Shapes.FileUpload csvfile)
+        {
+            try
+            {
+                List<Dictionary<string, string>> data = new List<Dictionary<string, string>>();
+                Dictionary<string, string> datarow = new Dictionary<string, string>();
+                using (Stream streampdf = GenerateStreamFromString(csvfile.PDFContent))
+                {
+                    using (TextFieldParser parser = new TextFieldParser(streampdf))
+                    {
+                        parser.TextFieldType = FieldType.Delimited;
+                        parser.SetDelimiters(",");
+                        while (!parser.EndOfData)
+                        {
+                            if (parser.LineNumber == 1)
+                            {
+                                foreach (string field in parser.ReadFields())
+                                {
+                                    datarow.Add(field, "");
+                                }
+                                break;
+                            }
+                        }
+                        while (!parser.EndOfData)
+                        {
+                            if (parser.LineNumber != 1)
+                            {
+                                Dictionary<string, string> aux = new Dictionary<string, string>(datarow);
+                                int i = 0;
+                                foreach (string field in parser.ReadFields())
+                                {
+                                    aux[aux.ElementAt(i).Key] = field;
+                                    i++;
+                                }
+                                data.Add(aux);
+                            }
+                        }
+                    }
+                }
+
+                foreach (Dictionary<string, string> dic in data)
+                {
+                    log.Info("----------------------- Start Line --------------------------");
+                    foreach (KeyValuePair<string, string> kp in dic)
+                    {
+                        log.Info(string.Format("Key : {0} | Value : {1}", kp.Key, kp.Value));
+                    }
+                    log.Info("----------------------- End Line --------------------------");
+                }
+
+                foreach (Dictionary<string, string> dic in data)
+                {
+                    string rfc = dic["RFC"];
+                    Employee tempEmp = db.Employees.Where(x => x.RFC.Trim() == rfc.Trim()).FirstOrDefault();
+                    if (tempEmp == null)
+                    {
+                        log.Info(string.Format("ReadCSVFile RFC was not found : {0}", rfc));
+                        continue;
+                    }
+                    if (!string.IsNullOrEmpty(tempEmp.EmailAddress) && !string.IsNullOrEmpty(tempEmp.CellPhoneNumber))
+                    {
+                        log.Info(string.Format("ReadCSVFile RFC alredy had information : {0}", tempEmp.EmailAddress));
+                        continue;
+                    }
+
+                    string emailaddress = ""; 
+                    string telephone = ""; 
+                    string lastname1 = ""; 
+                    string lastname2 = ""; 
+                    string name1 = ""; 
+
+                    try { emailaddress = dic["EMAIL"]; } catch { }
+                    try { telephone = dic["TELEPHONE"]; } catch { }
+                    try { lastname1 = dic["MNAME"]; } catch { }
+                    try { lastname2 = dic["LNAME"]; } catch { }
+                    try { name1 = dic["NAME1"]; } catch { }
+
+
+                    tempEmp.EmailAddress = emailaddress;
+                    tempEmp.CellPhoneNumber = telephone;
+                    tempEmp.LastName1 = lastname1;
+                    tempEmp.LastName2 = lastname2;
+                    tempEmp.FirstName = name1;
+                    db.SaveChanges();
+
+                    EmployeesCode codes = db.EmployeeSecurityCodes.Find(tempEmp.EmployeeId);
+                    if (codes != null)
+                    {
+                        codes.Vcode = EncryptionService.GenerateSecurityCode();
+                        codes.GeneratedDate = DateTime.Now;
+                    }
+                    else
+                    {
+                        codes = new EmployeesCode() { EmployeeId = tempEmp.EmployeeId, GeneratedDate = DateTime.Now, Prefix = Guid.NewGuid().ToString(), Vcode = EncryptionService.GenerateSecurityCode() };
+                        db.EmployeeSecurityCodes.Add(codes);
+                    }
+                    db.SaveChanges();
+
+                    string customsizedmail = string.Format(@"<!doctype html>
+                    <html lang=""en"">
+                    <head>
+                      <meta charset=""utf-8"">
+                      <title>TemplatesNomisign</title>
+                      <base href=""/"">
+
+                      <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
+                    </head>
+                    <body bgcolor=""#efefef"" text=""#7e7e7e"" link=""#7e7e7e"" vlink=""#7e7e7e"">
+                    <font face=""verdana"">
+                    <table width=""100%"">
+                      <tr>
+                        <th width=""15%""></th>
+                        <th width=""70%"" bgcolor=""#ffffff"">
+                          <br>
+                          <img width=""50%"" src=""{1}://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+                          <br>
+                          <br>
+                          <br>
+                          <h1>Bienvenido a Nomisign&copy;</h1>
+                          <br>
+                          <p>
+                            La empresa #-COMPANY-# utiliza los servicios de la plataforma NomiSign® para que tengas la facilidad de firmar electrónicamente tus recibos de nómina. 
+                          </p>
+                          <br>
+                          <p>
+                          Para crear tu contraseña debes ingresar el siguiente código de seguridad:
+                          </p>
+                          <br>
+                          <h4>Código de seguridad: #-SECCODE-#</h4>
+                          <br>
+                          <p>
+                          Dando click en el siguiente enlace:
+                          </p>
+                          <br>
+                          <div>
+                            <table width=""100%"" cellpadding=""15px"">
+                              <tr>
+                                <th width=""30%""></th>
+                                <th width=""40%"" bgcolor=""#2cbbc3"">
+                                  <a href=""{1}://{0}/nomisign/account/#-ID-#"" target=""_blank"">
+                                    Registro
+                                  </a>
+                                </th>
+                                <th width=""30%""></th>
+                              </tr>
+                            </table>
+                          </div>
+                          <br>
+                          <p>O copia y pega la siguiente liga en cualquier navegador:</p>
+                          <p>{1}://{0}/nomisign/account/#-ID-#</p>
+                          <br>
+                          <br>
+                        </th>
+                        <th width=""15%""></th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>
+                          <font size=""1"">
+                            <code>
+        
+                            </code>
+                          </font>
+                        </th>
+                        <th></th>
+                      </tr>
+                    </table>
+                    </font>
+                    </body>
+                    </html>
+                    ", httpDomain, httpDomainPrefix);
+                    customsizedmail = customsizedmail.Replace("#-SECCODE-#", codes.Vcode);
+                    customsizedmail = customsizedmail.Replace("#-ID-#", tempEmp.EmployeeId.ToString());
+                    customsizedmail = customsizedmail.Replace("#-COMPANY-#", tempEmp.Company.CompanyName);
+                    string msgBodySpanish = String.Format(Strings.newEmployeeWelcomeMessge, httpDomain, tempEmp.EmployeeId, codes.Vcode, httpDomainPrefix);
+                    string msgBodyMobile = String.Format(Strings.newEmployeeWelcomeMessgeMobile, tempEmp.Company.CompanyName, httpDomain, tempEmp.EmployeeId, codes.Vcode, httpDomainPrefix);
+                    if (null != tempEmp.CellPhoneNumber)
+                    {
+                        if (tempEmp.Company.SMSBalance > 0 && tempEmp.Company.TotalSMSPurchased > 0)
+                        {
+                            string res = "";
+                            SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", tempEmp.CellPhoneNumber), out res);
+                            tempEmp.Company.SMSBalance -= 1;
+                            db.SaveChanges();
+                        }
+                        if (tempEmp.Company.SMSBalance <= 50 && tempEmp.Company.TotalSMSPurchased > 0)
+                        {
+                            //log.Info("16");
+                            try { SendEmail.SendEmailMessage(tempEmp.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, tempEmp.Company.CompanyName, tempEmp.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - " + tempEmp.Company.BillingEmailAddress, ex); }
+                            try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, tempEmp.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, tempEmp.Company.CompanyName, tempEmp.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
+                            try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, tempEmp.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, tempEmp.Company.CompanyName, tempEmp.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - estela.gonzalez@nomisign.com ", ex); }
+                            try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, tempEmp.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, tempEmp.Company.CompanyName, tempEmp.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - info@nomisign.com ", ex); }
+                            try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, tempEmp.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, tempEmp.Company.CompanyName, tempEmp.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - artturobldrq@gmail.com ", ex); }
+
+                        }
+                        //SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
+                    }
+                    //log.Info("17");
+                    SendEmail.SendEmailMessage(tempEmp.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, customsizedmail);
+                    
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                log.Info(ex.ToString());
+                log.Info(ex.StackTrace);
+                log.Info(ex.Source);
+                log.Info(ex.Message);
+                return BadRequest("Cell Phone Number empty");
+            }
+        }
+
+
         [HttpPost]
         [Route("uploadfilesfront/{companyId}")]
         [Authorize(Roles = "ADMIN,UPLOADER")]
@@ -371,13 +593,13 @@ namespace CfdiService.Controllers
                         {
                             // Send SMS alerting employee of new docs
                             // send notifications
-                            string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                            string emailBody = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomainPrefix);
                             SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBody);
                             if (null != newDoc.Employee.CellPhoneNumber || newDoc.Employee.CellPhoneNumber.Length > 5) // check for > 5 as i needed to default to 52. for bulk uploader created new employee
                             {
                                 //SendSMS.SendSMSMsg(newDoc.Employee.CellPhoneNumber, smsBody);
                                 string res = "";
-                                var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
+                                var smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain, httpDomainPrefix);
                                 if (newDoc.Company.SMSBalance > 0)
                                 {
                                     if (newDoc.Company.SMSBalance > 0 && newDoc.Company.TotalSMSPurchased > 0)
@@ -388,17 +610,17 @@ namespace CfdiService.Controllers
                                     }
                                     if (newDoc.Company.SMSBalance <= 50 && newDoc.Company.TotalSMSPurchased > 0)
                                     {
-                                        try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
-                                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance)); } catch { }
+                                        try { SendEmail.SendEmailMessage(newDoc.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                                        try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                                        try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                                        try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
+                                        try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, newDoc.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, newDoc.Company.CompanyName, newDoc.Company.SMSBalance, httpDomainPrefix)); } catch { }
 
                                     }
                                 }
                                 else
                                 {
-                                    string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"));
+                                    string emailBodySMSWarning = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, newDoc.Employee.Company.CompanyName, newDoc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomainPrefix);
                                     SendEmail.SendEmailMessage(empDoc.EmailAddress, Strings.visitSiteTosignDocumentMessageEmailSubject, emailBodySMSWarning);
                                 }
                             }
@@ -830,6 +1052,13 @@ namespace CfdiService.Controllers
         private bool CanWriteTo(string dir)
         {
             return true;
+        }
+
+        public static Stream GenerateStreamFromString(string s)
+        {
+            byte[] bytes = Convert.FromBase64String(s);
+            MemoryStream stream = new MemoryStream(bytes);
+            return stream;
         }
 
     }

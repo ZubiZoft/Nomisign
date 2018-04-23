@@ -16,6 +16,7 @@ namespace CfdiService.Controllers
     {
         private ModelDbContext db = new ModelDbContext();
         private readonly string httpDomain = System.Configuration.ConfigurationManager.AppSettings["signingAppDomain"];
+        private readonly string httpDomainPrefix = System.Configuration.ConfigurationManager.AppSettings["DomainHttpPrefix"];
         private static bool allowDefaultAdmin = false;
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -77,21 +78,21 @@ namespace CfdiService.Controllers
                             if (employeeByCell.Company.SMSBalance > 0 && employeeByCell.Company.TotalSMSPurchased > 0)
                             {
                                 string res = "";
-                                SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a http://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
-                                httpDomain, employeeByCell.EmployeeId, code.Vcode), string.Format("+52{0}", employeeByCell.CellPhoneNumber), out res);
+                                SendSMS.SendSMSQuiubo(String.Format("Tu cuenta ha sido reiniciada.  Por favor, ingresa a {3}://{0}/nomisign/account/{1} para reiniciar tu contraseña.  Tu código de seguridad es: {2}",
+                                httpDomain, employeeByCell.EmployeeId, code.Vcode, httpDomainPrefix), string.Format("+52{0}", employeeByCell.CellPhoneNumber), out res);
                                 employeeByCell.Company.SMSBalance -= 1;
                                 db.SaveChanges();
                             }
                             if (employeeByCell.Company.SMSBalance <= 50 && employeeByCell.Company.TotalSMSPurchased > 0)
                             {
-                                try { SendEmail.SendEmailMessage(employeeByCell.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - " + employeeByCell.Company.BillingEmailAddress, ex); }
-                                try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
-                                try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - estela.gonzalez@nomisign.com ", ex); }
-                                try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - info@nomisign.com ", ex); }
-                                try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance)); } catch (Exception ex) { log.Error("Error sending Email - artturobldrq@gmail.com ", ex); }
+                                try { SendEmail.SendEmailMessage(employeeByCell.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - " + employeeByCell.Company.BillingEmailAddress, ex); }
+                                try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
+                                try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - estela.gonzalez@nomisign.com ", ex); }
+                                try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - info@nomisign.com ", ex); }
+                                try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employeeByCell.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employeeByCell.Company.CompanyName, employeeByCell.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - artturobldrq@gmail.com ", ex); }
 
                             }
-                            SendEmail.SendEmailMessage(employeeByCell.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employeeByCell.EmployeeId, code.Vcode));
+                            SendEmail.SendEmailMessage(employeeByCell.EmailAddress, "Reinicia tu cuenta", string.Format(Strings.restYourAccountMessage, httpDomain, employeeByCell.EmployeeId, code.Vcode, httpDomainPrefix));
                         }
                         catch { }
                         return Ok();
@@ -132,7 +133,7 @@ namespace CfdiService.Controllers
 
                 SendEmail.SendEmailMessage(userForReset.EmailAddress,
                     "Reset password request for " + userForReset.DisplayName,
-                    String.Format("Password reset was requested.  Please visit http://{0}/nomiadmin/account/{1} to reset password.", httpDomain, userForReset.UserId
+                    String.Format("Password reset was requested.  Please visit {2}://{0}/nomiadmin/account/{1} to reset password.", httpDomain, userForReset.UserId, httpDomainPrefix
                     ));
                 log.Info("Reset password request for user: " + userForReset.UserId);
                 return Ok();
@@ -161,7 +162,7 @@ namespace CfdiService.Controllers
 
                 SendEmail.SendEmailMessage(userForReset.EmailAddress,
                     "Reset password request for " + userForReset.DisplayName,
-                    String.Format("Password reset was requested.  Please visit http://{0}/nomiadmin/account/{1} to reset password.", httpDomain, userForReset.ClientUserID
+                    String.Format("Password reset was requested.  Please visit {2}://{0}/nomiadmin/account/{1} to reset password.", httpDomain, userForReset.ClientUserID, httpDomainPrefix
                     ));
                 log.Info("Reset password request for user: " + userForReset.ClientUserID);
                 return Ok();
@@ -267,8 +268,6 @@ namespace CfdiService.Controllers
                             emp.PasswordHash = string.Empty;
                             var eShape = EmployeeShape.FromDataModel(emp, Request);
                             //eShape.HasContractToSign = LooksForAUnSignedContract(employeeShape.CellPhoneNumber);
-
-                            
 
                             return Ok(eShape);
                         }
