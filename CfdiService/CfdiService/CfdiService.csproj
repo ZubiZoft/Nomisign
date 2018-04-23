@@ -264,6 +264,7 @@
     <Compile Include="Services\SendSMS.cs" />
     <Compile Include="Services\TokenGenerator.cs" />
     <Compile Include="Shapes\BatchResult.cs" />
+    <Compile Include="Shapes\ChangePasswordShappe.cs" />
     <Compile Include="Shapes\ClientShape.cs" />
     <Compile Include="Shapes\ClientUserShape.cs" />
     <Compile Include="Shapes\CompanyListShape.cs" />

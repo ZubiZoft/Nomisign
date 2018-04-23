@@ -427,7 +427,7 @@ namespace CfdiService.Controllers
                         if (tempEmp.Company.SMSBalance > 0 && tempEmp.Company.TotalSMSPurchased > 0)
                         {
                             string res = "";
-                            SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", tempEmp.CellPhoneNumber), out res);
+                            try { SendSMS.SendSMSQuiubo(msgBodyMobile, string.Format("+52{0}", tempEmp.CellPhoneNumber), out res); }catch(Exception ex){ log.Info(string.Format("SMS to {0} was not send.", tempEmp.RFC)); }
                             tempEmp.Company.SMSBalance -= 1;
                             db.SaveChanges();
                         }
@@ -444,7 +444,7 @@ namespace CfdiService.Controllers
                         //SendSMS.SendSMSQuiubo(String.Format(Strings.newEmployeeWelcomeMessgeMobileLink, httpDomain, employee.EmployeeId), string.Format("+52{0}", employee.CellPhoneNumber), out res2);
                     }
                     //log.Info("17");
-                    SendEmail.SendEmailMessage(tempEmp.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, customsizedmail);
+                    try { SendEmail.SendEmailMessage(tempEmp.EmailAddress, Strings.newEmployeeWelcomeMessgeEmailSubject, customsizedmail); } catch (Exception ex) { log.Info(string.Format("Email to {0} was not send. Employee RFC : {1}", tempEmp.EmailAddress, tempEmp.RFC)); }
                     
                 }
                 return Ok();

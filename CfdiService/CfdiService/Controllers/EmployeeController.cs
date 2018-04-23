@@ -225,36 +225,49 @@ namespace CfdiService.Controllers
         [Route("employees/passwordsessionadmin/{id}")]
         [Authorize(Roles = "ADMIN")]
         [IdentityBasicAuthentication]
-        public IHttpActionResult UpdateEmployeePasswordSessionAdmin(int id, UserShape adminShape)
+        public IHttpActionResult UpdateEmployeePasswordSessionAdmin(int id, ChangePasswordShappe adminShape)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                log.Info("START.");
+                log.Info("Old Password : " + adminShape.OldPassword);
+                log.Info("New Password : " + adminShape.NewPassword);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                User user = db.Users.Find(id);
+                if (user == null)
+                {
+                    log.Info("User wasn't found.");
+                    return NotFound();
+                }
+                // transform to data model
+                if (user.PasswordHash.Equals(EncryptionService.Sha256_hash(adminShape.OldPassword, string.Empty)))
+                {
+                    log.Info("Old and New passwords matched.");
+                    user.PasswordHash = EncryptionService.Sha256_hash(adminShape.OldPassword, string.Empty);
+                    var usrs = db.Users.Where(e => e.EmailAddress.Equals(user.EmailAddress) || e.PhoneNumber.Equals(user.PhoneNumber)).ToList();
+                    foreach (var e in usrs)
+                    {
+                        e.PasswordHash = EncryptionService.Sha256_hash(adminShape.NewPassword, string.Empty);
+                    }
+                    db.SaveChanges();
+                }
+                else
+                {
+                    log.Info("Password is not equal as the old password.");
+                    return BadRequest();
+                }
+
+                db.SaveChanges();
+                return Ok(adminShape);
             }
-            if (id != adminShape.UserId)
+            catch (Exception ex)
             {
+                log.Error(ex);
                 return BadRequest();
             }
-            User user = db.Users.Find(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            // transform to data model
-            UserShape.ToDataModel(adminShape, user);
-            // password is not set on initial employee creation
-            if(!String.IsNullOrEmpty(adminShape.PasswordHash))
-            {
-                user.PasswordHash = EncryptionService.Sha256_hash(adminShape.PasswordHash, string.Empty);
-                var usrs = db.Users.Where(e => e.EmailAddress.Equals(user.EmailAddress) || e.PhoneNumber.Equals(user.PhoneNumber)).ToList();
-                foreach (var e in usrs)
-                {
-                    e.PasswordHash = EncryptionService.Sha256_hash(adminShape.PasswordHash, string.Empty);
-                }
-                db.SaveChanges();
-            }
-            db.SaveChanges();
-            return Ok(adminShape);
         }
 
         [HttpPut]
