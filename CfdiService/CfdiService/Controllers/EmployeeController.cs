@@ -10,6 +10,7 @@ using System.Net;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using System.Data.Entity;
 
 namespace CfdiService.Controllers
 {
@@ -32,12 +33,31 @@ namespace CfdiService.Controllers
             var company = db.Companies.Find(cid);
             if (company == null)
                 return Ok(result);
-            foreach (var c in db.Employees)
+            var employees = db.Employees.Where(x => x.CompanyId == cid).ToList();
+            foreach (var c in employees)
             {
-                if (c.CompanyId == cid)
-                {
-                    result.Add(EmployeeListShape.FromDataModel(c, Request, company.CompanyName));
-                }
+                result.Add(EmployeeListShape.FromDataModel(c, Request, company.CompanyName));
+            }
+
+            log.Info("Looking for employees for cid: " + cid);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("employees/{cid}/{l}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult GetCompanyEmployees(int cid, string l)
+        {
+            var result = new List<EmployeeListShape>();
+            var company = db.Companies.Find(cid);
+            if (company == null)
+                return Ok(result);
+
+            var employees = db.Employees.Where(x => x.CompanyId == cid && x.FirstName.StartsWith(l)).ToList();
+            foreach (var c in employees)
+            {
+                result.Add(EmployeeListShape.FromDataModel(c, Request, company.CompanyName));
             }
 
             log.Info("Looking for employees for cid: " + cid);
@@ -55,6 +75,29 @@ namespace CfdiService.Controllers
             var employeeResult = db.Employees.Where(x => x.CompanyId == cid
                     && (x.EmailAddress == null || x.EmailAddress.Equals(""))
                     && (x.CellPhoneNumber == null || x.CellPhoneNumber.Equals(""))).ToList();
+            var company = db.Companies.Find(cid);
+            if (company == null)
+                return Ok(result);
+            foreach (var c in employeeResult)
+            {
+                result.Add(EmployeeListShape.FromDataModel(c, Request, company.CompanyName));
+            }
+
+            log.Info("Looking for employees that doesn't have email and phone for cid: " + cid);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("employees/{cid}/new/{l}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult GetCompanyNewEmployees(int cid, string l)
+        {
+            var result = new List<EmployeeListShape>();
+            var employeeResult = db.Employees.Where(x => x.CompanyId == cid
+                    && (x.EmailAddress == null || x.EmailAddress.Equals(""))
+                    && (x.CellPhoneNumber == null || x.CellPhoneNumber.Equals(""))
+                    && x.FirstName.ToUpper().StartsWith(l)).ToList();
             var company = db.Companies.Find(cid);
             if (company == null)
                 return Ok(result);
@@ -321,7 +364,7 @@ namespace CfdiService.Controllers
             }
             db.SaveChanges();
 
-            db.CreateLog(OperationTypes.EmployeeAccountActivated, string.Format("Cuenta de empleado activada {0}", employee.EmployeeId), User, 
+            db.CreateLog(OperationTypes.EmployeeAccountActivated, string.Format("Cuenta de empleado activada {0}", employee.EmployeeId), User,
                     employee.EmployeeId, ObjectTypes.Employee);
 
             return Ok(employeeShape);
@@ -509,7 +552,7 @@ namespace CfdiService.Controllers
                         if (employee.Company.SMSBalance <= 50 && employee.Company.TotalSMSPurchased > 0)
                         {
                             //log.Info("16");
-                            try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch(Exception ex) { log.Error("Error sending Email - " + employee.Company.BillingEmailAddress, ex); }
+                            try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - " + employee.Company.BillingEmailAddress, ex); }
                             try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - mariana.basto@nomisign.com ", ex); }
                             try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - estela.gonzalez@nomisign.com ", ex); }
                             try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch (Exception ex) { log.Error("Error sending Email - info@nomisign.com ", ex); }
@@ -536,7 +579,7 @@ namespace CfdiService.Controllers
             log.Info("19");
             db.SaveChanges();
             log.Info("20");
-            db.CreateLog(OperationTypes.EmployeeUpdated, string.Format("Empleado actualizado {0}", id), 
+            db.CreateLog(OperationTypes.EmployeeUpdated, string.Format("Empleado actualizado {0}", id),
                     User, id, ObjectTypes.Employee);
             log.Info("21");
             return Ok(employeeShape);
