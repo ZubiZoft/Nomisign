@@ -44,7 +44,7 @@ namespace CfdiService.Controllers
         }
 
         [HttpGet]
-        [Route("employees/{cid}/{l}")]
+        [Route("employeesLetter/{cid}/{l}")]
         [Authorize(Roles = "ADMIN")]
         [IdentityBasicAuthentication]
         public IHttpActionResult GetCompanyEmployees(int cid, string l)
