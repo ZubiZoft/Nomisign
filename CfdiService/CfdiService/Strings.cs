@@ -121,7 +121,7 @@ namespace CfdiService
     <th width = ""15%""></th>
     <th width = ""70%"" bgcolor=""#ffffff"">
       <br>
-      <img width = ""50%"" src=""{2}://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
+      <img width = ""50%"" src=""{3}://{0}/nomiadmin/assets/images/Nomi_Sign-12-1-1.png"">
       <br>
       <br>
       <br>
@@ -138,7 +138,7 @@ namespace CfdiService
           <tr>
             <th width = ""30%""></th>
             <th width = ""40%"" bgcolor=""#2cbbc3"">
-              <a href = ""{2}://{0}/nomisign/account/{1}"" target=""_blank"">
+              <a href = ""{3}://{0}/nomisign/account/{1}"" target=""_blank"">
                 Nomisign
               </a>
             </th>
@@ -148,7 +148,7 @@ namespace CfdiService
       </div>
       <br>
       <p>O copia y pega la siguiente liga en cualquier navegador:</p>
-      <p>{2}://{0}/nomisign/account/{1}</p>
+      <p>{3}://{0}/nomisign/account/{1}</p>
       <br>
       <br>
     </th>
