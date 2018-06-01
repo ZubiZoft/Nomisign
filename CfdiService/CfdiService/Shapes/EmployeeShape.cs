@@ -113,7 +113,7 @@ namespace CfdiService.Shapes
                     employeeShape.FullName;
             employee.CURP = employeeShape.CURP;
             employee.RFC = employeeShape.RFC;
-            employee.EmailAddress = employeeShape.EmailAddress;
+            employee.EmailAddress = employeeShape.EmailAddress.ToLower();
             employee.CellPhoneNumber = employeeShape.CellPhoneNumber;
             employee.CreatedByUserId = employeeShape.CreatedByUserId;
             employee.EmployeeStatus = employeeShape.EmployeeStatus;

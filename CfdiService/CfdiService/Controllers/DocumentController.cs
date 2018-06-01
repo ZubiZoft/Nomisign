@@ -910,6 +910,33 @@ namespace CfdiService.Controllers
             return Ok(DocumentShape.FromDataModel(document, Request));
         }
 
+        [HttpGet]
+        [Route("documents/nom/{id}")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult UpdateNOMDocument(int id)
+        {
+            Document document = db.Documents.Find(id);
+            if (document.AlwaysShow == 0 && document.SignStatus == SignStatus.Firmado)
+            {
+                try
+                {
+                    ConstanciaNOM151 nom151 = Nom1512017Service.GeneraConstanciaNOM1512017(NomiFileAccess.GetFilePath(document), document);
+                    document.Nom151 = nom151.tsqb64;
+                    document.Nom151Cert = nom151.constancia;
+                    //document.Nom151 = Nom151Service.CreateNom151(NomiFileAccess.GetFilePath(document), document);
+                    //document.Nom151Cert = Nom151Service.GenerateNOM151(document.Nom151);
+                    log.Info(document.Nom151);
+                }
+                catch (Exception ex)
+                {
+                    log.Info(ex.ToString());
+                }
+                db.SaveChanges();
+            }
+            return Ok();
+        }
+
         [HttpPut]
         [Route("documents/{id}")]
         [Authorize(Roles = "EMPLOYEE,ADMIN")]
@@ -967,7 +994,9 @@ namespace CfdiService.Controllers
                     //document.Nom151Cert = Nom151Service.GenerateNOM151(document.Nom151);
                     log.Info(document.Nom151);
                 }
-                catch (Exception ex) { log.Info(ex.ToString()); }
+                catch (Exception ex) {
+                    log.Info(ex.ToString());
+                }
             }
             if (document.SignStatus != SignStatus.Rechazado)
             {

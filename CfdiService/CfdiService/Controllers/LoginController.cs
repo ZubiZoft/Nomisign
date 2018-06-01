@@ -74,6 +74,7 @@ namespace CfdiService.Controllers
                                 code.GeneratedDate = DateTime.Now;
                             }
                             employeeByCell.EmployeeStatus = EmployeeStatusType.PasswordResetLocked;
+                            employeeByCell.FailedLoginCount = 0;
                             db.SaveChanges();
                             if (employeeByCell.Company.SMSBalance > 0 && employeeByCell.Company.TotalSMSPurchased > 0)
                             {

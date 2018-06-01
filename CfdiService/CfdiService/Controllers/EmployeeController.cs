@@ -713,35 +713,25 @@ namespace CfdiService.Controllers
                         //SendSMS.SendSMSMsg(employeeShape.CellPhoneNumber, Strings.verifyPhoneNumberSMSMessage);
                         log.Info("EmployeeShape celphone : " + employeeShape.CellPhoneNumber);
                         log.Info("verifyPhoneNumberSMSMessage : " + Strings.verifyPhoneNumberSMSMessage);
-                        log.Info("1");
                         if (employee.Company.SMSBalance.Value > 0 && employee.Company.TotalSMSPurchased.Value > 0)
                         {
                             string res = "";
-                            log.Info("1.1");
                             SendSMS.SendSMSQuiubo(Strings.verifyPhoneNumberSMSMessage, string.Format("+52{0}", employeeShape.CellPhoneNumber), out res);
-                            log.Info("1.2");
                             employee.Company.SMSBalance -= 1;
-                            log.Info("1.3");
                             db.SaveChanges();
-                            log.Info("1.4");
                             log.Info("res : " + res);
-                            log.Info("1.5");
+                            if (res.Contains("\"error\":true"))
+                            {
+                                return Ok("Cell Phone not verified");
+                            }
                         }
-                        log.Info("2");
                         if (employee.Company.SMSBalance.Value <= 50 && employee.Company.TotalSMSPurchased.Value > 0)
                         {
-                            log.Info("2.1");
                             try { SendEmail.SendEmailMessage(employee.Company.BillingEmailAddress, string.Format(Strings.smsQuantityWarningSubject), string.Format(Strings.smsQuantityWarning, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch { }
-                            log.Info("2.2");
                             try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch { }
-                            log.Info("2.3");
                             try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch { }
-                            log.Info("2.4");
                             try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch { }
-                            log.Info("2.5");
                             try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, employee.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, employee.Company.CompanyName, employee.Company.SMSBalance, httpDomainPrefix)); } catch { }
-                            log.Info("2.6");
-
                         }
                         return Ok("Success");
                     }
@@ -803,6 +793,66 @@ namespace CfdiService.Controllers
             employee.EmployeeStatus = EmployeeStatusType.NotLongerEmployed;
             db.SaveChanges();
             return Ok();
+        }
+
+        [HttpPost]
+        [Route("emailEmployeeValidator")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult UniqueEmailsPerRFCValidator(EmployeeShape employeeShape)
+        {
+            List<Employee> emps = db.Employees.Where(e => e.EmailAddress == employeeShape.EmailAddress.ToLower()).ToList();
+            if (emps.Count() > 0)
+            {
+                var f = false;
+                foreach (Employee e in emps)
+                {
+                    if (e.RFC.Trim().ToUpper().Equals(employeeShape.RFC.Trim().ToUpper()))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        f = true;
+                        break;
+                    }
+                }
+
+                if (f)
+                    return BadRequest();
+                return Ok("Success");
+            }
+            return Ok("Success");
+        }
+
+        [HttpPost]
+        [Route("phoneEmployeeValidator")]
+        [Authorize(Roles = "ADMIN")]
+        [IdentityBasicAuthentication]
+        public IHttpActionResult UniquePhonesPerRFCValidator(EmployeeShape employeeShape)
+        {
+            List<Employee> emps = db.Employees.Where(e => e.CellPhoneNumber == employeeShape.CellPhoneNumber.ToLower()).ToList();
+            if (emps.Count() > 0)
+            {
+                var f = false;
+                foreach (Employee e in emps)
+                {
+                    if (e.RFC.Trim().ToUpper().Equals(employeeShape.RFC.Trim().ToUpper()))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        f = true;
+                        break;
+                    }
+                }
+
+                if (f)
+                    return BadRequest();
+                return Ok("Success");
+            }
+            return Ok("Success");
         }
 
         protected override void Dispose(bool disposing)
