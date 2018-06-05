@@ -13,5 +13,6 @@ namespace CfdiService.Shapes
         public string Curp { get; set; }
         public string Type { get; set; }
         public string Status { get; set; }
+        public int CompanyId { get; set; }
     }
 }

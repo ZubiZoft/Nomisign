@@ -133,7 +133,7 @@ namespace CfdiService.Controllers
                 typeNum = DicTypes[range.Type];
             var statusNum = SignStatus.Invalid;
             if (!string.IsNullOrEmpty(range.Status))
-                statusNum = (SignStatus) DicStatuses[range.Status];
+                statusNum = (SignStatus)DicStatuses[range.Status];
 
             try
             {
@@ -145,7 +145,8 @@ namespace CfdiService.Controllers
                     if (user.UserType == UserAdminType.GlobalAdmin)
                     {
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
-                                enddateT >= x.PayperiodDate
+                                enddateT >= x.PayperiodDate &&
+                                x.CompanyId == cid
                             ).ToList();
                     }
                     else
@@ -164,7 +165,8 @@ namespace CfdiService.Controllers
                     {
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
-                            x.AlwaysShow == typeNum
+                            x.AlwaysShow == typeNum &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -184,7 +186,8 @@ namespace CfdiService.Controllers
                     {
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
-                            x.SignStatus == statusNum
+                            x.SignStatus == statusNum &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -204,7 +207,8 @@ namespace CfdiService.Controllers
                     {
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
-                            x.Employee.RFC == range.Rfc
+                            x.Employee.RFC == range.Rfc &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -224,7 +228,8 @@ namespace CfdiService.Controllers
                     {
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
-                            x.Employee.CURP == range.Curp
+                            x.Employee.CURP == range.Curp &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -244,7 +249,8 @@ namespace CfdiService.Controllers
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
                             x.AlwaysShow == typeNum &&
-                            x.SignStatus == statusNum
+                            x.SignStatus == statusNum &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -265,7 +271,8 @@ namespace CfdiService.Controllers
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
                             x.SignStatus == statusNum &&
-                            x.Employee.RFC == range.Rfc
+                            x.Employee.RFC == range.Rfc &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -286,7 +293,8 @@ namespace CfdiService.Controllers
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
                             x.Employee.RFC == range.Rfc &&
-                            x.Employee.CURP == range.Curp
+                            x.Employee.CURP == range.Curp &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -307,7 +315,8 @@ namespace CfdiService.Controllers
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
                             x.SignStatus == statusNum &&
-                            x.Employee.CURP == range.Curp
+                            x.Employee.CURP == range.Curp &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -328,7 +337,8 @@ namespace CfdiService.Controllers
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
                             x.AlwaysShow == typeNum &&
-                            x.Employee.RFC == range.Rfc
+                            x.Employee.RFC == range.Rfc &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -349,7 +359,8 @@ namespace CfdiService.Controllers
                             enddateT >= x.PayperiodDate &&
                             x.AlwaysShow == typeNum &&
                             x.SignStatus == statusNum &&
-                            x.Employee.RFC == range.Rfc
+                            x.Employee.RFC == range.Rfc &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -371,7 +382,8 @@ namespace CfdiService.Controllers
                             enddateT >= x.PayperiodDate &&
                             x.AlwaysShow == typeNum &&
                             x.SignStatus == statusNum &&
-                            x.Employee.CURP == range.Curp
+                            x.Employee.CURP == range.Curp &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -393,7 +405,8 @@ namespace CfdiService.Controllers
                             enddateT >= x.PayperiodDate &&
                             x.Employee.RFC == range.Rfc &&
                             x.Employee.CURP == range.Curp &&
-                            x.AlwaysShow == typeNum
+                            x.AlwaysShow == typeNum &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -415,7 +428,8 @@ namespace CfdiService.Controllers
                             enddateT >= x.PayperiodDate &&
                             x.SignStatus == statusNum &&
                             x.Employee.RFC == range.Rfc &&
-                            x.Employee.CURP == range.Curp
+                            x.Employee.CURP == range.Curp &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
@@ -433,20 +447,20 @@ namespace CfdiService.Controllers
                 {
                     if (user.UserType == UserAdminType.GlobalAdmin)
                     {
-                        docListResult = db.Documents.Where(x => x.CompanyId == cid &&
-                            x.PayperiodDate >= initdateT &&
+                        docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
                             x.AlwaysShow == typeNum &&
                             x.SignStatus == statusNum &&
                             x.Employee.RFC == range.Rfc &&
-                            x.Employee.CURP == range.Curp
+                            x.Employee.CURP == range.Curp &&
+                            x.CompanyId == cid
                         ).ToList();
                     }
                     else
                     {
                         docListResult = db.Documents.Where(x => x.PayperiodDate >= initdateT &&
                             enddateT >= x.PayperiodDate &&
-                            x.AlwaysShow == DicTypes[range.Type] &&
+                            x.AlwaysShow == typeNum &&
                             x.SignStatus == statusNum &&
                             x.Employee.RFC == range.Rfc &&
                             x.Employee.CURP == range.Curp &&
@@ -454,7 +468,8 @@ namespace CfdiService.Controllers
                         ).ToList();
                     }
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 log.Info(ex);
                 log.Info(ex.Source);
@@ -639,7 +654,7 @@ namespace CfdiService.Controllers
                         try { SendEmail.SendEmailMessage("artturobldrq@gmail.com", string.Format(Strings.smsWarningSalesMessageSubject, d.Company.CompanyName), string.Format(Strings.smsWarningSalesMessage, httpDomain, d.Company.CompanyName, d.Company.SMSBalance, httpDomainPrefix)); } catch { }
 
                     }
-                    
+
                 }
 
 
@@ -679,7 +694,7 @@ namespace CfdiService.Controllers
                         if (doc.Company.SMSBalance > 0 && doc.Company.TotalSMSPurchased > 0)
                         {
                             //string smsBody = String.Format(Strings.visitSiteTosignDocumentSMS, doc.Employeeemp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"), httpDomain);
-                            
+
                             //string msgBodySpanish = String.Format(Strings.visitSiteTosignDocumentMessage, httpDomain, emp.Company.CompanyName, doc.PayperiodDate.ToString("dd/MM/yyyy"));
                             //SendSMS.SendSMSMsg(doc.Employee.CellPhoneNumber, smsBody);
                             string res = "";
@@ -779,7 +794,7 @@ namespace CfdiService.Controllers
                             var fName = NomiFileAccess.GetFilePath(d);
                             log.Info(fName);
                             string fullname = d.Employee.FullName.Replace(" ", String.Empty);
-                            archive.CreateEntryFromFile(fName, string.Format("{0}_{1}_{2}.pdf",d.Company.CompanyRFC, fullname, d.PayperiodDate.ToString("dd-MM-yyyy")));
+                            archive.CreateEntryFromFile(fName, string.Format("{0}_{1}_{2}.pdf", d.Company.CompanyRFC, fullname, d.PayperiodDate.ToString("dd-MM-yyyy")));
                             if (d.Nom151 != null)
                             {
                                 var entryNom = archive.CreateEntry(string.Format("{0}_{1}_{2}.nom151", d.Company.CompanyRFC, fullname, d.PayperiodDate.ToString("dd-MM-yyyy")));
@@ -824,12 +839,12 @@ namespace CfdiService.Controllers
         public HttpResponseMessage DownloadSingleDocuments(int did)
         {
             string rootFilesPath = Path.Combine(rootPath, "Nomisign_Files1");
-            
+
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
             log.Info(1);
             Document docResult = db.Documents.Where(x => x.DocumentId == did).FirstOrDefault();
             string rootFilesCompanyPath = Path.Combine(rootFilesPath, docResult.Company.DocStoragePath1);
-            string rootpath = Path.Combine(rootFilesCompanyPath, docResult.Batch.WorkDirectory); 
+            string rootpath = Path.Combine(rootFilesCompanyPath, docResult.Batch.WorkDirectory);
             log.Info(1.1);
             var tempZip = Path.Combine(rootpath, docResult.PathToFile + ".pdf");
             try
@@ -895,7 +910,7 @@ namespace CfdiService.Controllers
                     var client = db.ClientUsers.Find(int.Parse(User.Identity.GetName()));
                     document = db.Documents.Where(d => d.DocumentId == id && d.ClientCompanyId == client.ClientCompanyID).FirstOrDefault();
                 }
-                
+
                 if (document == null)
                 {
                     return NotFound();
@@ -956,7 +971,7 @@ namespace CfdiService.Controllers
             {
                 return NotFound();
             }
-            
+
             if (documentShape.SignStatus == 2 && document.SignStatus != SignStatus.Firmado)
             {
                 // sign document
@@ -972,7 +987,7 @@ namespace CfdiService.Controllers
                 db.CreateLog(OperationTypes.SignedBy, string.Format("Documento Firmado {0}", document.DocumentId), User,
                         document.DocumentId, ObjectTypes.Document);
             }
-            
+
             document.SignStatus = (SignStatus)documentShape.SignStatus;
             log.Info("Employee Concern : " + documentShape.EmployeeConcern);
             if (documentShape.SignStatus == 3)
@@ -994,7 +1009,8 @@ namespace CfdiService.Controllers
                     //document.Nom151Cert = Nom151Service.GenerateNOM151(document.Nom151);
                     log.Info(document.Nom151);
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     log.Info(ex.ToString());
                 }
             }
@@ -1011,7 +1027,7 @@ namespace CfdiService.Controllers
             long unsigneddocs = db.Documents.Where(d => d.CompanyId == document.CompanyId && d.SignStatus == SignStatus.SinFirma).ToList().Count;
             if (document.Company.SignatureBalance <= unsigneddocs)
             {
-                try { SendEmail.SendEmailMessage(document.Company.BillingEmailAddress, string.Format(Strings.signatureLicenseQuantityWarningSubject), string.Format(Strings.signatureLicenseQuantityWarning, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance, document.Company.SignatureBalance*2, httpDomainPrefix)); } catch { }
+                try { SendEmail.SendEmailMessage(document.Company.BillingEmailAddress, string.Format(Strings.signatureLicenseQuantityWarningSubject), string.Format(Strings.signatureLicenseQuantityWarning, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance, document.Company.SignatureBalance * 2, httpDomainPrefix)); } catch { }
                 try { SendEmail.SendEmailMessage("mariana.basto@nomisign.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance, document.Company.SignatureBalance * 2, httpDomainPrefix)); } catch { }
                 try { SendEmail.SendEmailMessage("estela.gonzalez@nomisign.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance, document.Company.SignatureBalance * 2, httpDomainPrefix)); } catch { }
                 try { SendEmail.SendEmailMessage("info@nomisign.com", string.Format(Strings.signatureLicenseWarningSalesMessageSubject, document.Company.CompanyName), string.Format(Strings.signatureLicenseWarningSalesMessage, httpDomain, document.Company.CompanyName, document.Company.SignatureBalance, document.Company.SignatureBalance * 2, httpDomainPrefix)); } catch { }
